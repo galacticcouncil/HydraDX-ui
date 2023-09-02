@@ -8,7 +8,10 @@ import { StatsLRNA } from "./sections/LRNA/StatsLRNA"
 import { StatsPOL } from "./sections/POL/StatsPOL"
 import { StatsOverview } from "./sections/overview/StatsOverview"
 import { StatsTabs } from "./components/tabs/StatsTabs"
-import { StatsOmnipoolAsset } from "./sections/omnipoolAsset/StatsOmnipoolAsset"
+import {
+  OmnipoolAssetNavigation,
+  StatsOmnipoolAsset,
+} from "./sections/omnipoolAsset/StatsOmnipoolAsset"
 
 const pageEnabled = import.meta.env.VITE_FF_STATS_ENABLED === "true"
 
@@ -23,6 +26,7 @@ export const StatsPage = () => {
   return (
     <Page
       variant="stats"
+      subHeader={isOmnipoolAssetPage ? <OmnipoolAssetNavigation /> : null}
       css={isOmnipoolAssetPage && { padding: "10px!important" }}
     >
       {!isOmnipoolAssetPage && (

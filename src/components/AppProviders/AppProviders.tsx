@@ -23,16 +23,16 @@ export const AppProviders: FC<PropsWithChildren> = ({ children }) => {
       >
         <OnboardProvider>
           <InvalidateOnBlock>
-            <ToastProvider>
-              <SkeletonTheme
-                baseColor={`rgba(${theme.rgbColors.white}, 0.12)`}
-                highlightColor={`rgba(${theme.rgbColors.white}, 0.24)`}
-                borderRadius={4}
-              >
+            <SkeletonTheme
+              baseColor={`rgba(${theme.rgbColors.white}, 0.12)`}
+              highlightColor={`rgba(${theme.rgbColors.white}, 0.24)`}
+              borderRadius={4}
+            >
+              <ToastProvider>
                 {children}
                 <Transactions />
-              </SkeletonTheme>
-            </ToastProvider>
+              </ToastProvider>
+            </SkeletonTheme>
           </InvalidateOnBlock>
         </OnboardProvider>
       </ApiPromiseContext.Provider>

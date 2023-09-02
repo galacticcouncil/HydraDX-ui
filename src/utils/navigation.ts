@@ -25,8 +25,7 @@ export const LINKS = {
   statsLRNA: "/stats/LRNA",
   statsOmnipool: "/stats/overview/omnipool",
   staking: "/staking",
-  stakingDashboard: "/staking/dashboard",
-  stakingGovernance: "/staking/governance",
+  stakingVote: "/staking/referenda",
 }
 
 const isPoolsPageEnabled = import.meta.env.VITE_FF_POOLS_ENABLED === "true"

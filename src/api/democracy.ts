@@ -27,10 +27,11 @@ export const useReferendums = (type?: "ongoing" | "finished") => {
   )
 }
 
-export const useReferendumInfo = (referendumIndex: string) => {
+export const useReferendumInfo = (referendumIndex?: string) => {
   return useQuery(
     QUERY_KEYS.referendumInfo(referendumIndex),
     getReferendumInfo(referendumIndex),
+    { enabled: !!referendumIndex },
   )
 }
 
@@ -57,34 +58,88 @@ export const getReferendums =
     return referendums
   }
 
-export const getReferendumInfo = (referendumIndex: string) => async () => {
-  const res = await fetch(`${REFERENDUM_DATA_URL}/${referendumIndex}.json`)
-  if (!res.ok) return null
+export const getReferendumInfo = (referendumIndex?: string) => async () => {
+  const [info, votes] = await Promise.all([
+    fetch(`${REFERENDUM_DATA_URL}/${referendumIndex}.json`),
+    fetch(`${REFERENDUM_DATA_URL}/${referendumIndex}/votes`),
+  ])
+  if (!info.ok || !votes.ok) return null
 
-  const json: Referendum = await res.json()
+  const infoJson: Referendum = await info.json()
+  const votesJson: Array<Vote> = await votes.json()
+
+  const { ayeCount, nayCount } = votesJson.reduce(
+    (acc, vote) =>
+      vote.aye
+        ? { ...acc, ayeCount: acc.ayeCount + 1 }
+        : { ...acc, nayCount: acc.nayCount + 1 },
+    { ayeCount: 0, nayCount: 0 },
+  )
 
   if (
-    json === null ||
-    json.referendumIndex === null ||
-    json.motionIndex === null ||
-    json.title === null
+    infoJson === null ||
+    infoJson.referendumIndex === null ||
+    infoJson.motionIndex === null ||
+    infoJson.title === null
   )
     return null
 
-  return json
+  const authorAddress = infoJson.author.address
+
+  const shortIds = await fetch("https://id.statescan.io/hydradx/short-ids", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      addresses: [authorAddress],
+    }),
+  })
+
+  const ids = await shortIds.json()
+  const authorInfo = ids?.[0]?.info ?? authorAddress
+  const authorDisplay = {
+    verified: authorInfo?.status === "VERIFIED",
+    name: authorInfo?.display,
+  }
+  return { ...infoJson, ayeCount, nayCount, authorDisplay }
 }
 
 export type Referendum = {
   title: string
+  content: string
   state: string
   lastActivityAt: string
   referendumIndex: number
   motionIndex: number
+  author: {
+    address: string
+  }
   onchainData: {
     meta: {
       end: number
     }
   }
+}
+
+type Vote = {
+  aye: boolean
+}
+
+export const useReferendumInfoOf = (id: string) => {
+  const api = useApiPromise()
+
+  return useQuery(
+    QUERY_KEYS.referendumInfoOf(id),
+    async () => {
+      const res = await getReferendumInfoOf(api, id)
+      return res.unwrapOr(null)
+    },
+    {
+      enabled: !!isApiLoaded(api),
+    },
+  )
 }
 
 export const getReferendumInfoOf = async (api: ApiPromise, id: string) =>

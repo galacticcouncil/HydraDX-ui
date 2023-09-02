@@ -2,7 +2,7 @@ import { css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { theme } from "theme"
 
-export const SContainer = styled.a<{ type: "staking" | "toast" }>`
+export const SContainer = styled.div<{ type: "staking" | "toast" }>`
   padding: 16px;
   ${({ type }) =>
     type === "toast"
@@ -60,8 +60,9 @@ export const SHeader = styled.div`
 export const SBar = styled.div<{
   variant: "aye" | "nay" | "neutral"
   percentage: number
+  height?: number
 }>`
-  height: 4px;
+  height: ${({ height }) => (height ? `${height}px` : "4px")};
   width: ${({ percentage }) => percentage}%;
 
   border-radius: 4px;

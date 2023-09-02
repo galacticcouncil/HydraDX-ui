@@ -64,6 +64,7 @@ export const AssetSelectSkeleton = (props: {
           </div>
 
           <AssetInput
+            disabled
             value=""
             name={props.name}
             label={t("selectAsset.input.label")}

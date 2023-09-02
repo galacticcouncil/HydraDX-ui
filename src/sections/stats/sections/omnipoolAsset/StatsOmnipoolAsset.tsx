@@ -34,32 +34,22 @@ type SearchGenerics = MakeGenerics<{
   Search: { asset: number }
 }>
 
-const OmnipoolAssetNavigation = () => {
+export const OmnipoolAssetNavigation = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
   return (
-    <>
-      <div sx={{ flex: "row", gap: 10, align: "center", mb: 15 }}>
-        <BackButton
-          name="Expand"
-          icon={<ChevronDownIcon />}
-          onClick={() => navigate({ to: "" })}
-          size={24}
-        />
-        <Text fs={13} tTransform="uppercase" color="white">
-          {t("stats.omnipool.navigation.back")}
-        </Text>
-      </div>
-      <div
-        sx={{ height: 1, width: "100vw" }}
-        css={{
-          background: "rgba(84, 99, 128, 0.35)",
-          position: "absolute",
-          left: 0,
-        }}
+    <div sx={{ flex: "row", gap: 10, align: "center" }}>
+      <BackButton
+        name="Expand"
+        icon={<ChevronDownIcon />}
+        onClick={() => navigate({ to: "" })}
+        size={24}
       />
-    </>
+      <Text fs={13} tTransform="uppercase" color="white">
+        {t("stats.omnipool.navigation.back")}
+      </Text>
+    </div>
   )
 }
 
@@ -168,7 +158,6 @@ const StatsOmnipoolAssetData = ({ assetId }: { assetId: string }) => {
 
   return (
     <SOmnipoolAssetContainer>
-      <OmnipoolAssetNavigation />
       <OmnipoolAssetHeader assetId={assetId} tvl={omnipoolAsset.tvl} />
       <div sx={{ flex: ["column", "row"], gap: 20, mb: 20 }}>
         <AssetStats

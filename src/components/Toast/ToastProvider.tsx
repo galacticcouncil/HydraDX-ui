@@ -58,7 +58,6 @@ export const ToastProvider: FC<PropsWithChildren> = ({ children }) => {
         </AnimatePresence>
       </Provider>
       {children}
-      <ToastSidebar />
     </>
   )
 }

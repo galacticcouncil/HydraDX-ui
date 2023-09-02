@@ -276,6 +276,24 @@ const variantStyles: Record<ButtonVariant, SerializedStyles> = {
       transform: translate3d(3px, 3px, -1px);
     }
   `,
+  green: css`
+    background: ${theme.colors.green};
+    color: ${theme.colors.white};
+
+    border-radius: 4px;
+
+    box-shadow: unset;
+
+    :hover {
+      background: #71f8c5;
+      color: ${theme.colors.darkBlue900};
+    }
+
+    :active {
+      background: #c0fbe5;
+      color: ${theme.colors.darkBlue900};
+    }
+  `,
 }
 
 const sizeStyles: Record<ButtonSize, SerializedStyles> = {

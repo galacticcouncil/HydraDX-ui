@@ -20,8 +20,6 @@ import {
 } from "./ToastSidebar.styled"
 import { ToastSidebarGroup } from "./group/ToastSidebarGroup"
 import { ToastSidebarReferendums } from "./referendums/ToastSidebarReferendums"
-import { SkeletonTheme } from "react-loading-skeleton"
-import { theme } from "theme"
 
 export function ToastSidebar() {
   const { t } = useTranslation()
@@ -39,102 +37,96 @@ export function ToastSidebar() {
   const completedToasts = sortedToasts.filter((x) => x.variant !== "progress")
 
   return (
-    <SkeletonTheme
-      baseColor={`rgba(${theme.rgbColors.white}, 0.12)`}
-      highlightColor={`rgba(${theme.rgbColors.white}, 0.24)`}
-      borderRadius={4}
-    >
-      <Dialog open={store.sidebar}>
-        <DialogPortal>
-          <SWrapper>
-            <Backdrop onClick={onClose} />
+    <Dialog open={store.sidebar}>
+      <DialogPortal>
+        <SWrapper>
+          <Backdrop onClick={onClose} />
 
-            <RemoveScroll enabled={store.sidebar}>
-              <SDialogContent onEscapeKeyDown={onClose}>
-                <div>
-                  <Heading fw={500} fs={15} tAlign="center" sx={{ py: 24 }}>
-                    {t("toast.sidebar.title")}
-                  </Heading>
-                  <SCloseButton
-                    name={t("toast.close")}
-                    icon={<CrossIcon />}
-                    onClick={onClose}
-                  />
-                </div>
-                <SSidebarBody>
-                  {isApiLoaded(api) && <ToastSidebarReferendums />}
-                  {!sortedToasts.length ? (
-                    <SNoActivitiesContainer>
-                      <SNoActivitiesIcon />
-                      <Spacer size={16} />
-                      <Text color="basic500">
-                        {t("toast.sidebar.empty.text1")}
-                      </Text>
-                      <Text color="basic500">
-                        {t("toast.sidebar.empty.text2")}
-                      </Text>
-                    </SNoActivitiesContainer>
-                  ) : (
-                    <>
-                      {pendingToasts.length > 0 && (
-                        <ToastSidebarGroup title={t("toast.sidebar.pending")}>
-                          <div sx={{ flex: "column", gap: 6 }}>
-                            {pendingToasts.map((toast) => (
-                              <ToastContent
-                                key={toast.id}
-                                variant={toast.variant}
-                                title={
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html: toast.title,
-                                    }}
-                                  />
-                                }
-                                actions={toast.actions}
-                                dateCreated={
-                                  typeof toast.dateCreated === "string"
-                                    ? new Date(toast.dateCreated)
-                                    : toast.dateCreated
-                                }
-                              />
-                            ))}
-                          </div>
-                        </ToastSidebarGroup>
-                      )}
-                      {completedToasts.length > 0 && (
-                        <ToastSidebarGroup title={t("toast.sidebar.completed")}>
-                          <div sx={{ flex: "column", gap: 6 }}>
-                            {completedToasts.map((toast) => (
-                              <ToastContent
-                                key={toast.id}
-                                link={toast.link}
-                                variant={toast.variant}
-                                title={
-                                  <div
-                                    dangerouslySetInnerHTML={{
-                                      __html: toast.title,
-                                    }}
-                                  />
-                                }
-                                actions={toast.actions}
-                                dateCreated={
-                                  typeof toast.dateCreated === "string"
-                                    ? new Date(toast.dateCreated)
-                                    : toast.dateCreated
-                                }
-                              />
-                            ))}
-                          </div>
-                        </ToastSidebarGroup>
-                      )}
-                    </>
-                  )}
-                </SSidebarBody>
-              </SDialogContent>
-            </RemoveScroll>
-          </SWrapper>
-        </DialogPortal>
-      </Dialog>
-    </SkeletonTheme>
+          <RemoveScroll enabled={store.sidebar}>
+            <SDialogContent onEscapeKeyDown={onClose}>
+              <div>
+                <Heading fw={500} fs={15} tAlign="center" sx={{ py: 24 }}>
+                  {t("toast.sidebar.title")}
+                </Heading>
+                <SCloseButton
+                  name={t("toast.close")}
+                  icon={<CrossIcon />}
+                  onClick={onClose}
+                />
+              </div>
+              <SSidebarBody>
+                {isApiLoaded(api) && <ToastSidebarReferendums />}
+                {!sortedToasts.length ? (
+                  <SNoActivitiesContainer>
+                    <SNoActivitiesIcon />
+                    <Spacer size={16} />
+                    <Text color="basic500">
+                      {t("toast.sidebar.empty.text1")}
+                    </Text>
+                    <Text color="basic500">
+                      {t("toast.sidebar.empty.text2")}
+                    </Text>
+                  </SNoActivitiesContainer>
+                ) : (
+                  <>
+                    {pendingToasts.length > 0 && (
+                      <ToastSidebarGroup title={t("toast.sidebar.pending")}>
+                        <div sx={{ flex: "column", gap: 6 }}>
+                          {pendingToasts.map((toast) => (
+                            <ToastContent
+                              key={toast.id}
+                              variant={toast.variant}
+                              title={
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: toast.title,
+                                  }}
+                                />
+                              }
+                              actions={toast.actions}
+                              dateCreated={
+                                typeof toast.dateCreated === "string"
+                                  ? new Date(toast.dateCreated)
+                                  : toast.dateCreated
+                              }
+                            />
+                          ))}
+                        </div>
+                      </ToastSidebarGroup>
+                    )}
+                    {completedToasts.length > 0 && (
+                      <ToastSidebarGroup title={t("toast.sidebar.completed")}>
+                        <div sx={{ flex: "column", gap: 6 }}>
+                          {completedToasts.map((toast) => (
+                            <ToastContent
+                              key={toast.id}
+                              link={toast.link}
+                              variant={toast.variant}
+                              title={
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: toast.title,
+                                  }}
+                                />
+                              }
+                              actions={toast.actions}
+                              dateCreated={
+                                typeof toast.dateCreated === "string"
+                                  ? new Date(toast.dateCreated)
+                                  : toast.dateCreated
+                              }
+                            />
+                          ))}
+                        </div>
+                      </ToastSidebarGroup>
+                    )}
+                  </>
+                )}
+              </SSidebarBody>
+            </SDialogContent>
+          </RemoveScroll>
+        </SWrapper>
+      </DialogPortal>
+    </Dialog>
   )
 }

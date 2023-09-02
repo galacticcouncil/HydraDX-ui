@@ -14,8 +14,8 @@ import { Icon } from "components/Icon/Icon"
 import BN from "bignumber.js"
 import { useBestNumber } from "api/chain"
 import { customFormatDuration } from "utils/formatting"
-
-const REFERENDUM_LINK = import.meta.env.VITE_REFERENDUM_LINK as string
+import { useNavigate } from "@tanstack/react-location"
+import { useToast } from "state/toasts"
 
 type Props = {
   id: string
@@ -26,6 +26,8 @@ type Props = {
 
 export const ReferendumCard = ({ id, referendum, type, voted }: Props) => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { setSidebar } = useToast()
 
   const info = useReferendumInfo(id)
   const bestNumber = useBestNumber()
@@ -61,15 +63,18 @@ export const ReferendumCard = ({ id, referendum, type, voted }: Props) => {
     .toNumber()
   const endDate = customFormatDuration({ end: diff * 1000 })
 
+  const handleClick = (id: string) => {
+    setSidebar(false)
+    navigate({
+      to: "/staking/referenda",
+      search: { id },
+    })
+  }
+
   return info.isLoading || !info.data ? (
     <ReferendumCardSkeleton type={type} />
   ) : (
-    <SContainer
-      type={type}
-      href={`${REFERENDUM_LINK}/${info.data.referendumIndex}`}
-      target="_blank"
-      rel="noreferrer"
-    >
+    <SContainer type={type} onClick={() => handleClick(id.toString())}>
       <SHeader>
         <div sx={{ flex: "row", align: "center", gap: 8 }}>
           <Text color="brightBlue200" fs={14} fw={500}>

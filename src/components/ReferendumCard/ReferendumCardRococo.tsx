@@ -11,12 +11,13 @@ import { SBar, SContainer, SHeader, SVotedBage } from "./ReferendumCard.styled"
 import { Icon } from "components/Icon/Icon"
 import { useBestNumber } from "api/chain"
 import { customFormatDuration } from "utils/formatting"
+import { useNavigate } from "@tanstack/react-location"
+import { useToast } from "state/toasts"
 
 type Props = {
   id: string
   referendum: PalletDemocracyReferendumInfo
   type: "toast" | "staking"
-  rpc: string
   voted: boolean
 }
 
@@ -24,10 +25,11 @@ export const ReferendumCardRococo = ({
   id,
   referendum,
   type,
-  rpc,
   voted,
 }: Props) => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { setSidebar } = useToast()
 
   const bestNumber = useBestNumber()
 
@@ -55,6 +57,14 @@ export const ReferendumCardRococo = ({
     return { ayes, nays, percAyes, percNays }
   }, [referendum])
 
+  const handleClick = (id: string) => {
+    setSidebar(false)
+    navigate({
+      to: "/staking/referenda",
+      search: { id },
+    })
+  }
+
   const isNoVotes = votes.percAyes.eq(0) && votes.percNays.eq(0)
   const diff = referendum.asOngoing.end
     .toBigNumber()
@@ -64,12 +74,7 @@ export const ReferendumCardRococo = ({
   const endDate = customFormatDuration({ end: diff * 1000 })
 
   return (
-    <SContainer
-      type={type}
-      href={`https://polkadot.js.org/apps/?rpc=wss%3A%2F%2F${rpc}#/democracy`}
-      target="_blank"
-      rel="noreferrer"
-    >
+    <SContainer type={type} onClick={() => handleClick(id.toString())}>
       <SHeader>
         <div sx={{ flex: "row", align: "center", gap: 8 }}>
           <Text color="brightBlue200" fs={14} fw={500}>

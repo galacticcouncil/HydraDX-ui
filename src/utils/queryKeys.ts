@@ -291,7 +291,8 @@ export const QUERY_KEYS = {
     accountAddress,
     "referendums",
   ],
-  referendumInfo: (id: string) => [QUERY_KEY_PREFIX, id, "referendumInfo"],
+  referendumInfo: (id?: string) => [id, "referendumInfo"],
+  referendumInfoOf: (id: string) => [QUERY_KEY_PREFIX, id, "referendumInfoOf"],
   stats: (
     type: ChartType,
     timeframe?: StatsTimeframe,

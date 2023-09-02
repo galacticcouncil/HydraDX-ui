@@ -43,6 +43,7 @@ export const getTokenBalance =
         balance,
         total: freeBalance.plus(reservedBalance),
         freeBalance,
+        reservedBalance,
       }
     }
 
