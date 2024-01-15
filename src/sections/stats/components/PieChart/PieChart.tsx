@@ -11,7 +11,6 @@ import { BN_0 } from "utils/constants"
 import { DoughnutChart } from "sections/stats/components/DoughnutChart/DoughnutChart"
 import { EmotionJSX } from "@emotion/react/types/jsx-namespace"
 import BN from "bignumber.js"
-import { KeyOfType } from "utils/types"
 
 type TSlice = {
   percentage: number
@@ -32,7 +31,7 @@ type DataEntry = {
 
 type PieChartProps<T extends DataEntry> = {
   data: Array<T>
-  property: Extract<KeyOfType<T, BN>, string>
+  property: string
   label?: ComponentProps<typeof DoughnutChart>["label"]
 }
 

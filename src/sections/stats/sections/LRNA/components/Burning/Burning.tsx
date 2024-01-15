@@ -13,18 +13,12 @@ import { useDisplayAssetStore } from "utils/displayAsset"
 import { useSpotPrice } from "api/spotPrice"
 import { BlockSkeleton } from "./BlockSkeleton"
 import { useRpcProvider } from "providers/rpcProvider"
-import { useApiIds } from "api/consts"
+import { DisplayValue } from "components/DisplayValue/DisplayValue"
+import { BN_NAN } from "utils/constants"
 
 export const Burning = () => {
   const { t } = useTranslation()
   const { assets } = useRpcProvider()
-  const apiIds = useApiIds()
-
-  const meta = apiIds.data?.hubId
-    ? assets.getAsset(apiIds.data.hubId)
-    : undefined
-
-  const symbol = meta?.symbol
 
   const hubAssetImbalance = useHubAssetImbalance()
   const imbalance = hubAssetImbalance?.data?.value
@@ -32,21 +26,21 @@ export const Burning = () => {
     : BN_0
 
   const displayAsset = useDisplayAssetStore()
-  const spotPrice = useSpotPrice(meta?.id, displayAsset.stableCoinId)
+  const spotPrice = useSpotPrice(assets.hub.id, displayAsset.stableCoinId)
   const toBeBurnedSpotPrice = formatValue(
     spotPrice?.data?.spotPrice.multipliedBy(imbalance),
-    meta?.decimals,
+    assets.hub.decimals,
   ).toNumber()
 
   // TODO: fetch historical value form indexer
-  const maxHistoricalValue = new BigNumber(4567456745674564)
+  const maxHistoricalValue = new BigNumber(45674574522311564)
   const percentage = imbalance.times(100).div(maxHistoricalValue).toNumber()
 
   // TODO: fetch protocol fees
-  const fees = new BigNumber(14551455145514)
+  const fees = BN_NAN
   const feesSpotPrice = formatValue(
     spotPrice?.data?.spotPrice.multipliedBy(fees),
-    meta?.decimals,
+    assets.hub.decimals,
   ).toNumber()
 
   const isLoading = hubAssetImbalance.isLoading || spotPrice.isLoading
@@ -71,13 +65,12 @@ export const Burning = () => {
           <>
             <Text fs={[20, 30]} lh={[20, 30]} font="FontOver">
               {t("value.tokenWithSymbol", {
-                value: formatValue(imbalance, meta?.decimals),
-                symbol,
+                value: formatValue(imbalance, assets.hub.decimals),
+                symbol: assets.hub.symbol,
               })}
             </Text>
             <Text color="darkBlue200" fs={14}>
-              ≈{displayAsset.symbol}
-              {toBeBurnedSpotPrice}
+              <DisplayValue value={toBeBurnedSpotPrice} />
             </Text>
           </>
         )}
@@ -97,13 +90,12 @@ export const Burning = () => {
           <>
             <Text fs={[20, 30]} lh={[20, 30]} font="FontOver">
               {t("value.tokenWithSymbol", {
-                value: formatValue(fees, meta?.decimals),
-                symbol,
+                value: formatValue(fees, assets.hub.decimals),
+                symbol: assets.hub.symbol,
               })}
             </Text>
             <Text color="darkBlue200" fs={14}>
-              ≈{displayAsset.symbol}
-              {feesSpotPrice}
+              <DisplayValue value={feesSpotPrice} />
             </Text>
           </>
         )}

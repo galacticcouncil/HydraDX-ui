@@ -11,13 +11,13 @@ export const SBurnContainer = styled(SContainerVertical)`
   @media (${theme.viewport.gte.sm}) {
     flex-direction: row;
 
-    & > div:nth-child(1) {
+    & > div:nth-of-type(1) {
       order: 2;
     }
-    & > div:nth-child(2) {
+    & > div:nth-of-type(2) {
       order: 1;
     }
-    & > div:nth-child(3) {
+    & > div:nth-of-type(3) {
       order: 3;
     }
   }

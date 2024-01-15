@@ -19,6 +19,7 @@ import { StatsPOL } from "sections/stats/sections/POL/StatsPOL"
 import { StatsOverview } from "sections/stats/sections/overview/StatsOverview"
 import { StatsOmnipoolAsset } from "sections/stats/sections/omnipoolAsset/StatsOmnipoolAsset"
 import { BridgePage } from "sections/xcm/BridgePage"
+import { StatsLRNA } from "sections/stats/sections/LRNA/StatsLRNA"
 
 const isOtcPageEnabled = import.meta.env.VITE_FF_OTC_ENABLED === "true"
 const isDcaPageEnabled = import.meta.env.VITE_FF_DCA_ENABLED === "true"
@@ -147,12 +148,10 @@ export const routes = [
         path: "asset",
         element: <StatsOmnipoolAsset />,
       },
-
-      // TODO: Not ready. Requested in #861n9ffe4
-      // {
-      //   path: "LRNA",
-      //   element: <StatsPage />,
-      // },
+      {
+        path: "LRNA",
+        element: <StatsLRNA />,
+      },
     ],
   },
   {

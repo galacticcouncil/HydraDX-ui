@@ -565,6 +565,8 @@
   "stats.overview.table.trades.value.totalValueTime": "{{ date, dd/MM/yyyy, HH:mm }}",
   "stats.lrna.chart.switcher.price": "Price",
   "stats.lrna.chart.switcher.supply": "Circulating supply",
+  "stats.lrna.pie.label": "LRNA Distribution",
+  "stats.lrna.pie.desc": "In/Outside of Omnipool",
   "stats.lrna.pie.values.total": "Total LRNA Supply",
   "stats.lrna.pie.values.inside": "Inside of Omnipool",
   "stats.lrna.pie.values.outside": "Outside of Omnipool",

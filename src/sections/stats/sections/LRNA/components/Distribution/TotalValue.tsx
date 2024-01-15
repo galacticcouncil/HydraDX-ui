@@ -10,6 +10,7 @@ type PieTotalValueProps = {
   data?: BN
   isLoading: boolean
   compact?: boolean
+  percentage?: boolean
 }
 
 export const TotalValue = ({
@@ -17,6 +18,7 @@ export const TotalValue = ({
   data,
   isLoading,
   compact,
+  percentage,
 }: PieTotalValueProps) => {
   const { t } = useTranslation()
   const isDesktop = useMedia(theme.viewport.gte.sm)
@@ -29,7 +31,14 @@ export const TotalValue = ({
       ) : (
         <div sx={{ flex: "row", align: "baseline", gap: 4 }}>
           <Text fs={[20, 42]} font="FontOver">
-            {t(compact ? "value.compact" : "value", { value: data })}
+            {t(
+              compact
+                ? "value.compact"
+                : percentage
+                ? "value.percentage"
+                : "value",
+              { value: data },
+            )}
           </Text>
         </div>
       )}

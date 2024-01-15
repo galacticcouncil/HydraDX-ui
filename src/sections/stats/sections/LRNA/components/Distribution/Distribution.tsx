@@ -10,9 +10,8 @@ import { ChartLabel } from "./ChartLabel"
 import { DoughnutChart } from "sections/stats/components/DoughnutChart/DoughnutChart"
 import { makePercent } from "./Distribution.utils"
 import { DistributionSliceLabel } from "./DistributionSliceLabel"
-import { DEPOSIT_CLASS_ID, OMNIPOOL_ACCOUNT_ADDRESS } from "utils/api"
+import { OMNIPOOL_ACCOUNT_ADDRESS } from "utils/api"
 import { SContainerVertical } from "sections/stats/StatsPage.styled"
-import { useApiIds } from "api/consts"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useTotalIssuance } from "api/totalIssuance"
 import { useTokenBalance } from "api/balances"
@@ -22,19 +21,12 @@ export const Distribution = () => {
   const { t } = useTranslation()
   const { assets } = useRpcProvider()
   const isDesktop = useMedia(theme.viewport.gte.sm)
-  const apiIds = useApiIds()
 
-  const meta = apiIds.data?.hubId
-    ? assets.getAsset(apiIds.data.hubId)
-    : undefined
-
-  const totalIssuanceQuery = useTotalIssuance(apiIds.data?.hubId)
+  const totalIssuanceQuery = useTotalIssuance(assets.hub.id)
   const omnipoolBalanceQuery = useTokenBalance(
-    apiIds.data?.hubId,
+    assets.hub.id,
     OMNIPOOL_ACCOUNT_ADDRESS,
   )
-
-  const symbol = meta?.symbol
 
   const [activeSection, setActiveSection] = useState<"overview" | "chart">(
     "overview",
@@ -61,8 +53,9 @@ export const Distribution = () => {
     <div sx={{ flex: "column", gap: 20 }}>
       <TotalValue
         title={t("stats.lrna.pie.values.total")}
-        data={totalIssuanceQuery.data?.total}
+        data={totalIssuanceQuery.data?.total.shiftedBy(-assets.hub.decimals)}
         isLoading={totalIssuanceQuery.isLoading}
+        compact
       />
       <div
         sx={{
@@ -74,15 +67,15 @@ export const Distribution = () => {
       >
         <TotalValue
           title={t("stats.lrna.pie.values.inside")}
-          data={omnipoolBalanceQuery.data?.total}
-          isLoading={omnipoolBalanceQuery.isLoading}
-          compact={true}
+          data={insidePercent}
+          isLoading={isLoading}
+          percentage
         />
         <TotalValue
           title={t("stats.lrna.pie.values.outside")}
-          data={outsideOmnipool}
+          data={outsidePercent}
           isLoading={isLoading}
-          compact={true}
+          percentage
         />
       </div>
     </div>
@@ -103,30 +96,30 @@ export const Distribution = () => {
                   label: (
                     <DistributionSliceLabel
                       text={t("stats.lrna.distribution.inside")}
-                      symbol={symbol}
+                      symbol={assets.hub.symbol}
                       percentage={insidePercent?.toNumber() ?? 0}
                     />
                   ),
                   percentage: insidePercent?.toNumber() ?? 0,
                   color: "#A6DDFF",
                   name: "in",
-                  id: DEPOSIT_CLASS_ID,
+                  id: `in_${assets.hub.id}`,
                 },
                 {
                   label: (
                     <DistributionSliceLabel
                       text={t("stats.lrna.distribution.outside")}
-                      symbol={symbol}
+                      symbol={assets.hub.symbol}
                       percentage={outsidePercent?.toNumber() ?? 0}
                     />
                   ),
                   percentage: outsidePercent?.toNumber() ?? 0,
                   color: "#2489FF",
                   name: "out",
-                  id: DEPOSIT_CLASS_ID,
+                  id: `out_${assets.hub.id}`,
                 },
               ]}
-              label={ChartLabel}
+              label={<ChartLabel />}
             />
             {pieChartValues}
           </>

@@ -20,11 +20,10 @@ export const ChartLabel = () => {
       <div sx={{ flex: "column", align: "center", gap: 6 }}>
         {<AssetLogo id={DEPOSIT_CLASS_ID} />}
         <Text color="basic100" fs={[12, 18]}>
-          LRNA Distribution
-          {/*{t("stats.overview.pie.defaultLabel.composition")}*/}
+          {t("stats.lrna.pie.label")}
         </Text>
         <Text color="basic100" fs={[10, 12]}>
-          In/Outside of Omnipool
+          {t("stats.lrna.pie.desc")}
         </Text>
       </div>
       <motion.div
