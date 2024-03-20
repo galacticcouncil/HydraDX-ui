@@ -21,12 +21,17 @@ import {
   SRawCallData,
   SShowMoreButton,
 } from "./ReviewTransactionData.styled"
+import { TransactionRequest } from "@ethersproject/providers"
 
 const MAX_DECODED_HEIGHT = 130
 
 type Props = {
   address?: string
   tx?: SubmittableExtrinsic
+  evmTx?: {
+    data: TransactionRequest
+    abi?: string
+  }
   xcall?: XCall
 }
 
@@ -117,11 +122,11 @@ const EvmExtrinsicData: FC<Pick<Props, "tx">> = ({ tx }) => {
   )
 }
 
-const EvmXCallData: FC<
-  Pick<Props, "xcall"> & {
-    method: string
-  }
-> = ({ xcall, method }) => {
+const EvmTxData: FC<{ method?: string; abi?: string; data?: string }> = ({
+  data,
+  method,
+  abi,
+}) => {
   const { t } = useTranslation()
 
   const [ref, { height }] = useMeasure<HTMLDivElement>()
@@ -134,74 +139,91 @@ const EvmXCallData: FC<
   const allowDecodedFullExpand =
     !decodedFullyExpanded && height > MAX_DECODED_HEIGHT
 
+  const parsedAbi = useMemo(() => (abi ? JSON.parse(abi) : []) as any[], [abi])
+  const methodName = method ?? parsedAbi[0]?.name
+
   const decodedData = useMemo(() => {
-    if (xcall?.abi) {
+    if (parsedAbi && data) {
       try {
-        const parsedAbi = JSON.parse(xcall.abi) as any[]
-        const types = parsedAbi.find((f) => f.name === method)?.inputs ?? []
+        const types = parsedAbi.find((f) => f.name === methodName)?.inputs ?? []
         const decoded = utils.defaultAbiCoder.decode(
           types,
-          hexDataSlice(xcall.data, 10),
+          hexDataSlice(data, 10),
         )
 
         return decodedResultToJson(decoded)
-      } catch (error) {}
+      } catch (error) {
+        console.log(error)
+      }
     }
-  }, [method, xcall])
+  }, [data, methodName, parsedAbi])
+
+  console.log({ decodedData, data, methodName, parsedAbi, abi })
 
   if (!decodedData) return null
-  if (!xcall?.data) return null
+  if (!data) return null
+
+  const hasAbiInputs = parsedAbi?.length > 0
 
   return (
     <SContainer>
-      <div>
-        <SExpandButton
-          onClick={() => setDecodedExpanded((prev) => !prev)}
-          expanded={decodedExpanded}
-        >
-          <ChevronDownSmallIcon />
-          {t("liquidity.reviewTransaction.calldata.decoded")}
-        </SExpandButton>
-        {decodedExpanded && (
-          <div
-            sx={{
-              mt: 10,
-              pl: 16,
-            }}
-            css={{
-              position: "relative",
-              height: allowDecodedFullExpand ? MAX_DECODED_HEIGHT : "auto",
-              overflow: "hidden",
-            }}
-          >
-            <TransactionCode ref={ref} name={method} src={decodedData} />
-            {allowDecodedFullExpand && (
-              <SShowMoreButton
-                onClick={() => setDecodedFullyExpanded(true)}
+      {hasAbiInputs && (
+        <>
+          <div>
+            <SExpandButton
+              onClick={() => setDecodedExpanded((prev) => !prev)}
+              expanded={decodedExpanded}
+            >
+              <ChevronDownSmallIcon />
+              {t("liquidity.reviewTransaction.calldata.decoded")}
+            </SExpandButton>
+            {decodedExpanded && (
+              <div
+                sx={{
+                  mt: 10,
+                  pl: 16,
+                }}
                 css={{
-                  position: "absolute",
-                  bottom: 0,
+                  position: "relative",
+                  height: allowDecodedFullExpand ? MAX_DECODED_HEIGHT : "auto",
+                  overflow: "hidden",
                 }}
               >
-                Show more <ChevronDown width={16} height={16} />
-              </SShowMoreButton>
+                <TransactionCode
+                  ref={ref}
+                  name={methodName}
+                  src={decodedData}
+                />
+                {allowDecodedFullExpand && (
+                  <SShowMoreButton
+                    onClick={() => setDecodedFullyExpanded(true)}
+                    css={{
+                      position: "absolute",
+                      bottom: 0,
+                    }}
+                  >
+                    Show more <ChevronDown width={16} height={16} />
+                  </SShowMoreButton>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
-      <Separator sx={{ my: 12 }} />
+          <Separator sx={{ my: 12 }} />
+        </>
+      )}
       <div>
         <SExpandButton
           onClick={() => setEncodedExpanded((prev) => !prev)}
           expanded={encodedExpanded}
+          css={{ pointerEvents: hasAbiInputs ? "auto" : "none" }}
         >
-          <ChevronDownSmallIcon />
+          {hasAbiInputs && <ChevronDownSmallIcon />}
           {t("liquidity.reviewTransaction.calldata.encoded")}
         </SExpandButton>
         {encodedExpanded && (
           <SRawCallData>
             <span>0x</span>
-            {splitHexByZeroes(xcall.data).map((str, index) => (
+            {splitHexByZeroes(data).map((str, index) => (
               <Fragment key={index}>
                 {str.startsWith("00") ? <>{str}</> : <span>{str}</span>}
               </Fragment>
@@ -215,13 +237,17 @@ const EvmXCallData: FC<
 
 export const ReviewTransactionData: FC<Props> = ({
   tx,
+  evmTx,
   xcall,
   address = "",
 }) => {
   const isEVM = isEvmAccount(address) || isEvmAddress(address)
 
-  if (!isEVM) return <ExtrinsicData tx={tx} />
+  if (!isEVM && tx) return <ExtrinsicData tx={tx} />
   if (isEVM && tx) return <EvmExtrinsicData tx={tx} />
-  if (isEVM && xcall) return <EvmXCallData method="transfer" xcall={xcall} />
+  if (isEVM && xcall)
+    return <EvmTxData method="transfer" data={xcall?.data} abi={xcall?.abi} />
+  if (evmTx)
+    return <EvmTxData data={evmTx?.data?.data?.toString()} abi={evmTx?.abi} />
   return null
 }

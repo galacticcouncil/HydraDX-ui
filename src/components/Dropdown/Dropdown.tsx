@@ -15,18 +15,26 @@ export function Dropdown(props: {
   items: Array<TDropdownItem>
   children: ReactNode
   onSelect: (key: TDropdownItem) => void
+  asChild?: boolean
+  header?: ReactNode
+  footer?: ReactNode
 }) {
+  const Trigger = props.asChild ? DropdownMenu.Trigger : STrigger
   return (
     <DropdownMenu.Root>
-      <STrigger disabled={!props.items.length}>{props.children}</STrigger>
+      <Trigger asChild={props.asChild} disabled={!props.items.length}>
+        {props.children}
+      </Trigger>
       <DropdownMenu.Portal>
         <SContent sideOffset={8}>
+          {props.header}
           {props.items.map((i) => (
             <SItem key={i.key} onClick={() => props.onSelect(i)}>
               {i.icon}
               {i.label}
             </SItem>
           ))}
+          {props.footer}
         </SContent>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>

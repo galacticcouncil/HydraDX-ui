@@ -12,6 +12,7 @@ import { ReviewTransactionToast } from "./ReviewTransactionToast"
 import { ReviewTransactionXCallForm } from "./ReviewTransactionXCallForm"
 import { WalletUpgradeModal } from "sections/web3-connect/upgrade/WalletUpgradeModal"
 import { isEvmXCall } from "sections/transaction/ReviewTransactionXCallForm.utils"
+import { ReviewTransactionEvmTxForm } from "sections/transaction/ReviewTransactionEvmTxForm"
 
 export const ReviewTransaction = (props: Transaction) => {
   const { t } = useTranslation()
@@ -116,6 +117,15 @@ export const ReviewTransaction = (props: Transaction) => {
             onSigned={(signed) => {
               props.onSubmitted?.()
               sendTx(signed)
+            }}
+          />
+        ) : props.evmTx ? (
+          <ReviewTransactionEvmTxForm
+            tx={props.evmTx}
+            onCancel={onClose}
+            onEvmSigned={(data) => {
+              props.onSubmitted?.()
+              sendEvmTx(data)
             }}
           />
         ) : isEvmXCall(props.xcall) && props.xcallMeta ? (

@@ -189,6 +189,11 @@ export function formatBigNumber(
     return num.toFormat(0, BigNumber.ROUND_HALF_UP, fmtConfig)
   }
 
+  /* If decimal places is not set, display 2 decimals by default for percentages */
+  if (options?.type === "percentage" && !options.decimalPlaces) {
+    return num.toFormat(2, BigNumber.ROUND_HALF_UP, fmtConfig)
+  }
+
   /* Display only 2 decimals, by cutting them not rounding */
   if (options?.type !== "token") {
     return num

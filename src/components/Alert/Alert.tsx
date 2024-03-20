@@ -1,50 +1,68 @@
-import styled from "@emotion/styled"
-import { ReactNode } from "react"
 import ErrorIcon from "assets/icons/ErrorIcon.svg?react"
 import WarningIcon from "assets/icons/WarningIcon.svg?react"
+import { SInfoIcon } from "components/InfoTooltip/InfoTooltip.styled"
 import { Text } from "components/Typography/Text/Text"
-import { theme } from "theme"
+import { FC, ReactNode } from "react"
+import { SContainer } from "./Alert.styled"
 
-const SContainer = styled.div<{ variant: "warning" | "error" }>`
-  padding: 16px;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
+export type AlertVariant = "warning" | "error" | "info"
+export type AlertSize = "small" | "medium" | "large"
 
-  border-radius: 2px;
-  gap: 12px;
-
-  ${({ variant }) => {
-    switch (variant) {
-      case "error": {
-        return { backgroundColor: `rgba(${theme.rgbColors.red100}, 0.25)` }
-      }
-      case "warning": {
-        return { backgroundColor: `rgba(${theme.rgbColors.warning200}, 0.4)` }
-      }
-    }
-  }}
-`
-
-export function Alert(props: {
+export type AlertProps = {
   className?: string
-  variant: "warning" | "error"
+  variant: AlertVariant
+  size?: AlertSize
   children?: ReactNode
-}) {
-  return (
-    <SContainer variant={props.variant} className={props.className}>
-      {props.variant === "error" && <ErrorIcon />}
-      {props.variant === "warning" && <WarningIcon />}
+}
 
-      <div sx={{ flex: "column" }}>
-        {typeof props.children === "string" ? (
-          <Text fs={12} lh={16} fw={500}>
-            {props.children}
+export const Alert: FC<AlertProps> = ({
+  variant,
+  className,
+  children,
+  size = "medium",
+}) => {
+  const iconSize = getIconSize(size)
+  return (
+    <SContainer variant={variant} size={size} className={className}>
+      {variant === "error" && <ErrorIcon width={iconSize} height={iconSize} />}
+      {variant === "warning" && (
+        <WarningIcon width={iconSize} height={iconSize} />
+      )}
+      {variant === "info" && (
+        <SInfoIcon sx={{ width: iconSize, height: iconSize }} />
+      )}
+
+      <div sx={{ flex: "column", fontSize: getFontSize(size), lineHeight: 16 }}>
+        {typeof children === "string" ? (
+          <Text fs={getFontSize(size)} lh={16} fw={500}>
+            {children}
           </Text>
         ) : (
-          props.children
+          children
         )}
       </div>
     </SContainer>
   )
+}
+
+function getFontSize(size: AlertSize) {
+  switch (size) {
+    case "small":
+      return 13
+    case "medium":
+      return 14
+    case "large":
+      return 16
+  }
+}
+
+function getIconSize(size: AlertSize) {
+  switch (size) {
+    case "small":
+      return 18
+    case "medium":
+      return 20
+    case "large":
+      return 24
+  }
 }

@@ -54,10 +54,24 @@ export const Secondary: Story = {
   },
 }
 
+export const Tertiary: Story = {
+  render: Template,
+  args: {
+    variant: "tertiary",
+  },
+}
+
 export const Small: Story = {
   render: Template,
   args: {
     size: "small",
+  },
+}
+
+export const ExtraSmall: Story = {
+  render: Template,
+  args: {
+    size: "extra-small",
   },
 }
 

@@ -42,7 +42,10 @@ export const LINKS = {
   stakingDashboard: "/staking/dashboard",
   stakingGovernance: "/staking/governance",
   referrals: "/referrals",
+  lending: "/lending",
 }
+
+const isLendingEnabled = import.meta.env.VITE_FF_LENDING_ENABLED === "true"
 
 export const MENU_ITEMS = [
   {
@@ -127,6 +130,18 @@ export const MENU_ITEMS = [
     Icon: StakingIcon,
     subItems: undefined,
     enabled: true,
+    external: false,
+    mobVisible: false,
+    tabVisible: true,
+    mobOrder: 4,
+    asyncEnabled: false,
+  },
+  {
+    key: "lending",
+    href: LINKS.lending,
+    Icon: StakingIcon,
+    subItems: undefined,
+    enabled: isLendingEnabled,
     external: false,
     mobVisible: false,
     tabVisible: true,

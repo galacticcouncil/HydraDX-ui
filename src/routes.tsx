@@ -1,5 +1,5 @@
 import { WalletPage } from "./sections/wallet/WalletPage"
-import { Navigate } from "@tanstack/react-location"
+import { Navigate, Route } from "@tanstack/react-location"
 import { XcmPage } from "sections/xcm/XcmPage"
 import { PoolsPage } from "sections/pools/PoolsPage"
 import { StatsPage } from "sections/stats/StatsPage"
@@ -23,7 +23,7 @@ import { YieldDcaPage } from "sections/trade/sections/yieldDca/YieldDcaPage"
 
 const isDevelopment = import.meta.env.VITE_ENV === "development"
 
-export const routes = [
+export const routes: Route[] = [
   {
     path: "/",
     element: <Navigate to="/trade/swap" />,
@@ -156,6 +156,36 @@ export const routes = [
   {
     path: "referrals",
     element: <ReferralsWrapper />,
+  },
+  {
+    path: "lending",
+    element: () =>
+      import("./sections/lending/LendingPage").then((mod) => (
+        <mod.LendingPage />
+      )),
+    children: [
+      {
+        path: "/",
+        element: () =>
+          import("./sections/lending/LendingDashboardPage").then((mod) => (
+            <mod.LendingDashboardPage />
+          )),
+      },
+      {
+        path: "markets",
+        element: () =>
+          import("./sections/lending/LendingMarketsPage").then((mod) => (
+            <mod.LendingMarketsPage />
+          )),
+      },
+      {
+        path: "reserve-overview",
+        element: () =>
+          import("./sections/lending/LendingReserveOverviewPage").then(
+            (mod) => <mod.LendingReserveOverviewPage />,
+          ),
+      },
+    ],
   },
   {
     path: "*",

@@ -3,6 +3,7 @@ import {
   ChartState,
   TChartState,
 } from "components/Charts/components/ChartState"
+import { theme } from "theme"
 
 const points = [
   14, 22, 36, 0, 15, 22, 35, 27, 50, 70, 74, 56, 41, 67, 82, 102, 107, 85, 121,
@@ -16,7 +17,13 @@ const points = [
 
 const skeletonData = points.map((el) => ({ y: el + 100 }))
 
-export const AreaChartSkeleton = ({ state }: { state: TChartState }) => {
+export const AreaChartSkeleton = ({
+  state,
+  color = "brightBlue300",
+}: {
+  state: TChartState
+  color?: keyof typeof theme.colors
+}) => {
   return (
     <div sx={{ mb: [50, 100], width: "100%", height: [200, 229] }}>
       <ChartState state={state} />
@@ -24,15 +31,20 @@ export const AreaChartSkeleton = ({ state }: { state: TChartState }) => {
         <AreaRecharts data={skeletonData}>
           <defs>
             <linearGradient id="color" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#85D1FF" stopOpacity={0.8} />
+              <stop
+                offset="5%"
+                stopColor={theme.colors[color]}
+                stopOpacity={0.8}
+              />
               <stop offset="95%" stopColor="#000" stopOpacity={0} />
             </linearGradient>
           </defs>
           <Area
             type="monotone"
             dataKey="y"
-            stroke="#85D1FF"
+            stroke={theme.colors[color]}
             fill="url(#color)"
+            animationDuration={0}
           />
         </AreaRecharts>
       </ResponsiveContainer>
