@@ -18,7 +18,7 @@ import { QUERY_KEYS } from "utils/queryKeys"
 import { useSpotPrice } from "api/spotPrice"
 import { TXYKPool } from "sections/pools/PoolsPage.utils"
 import { TokensConversion } from "./components/TokensConvertion/TokensConversion"
-import { useTokensBalances } from "api/balances"
+import { useMaxBalance, useTokensBalances } from "api/balances"
 import IconWarning from "assets/icons/WarningIcon.svg?react"
 import * as xyk from "@galacticcouncil/math-xyk"
 import { useXYKConsts } from "api/xyk"
@@ -136,6 +136,50 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
 
   const { api } = useRpcProvider()
   const { createTransaction } = useStore()
+
+  const balanceAInfo = useMaxBalance(
+    formAssets.assetA.id,
+    api.tx.xyk.addLiquidity(
+      formAssets.assetA.id,
+      formAssets.assetB.id,
+      assetABalance?.balance.toFixed() ?? "0",
+      assetAReserve && assetBReserve && assetABalance
+        ? getFloatingPointAmount(
+            xyk.calculate_liquidity_in(
+              assetAReserve.balance.toFixed(),
+              assetBReserve.balance.toFixed(),
+              getFixedPointAmount(
+                assetABalance.balance,
+                formAssets.assetA.decimals.toString(),
+              ).toFixed(),
+            ),
+            formAssets.assetB.decimals.toString(),
+          ).toFixed(0)
+        : "0",
+    ),
+  )
+
+  const balanceBInfo = useMaxBalance(
+    formAssets.assetB.id,
+    api.tx.xyk.addLiquidity(
+      formAssets.assetA.id,
+      formAssets.assetB.id,
+      assetABalance?.balance.toFixed() ?? "0",
+      assetAReserve && assetBReserve && assetBBalance
+        ? getFloatingPointAmount(
+            xyk.calculate_liquidity_in(
+              assetBReserve.balance.toFixed(),
+              assetAReserve.balance.toFixed(),
+              getFixedPointAmount(
+                assetBBalance.balance,
+                formAssets.assetB.decimals.toString(),
+              ).toFixed(),
+            ),
+            formAssets.assetA.decimals.toString(),
+          ).toFixed(0)
+        : "0",
+    ),
+  )
 
   const onSubmit = async () => {
     const inputData = {
@@ -307,6 +351,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
               }}
               asset={assetA.id}
               error={error?.message}
+              balanceMax={balanceAInfo.maxBalance}
             />
           )}
         />
@@ -358,6 +403,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
               }}
               asset={assetB.id}
               error={error?.message}
+              balanceMax={balanceBInfo.maxBalance}
             />
           )}
         />

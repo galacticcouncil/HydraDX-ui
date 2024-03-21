@@ -46,7 +46,6 @@ export const ReviewTransactionForm: FC<Props> = (props) => {
     xcallMeta: props.xcallMeta,
     tx: props.tx,
     feePaymentId: props.overrides?.currencyId,
-    fee: props.overrides?.fee,
   })
 
   const {
@@ -64,7 +63,7 @@ export const ReviewTransactionForm: FC<Props> = (props) => {
     openEditFeePaymentAssetModal,
     editFeePaymentAssetModal,
     isOpenEditFeePaymentAssetModal,
-  } = useEditFeePaymentAsset(acceptedFeePaymentAssets, feePaymentMeta?.id)
+  } = useEditFeePaymentAsset(acceptedFeePaymentAssets, tx, feePaymentMeta?.id)
 
   const { wallet } = useWallet()
 

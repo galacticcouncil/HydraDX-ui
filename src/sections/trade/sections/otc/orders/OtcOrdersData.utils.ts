@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import { useOrdersData, useOrdersState, getOrderStateValue } from "api/otc"
 import BN from "bignumber.js"
 import { useAssetPrices } from "utils/displayAsset"
-import { calculateDiffToAvg, calculateDiffToRef } from "@galacticcouncil/sdk"
+import { calculateDiffToRef } from "@galacticcouncil/sdk"
 
 export const useOrdersTableData = () => {
   const treasuryAddr = import.meta.env.VITE_TRSRY_ADDR

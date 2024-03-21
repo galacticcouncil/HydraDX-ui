@@ -4,7 +4,6 @@ import { SubmittableExtrinsic } from "@polkadot/api/promise/types"
 import { ISubmittableResult } from "@polkadot/types/types"
 import { v4 as uuid } from "uuid"
 import { ReactElement } from "react"
-import BigNumber from "bignumber.js"
 import { StepProps } from "components/Stepper/Stepper"
 import { XCall } from "@galacticcouncil/xcm-sdk"
 
@@ -28,7 +27,6 @@ export interface TransactionInput {
   xcall?: XCall
   xcallMeta?: Record<string, string>
   overrides?: {
-    fee: BigNumber
     currencyId?: string
   }
 }

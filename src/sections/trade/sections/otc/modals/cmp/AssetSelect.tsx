@@ -39,62 +39,6 @@ export const UigcButton = createComponent({
   react: React,
 })
 
-export function OrderAssetSelect(props: {
-  name: string
-  value: string
-  title?: string
-  asset?: string | u32
-  balance?: BN | undefined
-  onChange: (value: string) => void
-  onOpen: () => void
-  error?: string
-}) {
-  const { assets } = useRpcProvider()
-  const asset = props.asset
-    ? assets.getAsset(props.asset.toString())
-    : undefined
-
-  const assetBalance = props.balance
-  const assetDecimals = asset?.decimals
-
-  let blnc: string = ""
-  if (assetBalance && assetDecimals) {
-    blnc = assetBalance.shiftedBy(-1 * assetDecimals).toFixed()
-  }
-
-  return (
-    <UigcAssetTransfer
-      ref={(el) => {
-        if (!el) {
-          return
-        }
-
-        if (props.error) {
-          el.setAttribute("error", props.error)
-        } else {
-          el.removeAttribute("error")
-        }
-      }}
-      onAssetInputChange={(e) => props.onChange(e.detail.value)}
-      onAssetSelectorClick={props.onOpen}
-      id={props.name}
-      title={props.title}
-      asset={asset?.symbol}
-      unit={asset?.symbol}
-      amount={props.value}
-    >
-      <UigcAsset slot="asset" symbol={asset?.symbol}>
-        <UigcAssetId slot="icon" symbol={asset?.symbol} />
-      </UigcAsset>
-      <UigcAssetBalance
-        slot="balance"
-        balance={blnc}
-        onMaxClick={() => props.onChange(blnc)}
-      />
-    </UigcAssetTransfer>
-  )
-}
-
 export function OrderAssetPay(props: {
   name?: string
   title?: string

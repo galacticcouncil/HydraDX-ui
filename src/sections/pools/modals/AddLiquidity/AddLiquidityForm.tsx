@@ -22,6 +22,7 @@ import { useDebounce } from "react-use"
 import { useQueryClient } from "@tanstack/react-query"
 import { QUERY_KEYS } from "utils/queryKeys"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { useMaxBalance } from "api/balances"
 
 type Props = {
   assetId: string
@@ -71,13 +72,21 @@ export const AddLiquidityForm = ({
     decimals: assetMeta.decimals,
   })
 
+  const balanceInfo = useMaxBalance(
+    assetId,
+    api.tx.omnipool.addLiquidity(
+      assetId,
+      assetBalance?.balance.toFixed() ?? "0",
+    ),
+  )
+
   const onSubmit = async (values: FormValues<typeof form>) => {
     if (assetMeta.decimals == null) throw new Error("Missing asset meta")
 
     const amount = getFixedPointAmount(
       values.amount,
       assetMeta.decimals,
-    ).toString()
+    ).toFixed(0)
 
     return await createTransaction(
       { tx: api.tx.omnipool.addLiquidity(assetId, amount) },
@@ -208,6 +217,7 @@ export const AddLiquidityForm = ({
               name={name}
               value={value}
               onBlur={setAssetValue}
+              balanceMax={balanceInfo.maxBalance}
               onChange={onChange}
               asset={assetId}
               error={error?.message}

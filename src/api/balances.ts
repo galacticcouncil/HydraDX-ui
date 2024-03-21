@@ -1,5 +1,5 @@
 import { NATIVE_ASSET_ID } from "utils/api"
-
+import { SubmittableExtrinsic } from "@polkadot/api/promise/types"
 import BigNumber from "bignumber.js"
 import { ApiPromise } from "@polkadot/api"
 import { useQueries, useQuery } from "@tanstack/react-query"
@@ -9,6 +9,14 @@ import { AccountId32 } from "@polkadot/types/interfaces"
 import { Maybe, undefinedNoop } from "utils/helpers"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useRpcProvider } from "providers/rpcProvider"
+import { useAcceptedCurrencies, useAccountCurrency } from "./payments"
+import { useSpotPrice } from "./spotPrice"
+import { usePaymentInfo } from "./transaction"
+import { BN_0, BN_1 } from "utils/constants"
+import BN from "bignumber.js"
+import { useOraclePrice } from "./farms"
+
+const EDFactor = 0.5 //50%
 
 export function calculateFreeBalance(free: BigNumber, frozen: BigNumber) {
   return free.minus(frozen)
@@ -159,3 +167,78 @@ export const getTokenLock =
       type: lock.id.toString(),
     }))
   }
+
+/**
+ * Used for calculations max transfarable values
+ * @param   assetId  asset that max balance should be calculated for
+ * @param   extrinsic  based on which fee will be calculated. Should be passed with max value
+ */
+export const useMaxBalance = (
+  assetId: string,
+  extrinsic: SubmittableExtrinsic,
+) => {
+  const { assets } = useRpcProvider()
+  const { account } = useAccount()
+
+  const accountCurrency = useAccountCurrency(account?.address)
+  const paymentInfo = usePaymentInfo(extrinsic)
+  const balanceQuery = useTokenBalance(assetId, account?.address)
+  const oraclePrice = useOraclePrice("1", assetId)
+  const isOraclePriceNone = oraclePrice.data?.isNone
+
+  const currency = useAcceptedCurrencies([
+    isOraclePriceNone ? assetId : undefined,
+  ])
+  const assetCurrency = currency?.[0].data?.data
+
+  const balance = balanceQuery.data?.balance ?? BN_0
+
+  const assetMeta = assets.getAsset(assetId)
+
+  const currencyMeta = accountCurrency.data
+    ? assets.getAsset(accountCurrency.data)
+    : undefined
+
+  const isPaymentAsset = accountCurrency.data === assetId
+
+  const spotPriceQuery = useSpotPrice(assets.native.id, currencyMeta?.id)
+
+  let spotPrice: BN
+
+  if (assetCurrency) {
+    spotPrice = BN_1.shiftedBy(assets.native.decimals)
+      .times(assetCurrency.toString())
+      .shiftedBy(-18)
+      .shiftedBy(-assetMeta.decimals)
+  } else {
+    spotPrice = spotPriceQuery.data?.spotPrice ?? BN_1
+  }
+
+  const nativeFee = paymentInfo.data?.partialFee.toBigNumber()
+
+  const fee = nativeFee
+    ? currencyMeta?.id === assets.native.id
+      ? nativeFee
+      : nativeFee
+          .shiftedBy(-assets.native.decimals)
+          .times(spotPrice)
+          .shiftedBy(currencyMeta?.decimals ?? 0)
+          .toFixed()
+    : undefined
+
+  const existentialDeposit = assetMeta.existentialDeposit.times(EDFactor)
+
+  const maxBalance = isPaymentAsset
+    ? balance.minus(fee ?? 0).minus(existentialDeposit)
+    : balance
+
+  return {
+    isLoading:
+      accountCurrency.isInitialLoading ||
+      paymentInfo.isInitialLoading ||
+      balanceQuery.isInitialLoading,
+    balance: balance,
+    maxBalance: BN.max(BN_0, maxBalance.toFixed(0)),
+    fee,
+  }
+}

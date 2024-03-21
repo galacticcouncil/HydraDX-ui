@@ -13,7 +13,7 @@ import { PoolAddLiquidityInformationCard } from "sections/pools/modals/AddLiquid
 import { useStablepoolShares } from "./AddStablepoolLiquidity.utils"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
 import { useDisplayPrice } from "utils/displayAsset"
-import { useTokenBalance } from "api/balances"
+import { useMaxBalance, useTokenBalance } from "api/balances"
 import { positive, validNumber } from "utils/validators"
 import { ISubmittableResult } from "@polkadot/types/types"
 import { TAsset } from "api/assetDetails"
@@ -61,6 +61,16 @@ export const AddStablepoolLiquidity = ({
 
   const { account } = useAccount()
   const walletBalance = useTokenBalance(asset.id, account?.address)
+
+  const balanceInfo = useMaxBalance(
+    asset.id,
+    api.tx.stableswap.addLiquidity(poolId, [
+      {
+        assetId: Number(asset.id),
+        amount: walletBalance.data?.balance.toString() ?? "0",
+      },
+    ]),
+  )
 
   const onSubmit = async (values: FormValues<typeof form>) => {
     if (asset.decimals == null) {
@@ -174,6 +184,7 @@ export const AddStablepoolLiquidity = ({
               asset={asset.id}
               error={error?.message}
               onAssetOpen={onAssetOpen}
+              balanceMax={balanceInfo.maxBalance}
             />
           )}
         />

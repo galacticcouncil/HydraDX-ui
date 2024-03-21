@@ -36,7 +36,7 @@ export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
       const assetReserve = omnipoolBalance.data?.balance.toString()
       const amount = BigNumber(assetValue)
         .multipliedBy(BN_10.pow(assetMeta.decimals))
-        .toString()
+        .toFixed(0)
 
       if (assetReserve && hubReserve && shares && amount) {
         return calculate_shares(

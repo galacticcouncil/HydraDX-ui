@@ -8,7 +8,7 @@ import DollarIcon from "assets/icons/DollarIcon.svg?react"
 import { ButtonTransparent } from "components/Button/Button"
 import { Dropdown, TDropdownItem } from "components/Dropdown/Dropdown"
 import { TableAction } from "components/Table/Table"
-import { Trans, useTranslation } from "react-i18next"
+import { useTranslation } from "react-i18next"
 import { theme } from "theme"
 import { isNotNil } from "utils/helpers"
 import { useSetAsFeePayment } from "api/payments"
@@ -52,45 +52,7 @@ export const WalletAssetsTableActions = (props: Props) => {
     isEvmAccount(account?.address) &&
     symbol !== NATIVE_EVM_ASSET_SYMBOL
 
-  const onFeePaymentSelect = () =>
-    setFeeAsPayment(id, {
-      onLoading: (
-        <Trans
-          t={t}
-          i18nKey="wallet.assets.table.actions.payment.toast.onLoading"
-          tOptions={{
-            asset: symbol,
-          }}
-        >
-          <span />
-          <span className="highlight" />
-        </Trans>
-      ),
-      onSuccess: (
-        <Trans
-          t={t}
-          i18nKey="wallet.assets.table.actions.payment.toast.onSuccess"
-          tOptions={{
-            asset: symbol,
-          }}
-        >
-          <span />
-          <span className="highlight" />
-        </Trans>
-      ),
-      onError: (
-        <Trans
-          t={t}
-          i18nKey="wallet.assets.table.actions.payment.toast.onLoading"
-          tOptions={{
-            asset: symbol,
-          }}
-        >
-          <span />
-          <span className="highlight" />
-        </Trans>
-      ),
-    })
+  const onFeePaymentSelect = () => setFeeAsPayment(id)
 
   const buttons: TDropdownItem[] = [
     {

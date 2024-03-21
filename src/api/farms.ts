@@ -432,6 +432,13 @@ const getOraclePrice =
       "TenMinutes",
     )
 
+    if (res.isNone)
+      return {
+        id: { rewardCurrency, incentivizedAsset },
+        oraclePrice: BN_0,
+        isNone: true,
+      }
+
     const [data] = res.unwrap()
     const n = data.price.n.toString()
     const d = data.price.d.toString()
@@ -446,6 +453,7 @@ const getOraclePrice =
     return {
       id: { rewardCurrency, incentivizedAsset },
       oraclePrice: BN(oraclePrice),
+      isNone: false,
     }
   }
 

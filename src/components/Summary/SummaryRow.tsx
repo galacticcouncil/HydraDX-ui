@@ -1,11 +1,13 @@
 import { Separator } from "components/Separator/Separator"
 import { Text } from "components/Typography/Text/Text"
 import { ReactNode } from "react"
+import Skeleton from "react-loading-skeleton"
 
 export type RowModel = {
   label: string
   content: ReactNode | string
   description?: string
+  isLoading?: boolean
 }
 
 type SummaryRowProps = RowModel & {
@@ -15,6 +17,7 @@ type SummaryRowProps = RowModel & {
 export const SummaryRow = ({
   label,
   content,
+  isLoading,
   description,
   withSeparator,
 }: SummaryRowProps) => {
@@ -30,7 +33,9 @@ export const SummaryRow = ({
           <Text color="basic400" fs={14} tAlign="left">
             {label}
           </Text>
-          {typeof content === "string" ? (
+          {isLoading ? (
+            <Skeleton width={40} height={16} />
+          ) : typeof content === "string" ? (
             <Text fs={14} color="white" tAlign="right">
               {content}
             </Text>

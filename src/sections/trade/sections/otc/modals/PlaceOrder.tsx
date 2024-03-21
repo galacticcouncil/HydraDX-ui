@@ -1,5 +1,5 @@
 import { u32 } from "@polkadot/types"
-import { useTokenBalance } from "api/balances"
+import { useMaxBalance } from "api/balances"
 import BigNumber from "bignumber.js"
 import { Button } from "components/Button/Button"
 import { Modal } from "components/Modal/Modal"
@@ -11,14 +11,13 @@ import { Controller, useForm } from "react-hook-form"
 import { Trans, useTranslation } from "react-i18next"
 import { AssetsModalContent } from "sections/assets/AssetsModal"
 import { getFixedPointAmount } from "utils/balance"
-import { BN_10 } from "utils/constants"
+import { BN_1, BN_10 } from "utils/constants"
 import { FormValues } from "utils/helpers"
 import { useStore } from "state/store"
-import { OrderAssetSelect } from "./cmp/AssetSelect"
 import { OrderAssetRate } from "./cmp/AssetXRate"
 import { PartialOrderToggle } from "./cmp/PartialOrderToggle"
 import { useRpcProvider } from "providers/rpcProvider"
-import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { WalletTransferAssetSelect } from "sections/wallet/transfer/WalletTransferAssetSelect"
 
 type PlaceOrderProps = {
   assetOut?: u32 | string
@@ -36,7 +35,6 @@ export const PlaceOrder = ({
   onSuccess,
 }: PlaceOrderProps) => {
   const { t } = useTranslation()
-  const { account } = useAccount()
 
   const [aOut, setAOut] = useState(assetOut)
   const [aIn, setAIn] = useState(assetIn)
@@ -53,9 +51,7 @@ export const PlaceOrder = ({
 
   const { api, assets } = useRpcProvider()
   const assetOutMeta = aOut ? assets.getAsset(aOut.toString()) : undefined
-  const assetOutBalance = useTokenBalance(aOut, account?.address)
   const assetInMeta = aIn ? assets.getAsset(aIn.toString()) : undefined
-  const assetInBalance = useTokenBalance(aIn, account?.address)
 
   useEffect(() => {
     form.trigger()
@@ -93,6 +89,16 @@ export const PlaceOrder = ({
     }
     form.trigger()
   }
+
+  const extrinsic = api.tx.otc.placeOrder(
+    aIn ?? "",
+    aOut ?? "",
+    BN_1.shiftedBy(assetInMeta?.decimals ?? 12).toFixed(),
+    BN_1.shiftedBy(assetOutMeta?.decimals ?? 12).toFixed(),
+    true,
+  )
+  const balanceInfoIn = useMaxBalance(aIn?.toString() ?? "", extrinsic)
+  const balanceInfoOut = useMaxBalance(aOut?.toString() ?? "", extrinsic)
 
   const handleSubmit = async (values: FormValues<typeof form>) => {
     if (assetOutMeta?.decimals == null) throw new Error("Missing assetOut meta")
@@ -193,7 +199,7 @@ export const PlaceOrder = ({
                       required: true,
                       validate: {
                         maxBalance: (value) => {
-                          const balance = assetOutBalance.data?.balance
+                          const balance = balanceInfoOut.balance
                           const decimals = assetOutMeta?.decimals
                           if (
                             balance &&
@@ -216,18 +222,18 @@ export const PlaceOrder = ({
                       field: { name, value, onChange },
                       fieldState: { error },
                     }) => (
-                      <OrderAssetSelect
+                      <WalletTransferAssetSelect
                         title={t("otc.order.place.offerTitle")}
                         name={name}
                         value={value}
+                        balanceMax={balanceInfoOut.maxBalance}
                         onChange={(e) => {
                           onChange(e)
                           handleAmountChange()
                         }}
-                        onOpen={() => paginateTo(2)}
-                        asset={aOut}
-                        balance={assetOutBalance.data?.balance}
+                        asset={aOut ?? ""}
                         error={error?.message}
+                        onAssetOpen={() => paginateTo(2)}
                       />
                     )}
                   />
@@ -266,17 +272,17 @@ export const PlaceOrder = ({
                       field: { name, value, onChange },
                       fieldState: { error },
                     }) => (
-                      <OrderAssetSelect
+                      <WalletTransferAssetSelect
                         title={t("otc.order.place.getTitle")}
                         name={name}
                         value={value}
+                        balanceMax={balanceInfoIn.maxBalance}
                         onChange={(e) => {
                           onChange(e)
                           handleAmountChange()
                         }}
-                        onOpen={() => paginateTo(1)}
-                        asset={aIn}
-                        balance={assetInBalance.data?.balance}
+                        onAssetOpen={() => paginateTo(1)}
+                        asset={aIn ?? ""}
                         error={error?.message}
                       />
                     )}

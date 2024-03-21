@@ -21,7 +21,7 @@ export const SContainer = styled.div<{
       & > div {
         text-align: center;
 
-        &:not(:nth-child(${cols}n)) {
+        &:not(:nth-of-type(${cols}n)) {
           border-right: 1px solid rgba(255, 255, 255, 0.12);
         }
 
