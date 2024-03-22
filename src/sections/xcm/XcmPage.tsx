@@ -25,6 +25,7 @@ import {
   getXCall,
 } from "sections/xcm/XcmPage.utils"
 import { PageSwitch } from "sections/xcm/components/PageSwitch"
+import { genesisHashToChain } from "utils/helpers"
 
 type WalletChangeDetail = {
   srcChain: string
@@ -128,6 +129,7 @@ export function XcmPage() {
 
   const assetDefault =
     search.success && search.data.asset ? search.data.asset : undefined
+  const ss58Prefix = genesisHashToChain(account?.genesisHash).prefix
 
   return (
     <Page>
@@ -145,6 +147,7 @@ export function XcmPage() {
           stableCoinAssetId={stableCoinAssetId}
           onXcmNew={handleSubmit}
           onWalletChange={handleWalletChange}
+          ss58Prefix={ss58Prefix}
         />
       </SContainer>
     </Page>
