@@ -1,4 +1,4 @@
-import { FC } from "react"
+import { FC, ReactNode } from "react"
 import { SSeparator } from "./Separator.styled"
 import { theme } from "theme"
 
@@ -7,6 +7,7 @@ export type SeparatorProps = {
   color?: keyof typeof theme.colors
   opacity?: number
   size?: number
+  children?: ReactNode
 }
 
 export const Separator: FC<SeparatorProps> = ({

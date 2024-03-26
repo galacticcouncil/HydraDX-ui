@@ -301,10 +301,16 @@ export const QUERY_KEYS = {
   maxAddLiquidityLimit: ["maxAddLiquidityLimit"],
   coingeckoUsd: ["coingeckoUsd"],
   polStats: ["polStats"],
-  referendums: (accountAddress?: string) => [
+  referendums: (accountAddress?: string, type?: "ongoing" | "finished") => [
     QUERY_KEY_PREFIX,
-    accountAddress,
     "referendums",
+    accountAddress,
+    type,
+  ],
+  referendumVotes: (accountAddress?: string) => [
+    QUERY_KEY_PREFIX,
+    "referendumVotes",
+    accountAddress,
   ],
   referendumInfo: (id: string) => [QUERY_KEY_PREFIX, id, "referendumInfo"],
   stats: (

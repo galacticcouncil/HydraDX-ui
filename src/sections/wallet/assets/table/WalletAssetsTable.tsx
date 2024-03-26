@@ -86,7 +86,7 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
         <Table css={{ tableLayout: "fixed" }}>
           <TableHeaderContent>
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
+              <TableRow key={hg.id} header>
                 {hg.headers.map((header) => (
                   <TableSortHeader
                     key={header.id}
@@ -120,7 +120,7 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableData key={cell.id}>
+                      <TableData key={cell.id} isExpanded={row.getIsSelected()}>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),
@@ -129,10 +129,11 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
                     ))}
                   </TableRow>
                   {row.getIsSelected() && (
-                    <TableRow>
+                    <TableRow header>
                       <TableData
                         colSpan={table.getAllColumns().length}
                         isExpanded
+                        sub
                       >
                         <WalletAssetsTableDetails {...row.original} />
                       </TableData>
