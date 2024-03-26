@@ -3,12 +3,43 @@ import {
   ReactLocation,
   Router,
 } from "@tanstack/react-location"
-import { AppProviders } from "components/AppProviders/AppProviders"
-import { useEffect } from "react"
+import { lazy, Suspense, useEffect } from "react"
 import { routes } from "./routes"
+import HydraLogoFull from "assets/icons/HydraLogoFull.svg?react"
+import { Spinner } from "components/Spinner/Spinner"
+import { Page } from "components/Layout/Page/Page"
+
+import "unfonts.css"
+
+const AppProviders = lazy(async () => ({
+  default: (await import("components/AppProviders/AppProviders")).AppProviders,
+}))
 
 const history = createBrowserHistory()
 const location = new ReactLocation({ history })
+
+const HydraSplash = () => {
+  return (
+    <div
+      sx={{
+        flex: "column",
+        justify: "center",
+        align: "center",
+      }}
+      css={{
+        transform: "scale(2)",
+        position: "fixed",
+        inset: "0",
+        height: "100vh",
+        width: "100vw",
+        zIndex: 1000,
+      }}
+    >
+      <HydraLogoFull />
+      <Spinner />
+    </div>
+  )
+}
 
 export const App = () => {
   useEffect(() => {
@@ -29,8 +60,12 @@ export const App = () => {
   }, [])
 
   return (
-    <AppProviders>
-      <Router location={location} routes={routes} />
-    </AppProviders>
+    <Router location={location} routes={routes}>
+      <Suspense fallback={<HydraSplash />}>
+        <AppProviders>
+          <Page />
+        </AppProviders>
+      </Suspense>
+    </Router>
   )
 }

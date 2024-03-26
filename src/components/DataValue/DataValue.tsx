@@ -47,7 +47,7 @@ const VALUE_SIZES: Record<DataValueSize, TextProps> = {
 
 export type DataValueProps = {
   label: ReactNode
-  children: ReactNode
+  children?: ReactNode
   className?: string
   tooltip?: string
   size?: DataValueSize

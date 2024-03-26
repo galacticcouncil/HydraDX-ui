@@ -1,4 +1,3 @@
-import { Page } from "components/Layout/Page/Page"
 import { SContainer } from "./XcmPage.styled"
 
 import type { TxInfo } from "@galacticcouncil/apps"
@@ -130,7 +129,7 @@ export function XcmPage() {
     search.success && search.data.asset ? search.data.asset : undefined
 
   return (
-    <Page>
+    <>
       <PageSwitch />
       <SContainer>
         <XcmApp
@@ -147,6 +146,6 @@ export function XcmPage() {
           onWalletChange={handleWalletChange}
         />
       </SContainer>
-    </Page>
+    </>
   )
 }

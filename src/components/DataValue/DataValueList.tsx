@@ -2,6 +2,7 @@ import { ResponsiveValue } from "utils/responsive"
 import { SDataValueList } from "./DataValueList.styled"
 
 export type DataValueListProps = {
+  className?: string
   separated?: boolean
   gap?: ResponsiveValue<number>
   children: React.ReactNode

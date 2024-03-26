@@ -117,7 +117,8 @@
     "lint": "run-p -lsc 'lint:*'",
     "lint:ts": "tsc --noEmit -p tsconfig.json",
     "lint:eslint": "eslint src",
-    "fix": "eslint --fix src"
+    "fix": "eslint --fix src",
+    "analyze": "npx vite-bundle-visualizer -o ./build/stats.html"
   },
   "browserslist": {
     "production": [
@@ -164,6 +165,7 @@
     "prop-types": "^15.8.1",
     "storybook": "^7.1.1",
     "ts-node": "^10.9.1",
+    "unplugin-fonts": "^1.1.1",
     "vite": "^4.4.6",
     "vite-plugin-svgr": "^4.0.0",
     "vite-tsconfig-paths": "^4.2.1",

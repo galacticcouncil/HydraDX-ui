@@ -1,5 +1,3 @@
-import { useLbpPool } from "api/bonds"
-import { useBestNumber } from "api/chain"
 import IconBonds from "assets/icons/Bonds.svg?react"
 import IconDCA from "assets/icons/navigation/IconDCA.svg?react"
 import IconOTC from "assets/icons/navigation/IconOTC.svg?react"
@@ -10,54 +8,16 @@ import {
   SubNavigation,
   SubNavigationTabLink,
 } from "components/Layout/SubNavigation/SubNavigation"
-import { useRpcProvider } from "providers/rpcProvider"
-import { useMemo } from "react"
+import { lazy, Suspense } from "react"
 import { useTranslation } from "react-i18next"
 import { LINKS } from "utils/navigation"
 
-export const BondsTabLink = () => {
-  const { t } = useTranslation()
-  const {
-    assets: { bonds },
-  } = useRpcProvider()
-
-  const lbpPool = useLbpPool()
-  const bestNumber = useBestNumber()
-
-  const currentBlockNumber = bestNumber.data?.relaychainBlockNumber.toNumber()
-
-  const isActive = useMemo(() => {
-    if (bonds) {
-      return bonds.some((bond) => {
-        const pool = lbpPool.data?.find((pool) =>
-          pool.assets.some((assetId: number) => assetId === Number(bond.id)),
-        )
-
-        if (currentBlockNumber && pool && pool.start && pool.end) {
-          return (
-            currentBlockNumber > Number(pool.start) &&
-            currentBlockNumber < Number(pool.end)
-          )
-        }
-
-        return false
-      })
-    }
-  }, [bonds, currentBlockNumber, lbpPool.data])
-
-  return (
-    <SubNavigationTabLink
-      to={LINKS.bonds}
-      icon={<IconBonds />}
-      label={t("header.trade.bonds.title")}
-      badge={isActive ? t("header.trade.active") : ""}
-    />
-  )
-}
+const BondsTabLink = lazy(async () => ({
+  default: (await import("./BondsTabLink")).BondsTabLink,
+}))
 
 export const Navigation = () => {
   const { t } = useTranslation()
-  const { isLoaded } = useRpcProvider()
   return (
     <SubNavigation>
       <SubNavigationTabLink
@@ -80,15 +40,17 @@ export const Navigation = () => {
         icon={<IconDCA />}
         label={t("header.trade.dca.title")}
       />
-      {isLoaded ? (
+      <Suspense
+        fallback={
+          <SubNavigationTabLink
+            to={LINKS.bonds}
+            icon={<IconBonds />}
+            label={t("header.trade.bonds.title")}
+          />
+        }
+      >
         <BondsTabLink />
-      ) : (
-        <SubNavigationTabLink
-          to={LINKS.bonds}
-          icon={<IconBonds />}
-          label={t("header.trade.bonds.title")}
-        />
-      )}
+      </Suspense>
     </SubNavigation>
   )
 }

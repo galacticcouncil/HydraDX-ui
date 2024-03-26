@@ -26,7 +26,7 @@ const Pool = ({ pool }: { pool: TPool }) => {
   if (poolDetails.isInitialLoading) return <PoolSkeleton />
 
   return (
-    <SPoolContainer>
+    <SPoolContainer sx={{ mt: [-22, "inherit"] }}>
       <PoolDetails pool={{ ...pool, ...poolDetails.data }} />
       <MyPositions pool={{ ...pool, ...poolDetails.data }} />
       <AvailableFarms pool={pool} />
@@ -40,7 +40,7 @@ const XYKPool = ({ pool }: { pool: TXYKPool }) => {
   if (poolDetails.isInitialLoading) return <PoolSkeleton />
 
   return (
-    <SPoolContainer>
+    <SPoolContainer sx={{ mt: [-22, "inherit"] }}>
       <PoolDetails pool={{ ...pool, ...poolDetails.data }} />
       <MyXYKPositions pool={{ ...pool }} />
     </SPoolContainer>

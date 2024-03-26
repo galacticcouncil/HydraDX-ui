@@ -13,7 +13,6 @@ import { useTranslation } from "react-i18next"
 import { useMedia } from "react-use"
 import { theme } from "theme"
 import { TabItemWithSubItems, resetSearchParams } from "utils/navigation"
-import { MobileNavBarItem } from "components/Layout/Header/MobileNavBar/MobileNavBar"
 import {
   SArrow,
   SItem,
@@ -21,6 +20,7 @@ import {
   SSubMenuContainer,
   SSubMenuItem,
 } from "./HeaderMenu.styled"
+import { MobileNavBarItem } from "components/Layout/Header/MobileNavBar/MobileNavBarItem"
 
 type Props = { item: TabItemWithSubItems }
 

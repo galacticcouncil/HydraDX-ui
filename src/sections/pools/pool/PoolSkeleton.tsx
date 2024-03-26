@@ -16,7 +16,7 @@ export const PoolSkeleton = () => {
   const { t } = useTranslation()
 
   return (
-    <SPoolContainer>
+    <SPoolContainer sx={{ mt: [-22, "inherit"] }}>
       <div sx={{ flex: "column", gap: 20, p: ["30px 12px", 30] }}>
         <GradientText
           gradient="pinkLightBlue"

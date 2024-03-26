@@ -1,22 +1,20 @@
-import { theme } from "theme"
-import { LINKS } from "utils/navigation"
-import UserIcon from "assets/icons/UserIcon.svg?react"
+import { useLocation } from "@tanstack/react-location"
 import AllPools from "assets/icons/AllPools.svg?react"
-import OmniStablepools from "assets/icons/Omnipool&Stablepool.svg?react"
 import IsolatedPools from "assets/icons/IsolatedPools.svg?react"
-import { SSeparator } from "components/Separator/Separator.styled"
-import { useAccountOmnipoolPositions } from "sections/pools/PoolsPage.utils"
-import { useRpcProvider } from "providers/rpcProvider"
-import { useTranslation } from "react-i18next"
-import { useTokensBalances } from "api/balances"
-import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import OmniStablepools from "assets/icons/Omnipool&Stablepool.svg?react"
+import { BackSubHeader } from "components/Layout/Header/BackSubHeader/BackSubHeader"
 import {
   SubNavigation,
   SubNavigationTabLink,
 } from "components/Layout/SubNavigation/SubNavigation"
-import { BackSubHeader } from "components/Layout/Header/BackSubHeader/BackSubHeader"
-import { useLocation } from "@tanstack/react-location"
 import { t } from "i18next"
+import { Suspense, lazy } from "react"
+import { useTranslation } from "react-i18next"
+import { LINKS } from "utils/navigation"
+
+const MyLiquidityTabLink = lazy(async () => ({
+  default: (await import("./MyLiquidityTabLink")).MyLiquidityTabLink,
+}))
 
 const routeMap = new Map([
   [LINKS.allPools, t("liquidity.navigation.allPools")],
@@ -27,11 +25,12 @@ const routeMap = new Map([
 
 export const Navigation = () => {
   const { t } = useTranslation()
-  const { isLoaded } = useRpcProvider()
 
   return (
     <SubNavigation>
-      {isLoaded && <MyLiquidity />}
+      <Suspense>
+        <MyLiquidityTabLink />
+      </Suspense>
       <SubNavigationTabLink
         to={LINKS.allPools}
         label={t("liquidity.navigation.allPools")}
@@ -48,47 +47,6 @@ export const Navigation = () => {
         icon={<IsolatedPools width={15} height={15} />}
       />
     </SubNavigation>
-  )
-}
-
-const MyLiquidity = () => {
-  const { t } = useTranslation()
-  const { account } = useAccount()
-  const { assets } = useRpcProvider()
-  const accountPositions = useAccountOmnipoolPositions()
-
-  const shareTokensId = assets.shareTokens.map((shareToken) => shareToken.id)
-  const stableswapsId = assets.stableswap.map((shareToken) => shareToken.id)
-
-  const userPositions = useTokensBalances(
-    [...shareTokensId, ...stableswapsId],
-    account?.address,
-  )
-
-  const isOmnipoolPositions =
-    accountPositions.data?.miningNfts.length ||
-    accountPositions.data?.omnipoolNfts.length ||
-    userPositions.some((userPosition) => userPosition.data?.freeBalance.gt(0))
-
-  if (!isOmnipoolPositions) return null
-
-  return (
-    <>
-      <SubNavigationTabLink
-        to={LINKS.myLiquidity}
-        icon={
-          <UserIcon style={{ width: 14, height: 14, alignSelf: "center" }} />
-        }
-        label={t("liquidity.navigation.myLiquidity")}
-      />
-      <SSeparator
-        orientation="vertical"
-        sx={{ width: 1, height: "60%", flexShrink: ["0", "inherit"] }}
-        css={{
-          background: `rgba(${theme.rgbColors.white}, 0.12)`,
-        }}
-      />
-    </>
   )
 }
 

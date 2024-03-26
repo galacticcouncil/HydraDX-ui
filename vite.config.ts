@@ -6,6 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import fs from "fs/promises"
 import { resolve } from "node:path"
 import { exec } from "child_process"
+import Unfonts from "unplugin-fonts/vite"
 
 import { SEO_METADATA } from "./src/seo.ts"
 
@@ -15,6 +16,15 @@ export default defineConfig(({ mode }) => {
     build: {
       target: "esnext",
       outDir: "build",
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("src/assets")) {
+              return "assets"
+            }
+          },
+        },
+      },
     },
     optimizeDeps: {
       esbuildOptions: {
@@ -35,6 +45,30 @@ export default defineConfig(({ mode }) => {
       }),
       wasm(),
       svgr(),
+      Unfonts({
+        custom: {
+          display: "auto",
+          preload: true,
+          injectTo: "head-prepend",
+          families: [
+            {
+              name: "ChakraPetch",
+              local: "ChakraPetch",
+              src: "./src/assets/fonts/ChakraPetch/*.ttf",
+              transform(font) {
+                font.name = font.basename
+                font.local = font.basename
+                return font
+              },
+            },
+            {
+              name: "FontOver",
+              local: "FontOver",
+              src: "./src/assets/fonts/FontOver/FontOver.ttf",
+            },
+          ],
+        },
+      }),
       transformIndexHtml(),
     ],
   }
