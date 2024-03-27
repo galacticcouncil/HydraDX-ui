@@ -4,27 +4,24 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { safeConvertAddressSS58 } from "utils/formatting"
 import { SContainer, SHeader, SItems } from "./AddressBook.styled"
-import { useWalletAddresses } from "./AddressBook.utils"
+import { useAddressStore } from "./AddressBook.utils"
 import { AddressBookEmpty } from "./empty/AddressBookEmpty"
 import { AddressBookInput } from "./input/AddressBookInput"
 import { AddressBookItem } from "./item/AddressBookItem"
 import { safeConvertAddressH160 } from "utils/evm"
+import { arraySearch } from "utils/helpers"
 
 type Props = { onSelect: (address: string) => void }
 
 export const AddressBook = ({ onSelect }: Props) => {
   const { t } = useTranslation()
   const [search, setSearch] = useState("")
-  const addresses = useWalletAddresses()
+  const { addresses } = useAddressStore()
 
-  const items = useMemo(() => {
-    const str = search.trim().toLowerCase()
-    return addresses.data.filter((address) => {
-      const name = address.name.trim().toLowerCase()
-      const addr = address.address.trim().toLowerCase()
-      return name.includes(str) || addr.includes(str)
-    })
-  }, [addresses.data, search])
+  const items = useMemo(
+    () => (search ? arraySearch(addresses, search) : addresses),
+    [addresses, search],
+  )
 
   const isValidAddress =
     safeConvertAddressSS58(search, 0) !== null ||

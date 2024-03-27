@@ -2,15 +2,12 @@ import { decodeAddress, encodeAddress } from "@polkadot/util-crypto"
 import { useNavigate } from "@tanstack/react-location"
 import { getDelegates } from "api/proxies"
 import CrossIcon from "assets/icons/CrossIcon.svg?react"
-import { AddressInput } from "components/AddressInput/AddressInput"
-import { SErrorMessage } from "components/AssetInput/AssetInput.styled"
 import { Button } from "components/Button/Button"
 import { Spacer } from "components/Spacer/Spacer"
 import { Text } from "components/Typography/Text/Text"
 import { useRpcProvider } from "providers/rpcProvider"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, UseFormReturn } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { SContainer } from "sections/wallet/transfer/WalletTransferAccountInput.styled"
 import {
   CloseIcon,
   PasteAddressIcon,
@@ -26,26 +23,29 @@ import { HYDRA_ADDRESS_PREFIX, POLKADOT_APP_NAME } from "utils/api"
 import { H160, safeConvertAddressH160 } from "utils/evm"
 import { getAddressVariants, safeConvertAddressSS58 } from "utils/formatting"
 import { FormValues } from "utils/helpers"
+import { WalletTransferAccountInput } from "sections/wallet/transfer/WalletTransferAccountInput"
 
 type ExternalWalletConnectModalProps = {
+  form: UseFormReturn<{
+    address: string
+    delegates: boolean
+  }>
   onClose: () => void
   onSelect: () => void
+  onOpenAddressBook?: () => void
 }
 
 export const Web3ConnectExternalModal = ({
+  form,
   onClose,
   onSelect,
+  onOpenAddressBook,
 }: ExternalWalletConnectModalProps) => {
   const { api } = useRpcProvider()
   const { t } = useTranslation()
   const navigate = useNavigate()
 
   const { setAccount } = useWeb3ConnectStore()
-
-  const form = useForm<{
-    address: string
-    delegates: boolean
-  }>({})
 
   const { wallet: activeWallet } = useWallet()
   const externalWallet =
@@ -165,25 +165,20 @@ export const Web3ConnectExternalModal = ({
           )
 
           return (
-            <>
-              <SContainer error={!!error} sx={{ mt: 35 }}>
-                <AddressInput
-                  name={name}
-                  onChange={(value) => {
-                    onChange(value)
-                    form.clearErrors("delegates")
-                  }}
-                  value={value}
-                  placeholder={t(
-                    "walletConnect.externalWallet.modal.input.placeholder",
-                  )}
-                  rightIcon={rightIcon}
-                  css={{ width: "100%", height: 35, padding: "0 10px" }}
-                  error={error?.message}
-                />
-              </SContainer>
-              {error && <SErrorMessage>{error.message}</SErrorMessage>}
-            </>
+            <div sx={{ mt: 35 }}>
+              <WalletTransferAccountInput
+                label={t("walletConnect.externalWallet.modal.input.label")}
+                name={name}
+                value={value}
+                onChange={onChange}
+                placeholder={t(
+                  "walletConnect.externalWallet.modal.input.placeholder",
+                )}
+                rightIcon={rightIcon}
+                error={error?.message}
+                openAddressBook={onOpenAddressBook}
+              />
+            </div>
           )
         }}
       />

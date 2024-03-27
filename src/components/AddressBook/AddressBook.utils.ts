@@ -1,35 +1,11 @@
 import { getWalletBySource } from "@talismn/connect-wallets"
 import { useQuery } from "@tanstack/react-query"
-import { useMemo } from "react"
-import {
-  useAccount,
-  useWalletAccounts,
-} from "sections/web3-connect/Web3Connect.utils"
+import { safeConvertAddressH160 } from "utils/evm"
+import { safeConvertAddressSS58 } from "utils/formatting"
 import { QUERY_KEYS } from "utils/queryKeys"
+import { diffBy } from "utils/rx"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-
-export const useWalletAddresses = () => {
-  const { account } = useAccount()
-  const storageAddresses = useAddressStore()
-  const providerAddresses = useWalletAccounts(account?.provider ?? null)
-
-  const data = useMemo(() => {
-    if (!providerAddresses.data) return []
-
-    let addresses: Address[] = providerAddresses.data.map((pa) => {
-      const name = pa.name ?? ""
-      const address = pa?.displayAddress || pa.address
-      const provider = account?.provider ?? "external"
-      return { name, address, provider }
-    })
-    addresses = [...addresses, ...storageAddresses.addresses]
-
-    return addresses
-  }, [providerAddresses.data, storageAddresses.addresses, account?.provider])
-
-  return { data, isLoading: providerAddresses.isLoading }
-}
 
 export const useProviderAccounts = (
   provider: string | undefined,
@@ -53,7 +29,7 @@ export type Address = {
 }
 export type AddressStore = {
   addresses: Address[]
-  add: (address: Address) => void
+  add: (address: Address | Address[]) => void
   edit: (address: Address) => void
   remove: (id: string) => void
 }
@@ -64,12 +40,30 @@ export const useAddressStore = create<AddressStore>()(
       addresses: [],
 
       add: (address) =>
-        set((state) => ({
-          addresses: [
-            ...state.addresses,
-            { ...address, id: crypto.randomUUID() },
-          ],
-        })),
+        set((state) => {
+          const addresses = Array.isArray(address) ? address : [address]
+
+          const uniqueAddresses = diffBy(
+            ({ address }) =>
+              safeConvertAddressH160(address) ||
+              safeConvertAddressSS58(address, 0) ||
+              "",
+            addresses,
+            state.addresses,
+          )
+
+          if (!uniqueAddresses.length) return { addresses: state.addresses }
+
+          return {
+            addresses: [
+              ...state.addresses,
+              ...uniqueAddresses.map((address) => ({
+                ...address,
+                id: crypto.randomUUID(),
+              })),
+            ],
+          }
+        }),
 
       edit: (address) =>
         set((state) => ({

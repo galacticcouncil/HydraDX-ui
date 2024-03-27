@@ -3,7 +3,8 @@ import styled from "@emotion/styled"
 import { ButtonTransparent } from "components/Button/Button"
 import { theme } from "theme"
 
-export const SContainer = styled.div<{ error?: boolean; disabled?: boolean }>`
+export const SContainer = styled.label<{ error?: boolean; disabled?: boolean }>`
+  display: block;
   position: relative;
   padding: 18px;
 

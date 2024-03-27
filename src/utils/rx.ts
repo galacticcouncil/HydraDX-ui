@@ -54,3 +54,24 @@ export function uniqBy<T, K>(keyFn: (item: T) => K, list: T[]): T[] {
 
   return result
 }
+
+export function diffBy<T>(
+  diffFn: (item: T) => string,
+  arr1: T[],
+  arr2: T[],
+): T[] {
+  const seen = new Set<string>()
+  const result: T[] = []
+
+  for (const item of arr2) {
+    seen.add(diffFn(item))
+  }
+
+  for (const item of arr1) {
+    if (!seen.has(diffFn(item))) {
+      result.push(item)
+    }
+  }
+
+  return result
+}

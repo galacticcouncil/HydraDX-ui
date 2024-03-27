@@ -39,7 +39,11 @@ export const WalletTransferAccountInput = (props: Props) => {
 
   return (
     <>
-      <SContainer disabled={isDisabled} id={props.name} error={!!props.error}>
+      <SContainer
+        disabled={isDisabled}
+        htmlFor={props.name}
+        error={!!props.error}
+      >
         <Text fs={12} color="basic500" tTransform={"uppercase"} sx={{ mb: 8 }}>
           {props.label}
         </Text>

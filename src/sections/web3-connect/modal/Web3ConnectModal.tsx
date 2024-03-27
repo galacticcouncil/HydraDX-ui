@@ -15,6 +15,7 @@ enum ModalPage {
   External,
   AccountSelect,
   Error,
+  AddressBook,
 }
 
 export const Web3ConnectModal = () => {
@@ -77,10 +78,14 @@ export const Web3ConnectModal = () => {
       <Web3ConnectContent
         page={page}
         direction={direction}
-        onBack={() => paginateTo(0)}
+        onBack={() =>
+          paginateTo(page === ModalPage.AddressBook ? ModalPage.External : 0)
+        }
         onClose={toggle}
         onSelect={() => paginateTo(ModalPage.AccountSelect)}
         onRetry={() => paginateTo(ModalPage.ProviderSelect)}
+        onOpenAddressBook={() => paginateTo(ModalPage.AddressBook)}
+        onCloseAddressBook={() => paginateTo(ModalPage.External)}
       />
       {showFooter && (
         <Web3ConnectFooter

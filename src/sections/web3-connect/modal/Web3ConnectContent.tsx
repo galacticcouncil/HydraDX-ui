@@ -11,6 +11,8 @@ import { Web3ConnectProviderPending } from "sections/web3-connect/providers/Web3
 import { Web3ConnectProviders } from "sections/web3-connect/providers/Web3ConnectProviders"
 import { useWeb3ConnectStore } from "sections/web3-connect/store/useWeb3ConnectStore"
 import { chainsMap } from "@galacticcouncil/xcm-cfg"
+import { AddressBook } from "components/AddressBook/AddressBook"
+import { useForm } from "react-hook-form"
 
 type Props = {
   page: number
@@ -19,11 +21,15 @@ type Props = {
   onBack: () => void
   onSelect: () => void
   onRetry: () => void
+  onOpenAddressBook: () => void
+  onCloseAddressBook: () => void
 }
 
 export const Web3ConnectContent: React.FC<Props> = ({
   onSelect,
   onRetry,
+  onOpenAddressBook,
+  onCloseAddressBook,
   ...props
 }) => {
   const { t } = useTranslation()
@@ -43,6 +49,11 @@ export const Web3ConnectContent: React.FC<Props> = ({
   const isConnecting = isLoading || status === "pending"
 
   const chain = meta?.chain ? chainsMap.get(meta?.chain) : null
+
+  const externalWalletForm = useForm<{
+    address: string
+    delegates: boolean
+  }>()
 
   return (
     <ModalContents
@@ -66,8 +77,10 @@ export const Web3ConnectContent: React.FC<Props> = ({
           title: t("walletConnect.provider.title"),
           content: (
             <Web3ConnectExternalModal
+              form={externalWalletForm}
               onClose={props.onClose}
               onSelect={onSelect}
+              onOpenAddressBook={onOpenAddressBook}
             />
           ),
         },
@@ -89,6 +102,17 @@ export const Web3ConnectContent: React.FC<Props> = ({
               onRetry={() => {
                 disconnect()
                 onRetry?.()
+              }}
+            />
+          ),
+        },
+        {
+          title: t("addressbook.title"),
+          content: (
+            <AddressBook
+              onSelect={(address) => {
+                externalWalletForm.setValue("address", address)
+                onCloseAddressBook?.()
               }}
             />
           ),

@@ -26,6 +26,7 @@ import { isMetaMask, requestNetworkSwitch } from "utils/metamask"
 import { genesisHashToChain } from "utils/helpers"
 import { WalletAccount } from "sections/web3-connect/types"
 import { EVM_PROVIDERS } from "sections/web3-connect/constants/providers"
+import { useAddressStore } from "components/AddressBook/AddressBook.utils"
 export type { WalletProvider } from "./wallets"
 export { WalletProviderType, getSupportedWallets }
 
@@ -95,22 +96,7 @@ export const useWalletAccounts = (
       select: (data) => {
         if (!data) return []
 
-        return data.map(({ address, name, wallet, genesisHash }) => {
-          const isEvm = isEvmAddress(address)
-
-          const chainInfo = genesisHashToChain(genesisHash)
-
-          return {
-            address: isEvm ? new H160(address).toAccount() : address,
-            displayAddress: isEvm
-              ? address
-              : safeConvertAddressSS58(address, chainInfo.prefix) || address,
-            genesisHash,
-            name: name ?? "",
-            provider: wallet?.extensionName as WalletProviderType,
-            isExternalWalletConnected: wallet instanceof ExternalWallet,
-          }
-        })
+        return data.map(mapWalletAccount)
       },
       ...options,
     },
@@ -218,6 +204,7 @@ export const useEnableWallet = (
   options?: MutationObserverOptions,
 ) => {
   const { wallet } = getWalletProviderByType(provider)
+  const { add: addToAddressBook } = useAddressStore()
   const meta = useWeb3ConnectStore(useShallow((state) => state.meta))
   const { mutate: enable, ...mutation } = useMutation(
     async () => {
@@ -228,10 +215,27 @@ export const useEnableWallet = (
           chain: meta?.chain,
         })
       }
+
+      return wallet?.getAccounts()
     },
     {
       retry: false,
       ...options,
+      onSuccess: (...args) => {
+        const [data] = args
+        if (data?.length) {
+          const addresses = data.map((account) => {
+            const { displayAddress, name, provider } = mapWalletAccount(account)
+            return {
+              address: displayAddress,
+              name,
+              provider,
+            }
+          })
+          addToAddressBook(addresses)
+        }
+        options?.onSuccess?.(...args)
+      },
     },
   )
 
@@ -308,4 +312,26 @@ function getProviderQueryKey(type: WalletProviderType | null) {
   }
 
   return type ?? ""
+}
+
+function mapWalletAccount({
+  address,
+  name,
+  wallet,
+  genesisHash,
+}: WalletAccount) {
+  const isEvm = isEvmAddress(address)
+
+  const chainInfo = genesisHashToChain(genesisHash)
+
+  return {
+    address: isEvm ? new H160(address).toAccount() : address,
+    displayAddress: isEvm
+      ? address
+      : safeConvertAddressSS58(address, chainInfo.prefix) || address,
+    genesisHash,
+    name: name ?? "",
+    provider: wallet?.extensionName as WalletProviderType,
+    isExternalWalletConnected: wallet instanceof ExternalWallet,
+  }
 }

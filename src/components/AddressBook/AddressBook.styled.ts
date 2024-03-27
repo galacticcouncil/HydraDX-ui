@@ -12,7 +12,7 @@ export const SItems = styled.div`
 
 export const SHeader = styled.div`
   display: grid;
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: 1fr 2fr;
   grid-column-gap: 8px;
   align-items: center;
 

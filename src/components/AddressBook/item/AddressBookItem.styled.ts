@@ -5,7 +5,7 @@ import { theme } from "theme"
 
 export const SItem = styled.div`
   display: grid;
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: 1fr 2fr;
   grid-column-gap: 8px;
   align-items: center;
 
@@ -30,6 +30,7 @@ export const SNameContainer = styled.div`
 
 export const SName = styled(Text)`
   font-weight: 700;
+  font-family: "ChakraPetchBold";
   font-size: 14px;
 
   overflow: hidden;
