@@ -6,9 +6,16 @@ import {
   PlaceholderLogo,
 } from "@galacticcouncil/ui"
 import { chainsMap } from "@galacticcouncil/xcm-cfg"
-import { assetPlaceholderCss } from "./AssetIcon.styled"
+import {
+  SLogoContainer,
+  SWarningIconContainer,
+  assetPlaceholderCss,
+} from "./AssetIcon.styled"
 import { useMemo } from "react"
 import { useRpcProvider } from "providers/rpcProvider"
+import WarningIcon from "assets/icons/WarningIcon.svg?react"
+import { InfoTooltip } from "components/InfoTooltip/InfoTooltip"
+import { useTranslation } from "react-i18next"
 
 const chains = Array.from(chainsMap.values())
 
@@ -55,6 +62,7 @@ export function getAssetName(symbol: string | null | undefined) {
 }
 
 export const AssetLogo = ({ id }: { id?: string }) => {
+  const { t } = useTranslation()
   const { assets } = useRpcProvider()
 
   const asset = useMemo(() => {
@@ -67,20 +75,30 @@ export const AssetLogo = ({ id }: { id?: string }) => {
     return {
       chain: chain?.key,
       symbol: assetDetails?.symbol,
+      isExternal: assetDetails?.isExternal,
     }
   }, [assets, id])
 
   if (asset.chain || asset.symbol)
     return (
-      <UigcAssetId
-        css={{ "& uigc-logo-chain": { display: "none" } }}
-        ref={(el) => {
-          el && asset.chain && el.setAttribute("chain", asset.chain)
-          el && el.setAttribute("fit", "")
-        }}
-        symbol={asset.symbol}
-        chain={asset?.chain}
-      />
+      <SLogoContainer>
+        <UigcAssetId
+          css={{ "& uigc-logo-chain": { display: "none" } }}
+          ref={(el) => {
+            el && asset.chain && el.setAttribute("chain", asset.chain)
+            el && el.setAttribute("fit", "")
+          }}
+          symbol={asset.symbol}
+          chain={asset?.chain}
+        />
+        {asset?.isExternal && (
+          <InfoTooltip text={t("wallet.addToken.tooltip.warning")} asChild>
+            <SWarningIconContainer>
+              <WarningIcon />
+            </SWarningIconContainer>
+          </InfoTooltip>
+        )}
+      </SLogoContainer>
     )
 
   return (

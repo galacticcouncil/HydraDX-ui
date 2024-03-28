@@ -504,6 +504,7 @@
   "wallet.addToken.toast.register.onLoading": "Registering {{name}} on HydraDx as external asset",
   "wallet.addToken.toast.register.onSuccess": "You registered {{name}} as external asset",
   "wallet.addToken.toast.add.onSuccess": "You added info about {{name}} to your UI",
+  "wallet.addToken.tooltip.warning": "This asset is registered as an external token. Always conduct your own research before trading.",
   "wallet.assets.farmingPositions.empty.desc": "You don’t have any farming position yet, add liquidity and start earning with Hydra.",
   "wallet.transactions.table.header.title": "Transaction History",
   "wallet.transactions.table.header.download": "Download CSV",
