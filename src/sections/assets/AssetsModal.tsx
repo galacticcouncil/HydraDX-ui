@@ -78,6 +78,7 @@ export const AssetsModalContent = ({
     ? getAssetBalances([
         ...assets.tokens,
         ...assets.stableswap,
+        ...(withExternal ? assets.external : []),
         ...(withShareTokens ? assets.shareTokens : []),
       ])
     : accountAssets.filter(
@@ -97,15 +98,15 @@ export const AssetsModalContent = ({
 
   const searchedTokens = tokens.filter((token) =>
     search
-      ? token.asset.name.toLowerCase().includes(search.toLowerCase()) ||
-        token.asset.symbol.toLowerCase().includes(search.toLowerCase())
+      ? token.asset.name?.toLowerCase().includes(search.toLowerCase()) ||
+        token.asset.symbol?.toLowerCase().includes(search.toLowerCase())
       : true,
   )
 
   const searchedBonds = bonds.filter((token) =>
     search
-      ? token.asset.name.toLowerCase().includes(search.toLowerCase()) ||
-        token.asset.symbol.toLowerCase().includes(search.toLowerCase())
+      ? token.asset.name?.toLowerCase().includes(search.toLowerCase()) ||
+        token.asset.symbol?.toLowerCase().includes(search.toLowerCase())
       : true,
   )
 
@@ -113,6 +114,11 @@ export const AssetsModalContent = ({
     allowedAssets != null
       ? searchedTokens.filter(({ asset }) => allowedAssets.includes(asset.id))
       : searchedTokens
+
+  const allowedBonds =
+    allowedAssets != null
+      ? searchedBonds.filter(({ asset }) => allowedAssets.includes(asset.id))
+      : searchedBonds
 
   const notAllowedTokens =
     allowedAssets != null
@@ -224,7 +230,7 @@ export const AssetsModalContent = ({
                 ))}
               </>
             )}
-            {withBonds && searchedBonds.length ? (
+            {withBonds && allowedBonds.length ? (
               <>
                 <SAssetsModalHeader>
                   <Text
@@ -246,7 +252,7 @@ export const AssetsModalContent = ({
                     {t("selectAssets.your_balance")}
                   </Text>
                 </SAssetsModalHeader>
-                {searchedBonds.map(({ asset, balance }) => (
+                {allowedBonds.map(({ asset, balance }) => (
                   <AssetsModalRow
                     key={asset.id}
                     asset={asset}

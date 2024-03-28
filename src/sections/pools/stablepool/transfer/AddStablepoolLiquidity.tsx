@@ -14,12 +14,15 @@ import { useStablepoolShares } from "./AddStablepoolLiquidity.utils"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
 import { useDisplayPrice } from "utils/displayAsset"
 import { useTokenBalance } from "api/balances"
-import { positive, validNumber } from "utils/validators"
+import { required, maxBalance } from "utils/validators"
 import { ISubmittableResult } from "@polkadot/types/types"
 import { TAsset } from "api/assetDetails"
 import { useRpcProvider } from "providers/rpcProvider"
 import { CurrencyReserves } from "sections/pools/stablepool/components/CurrencyReserves"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { BN_0 } from "utils/constants"
 
 type Props = {
   poolId: string
@@ -32,6 +35,11 @@ type Props = {
   onSubmitted: (shares?: string) => void
   reserves: { asset_id: number; amount: string }[]
 }
+
+const createFormSchema = (balance: BigNumber, decimals: number) =>
+  z.object({
+    amount: required.pipe(maxBalance(balance, decimals)),
+  })
 
 export const AddStablepoolLiquidity = ({
   poolId,
@@ -48,7 +56,16 @@ export const AddStablepoolLiquidity = ({
   const { createTransaction } = useStore()
 
   const { t } = useTranslation()
-  const form = useForm<{ amount: string }>({ mode: "onChange" })
+
+  const { account } = useAccount()
+  const walletBalance = useTokenBalance(asset.id, account?.address)
+
+  const form = useForm<{ amount: string }>({
+    mode: "onChange",
+    resolver: zodResolver(
+      createFormSchema(walletBalance.data?.balance ?? BN_0, asset?.decimals),
+    ),
+  })
   const displayPrice = useDisplayPrice(asset.id)
 
   const amountIn = form.watch("amount")
@@ -58,9 +75,6 @@ export const AddStablepoolLiquidity = ({
     asset: { id: asset.id, decimals: asset.decimals, amount: amountIn },
     reserves,
   })
-
-  const { account } = useAccount()
-  const walletBalance = useTokenBalance(asset.id, account?.address)
 
   const onSubmit = async (values: FormValues<typeof form>) => {
     if (asset.decimals == null) {
@@ -139,29 +153,6 @@ export const AddStablepoolLiquidity = ({
         <Controller
           name="amount"
           control={form.control}
-          rules={{
-            required: t("wallet.assets.transfer.error.required"),
-            validate: {
-              validNumber,
-              positive,
-              maxBalance: (value) => {
-                try {
-                  if (asset.decimals == null) {
-                    throw new Error("Missing asset meta")
-                  }
-
-                  if (
-                    walletBalance.data?.balance?.gte(
-                      BigNumber(value).shiftedBy(asset.decimals),
-                    )
-                  ) {
-                    return true
-                  }
-                } catch {}
-                return t("liquidity.add.modal.validation.notEnoughBalance")
-              },
-            },
-          }}
           render={({
             field: { name, value, onChange },
             fieldState: { error },

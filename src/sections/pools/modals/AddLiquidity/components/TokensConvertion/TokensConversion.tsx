@@ -6,13 +6,17 @@ import { SConvertionContainer } from "./TokensConvertion.styled"
 import Skeleton from "react-loading-skeleton"
 
 type TokensConversionProps = {
+  label?: string
   firstValue?: { amount: BN; symbol: string }
   secondValue?: { amount: BN; symbol: string }
+  placeholderValue?: string
 }
 
 export const TokensConversion = ({
+  label,
   firstValue,
   secondValue,
+  placeholderValue,
 }: TokensConversionProps) => {
   const { t } = useTranslation()
 
@@ -24,7 +28,7 @@ export const TokensConversion = ({
       <Separator />
       <SConvertionContainer>
         <Text fs={11} lh={15}>
-          {t("price")}
+          {label ?? t("price")}
         </Text>
         {firstValue ? (
           <Text fs={11} lh={15} color="brightBlue300">
@@ -34,7 +38,15 @@ export const TokensConversion = ({
             })}
           </Text>
         ) : (
-          <Skeleton height={11} width={30} />
+          <>
+            {placeholderValue ? (
+              <Text fs={11} lh={15}>
+                {placeholderValue}
+              </Text>
+            ) : (
+              <Skeleton height={11} width={30} />
+            )}
+          </>
         )}
         <Text>=</Text>
         {secondValue ? (
@@ -45,7 +57,15 @@ export const TokensConversion = ({
             })}
           </Text>
         ) : (
-          <Skeleton height={11} width={30} />
+          <>
+            {placeholderValue ? (
+              <Text fs={11} lh={15}>
+                {placeholderValue}
+              </Text>
+            ) : (
+              <Skeleton height={11} width={30} />
+            )}
+          </>
         )}
       </SConvertionContainer>
     </div>

@@ -17,9 +17,11 @@ import { PoolsTableSkeleton } from "sections/pools/table/PoolsTableSkeleton"
 import { PoolSkeleton } from "sections/pools/pool/PoolSkeleton"
 import { EmptySearchState } from "components/EmptySearchState/EmptySearchState"
 import { TableLabel } from "sections/pools/components/TableLabel"
+import { CreateXYKPoolModalButton } from "sections/pools/modals/CreateXYKPool/CreateXYKPoolModalButton"
 
 export const AllPools = () => {
   const { t } = useTranslation()
+
   const { isLoaded } = useRpcProvider()
   const { id } = useSearch<{
     Search: {
@@ -74,6 +76,7 @@ export const AllPools = () => {
 
 const AllPoolsData = () => {
   const { t } = useTranslation()
+
   const { search } = useSearchFilter()
   const { id } = useSearch<{
     Search: {
@@ -188,7 +191,19 @@ const AllPoolsData = () => {
 
         {xylPools.isInitialLoading || !!filteredXYKPools.length ? (
           <div sx={{ flex: "column" }}>
-            <TableLabel label={t("liquidity.section.xyk")} />
+            <div
+              sx={{
+                flex: ["column", "row"],
+                justify: "space-between",
+                align: ["flex-start", "flex-end"],
+              }}
+            >
+              <TableLabel label={t("liquidity.section.xyk")} />
+              <CreateXYKPoolModalButton
+                disabled={xylPools.isInitialLoading}
+                sx={{ mb: 14, width: ["100%", "auto"] }}
+              />
+            </div>
             {xylPools.isInitialLoading ? (
               <PoolsTableSkeleton isXyk />
             ) : (

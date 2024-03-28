@@ -20,6 +20,7 @@ import { EmptySearchState } from "components/EmptySearchState/EmptySearchState"
 import { MyLiquidityTotal } from "sections/pools/header/MyLiquidityTotal"
 import { TableLabel } from "sections/pools/components/TableLabel"
 import { LINKS } from "utils/navigation"
+import { CreateXYKPoolModalButton } from "sections/pools/modals/CreateXYKPool/CreateXYKPoolModalButton"
 
 const poolsWithMyPositions = true
 
@@ -186,7 +187,19 @@ const MyLiquidityData = () => {
 
         {xylPools.isInitialLoading || !!filteredXYKPools.length ? (
           <div sx={{ flex: "column" }}>
-            <TableLabel label={t("liquidity.section.xyk")} />
+            <div
+              sx={{
+                flex: ["column", "row"],
+                justify: "space-between",
+                align: ["flex-start", "flex-end"],
+              }}
+            >
+              <TableLabel label={t("liquidity.section.xyk")} />
+              <CreateXYKPoolModalButton
+                disabled={xylPools.isInitialLoading}
+                sx={{ mb: 14, width: ["100%", "auto"] }}
+              />
+            </div>
             {xylPools.isInitialLoading ? (
               <PoolsTableSkeleton isXyk />
             ) : (

@@ -16,6 +16,7 @@ import { PoolsTableSkeleton } from "sections/pools/table/PoolsTableSkeleton"
 import { PoolSkeleton } from "sections/pools/pool/PoolSkeleton"
 import { EmptySearchState } from "components/EmptySearchState/EmptySearchState"
 import { Spacer } from "components/Spacer/Spacer"
+import { CreateXYKPoolModalButton } from "sections/pools/modals/CreateXYKPool/CreateXYKPoolModalButton"
 
 export const IsolatedPools = () => {
   const { t } = useTranslation()
@@ -114,7 +115,13 @@ const IsolatedPoolsData = () => {
         ]}
       />
       <SearchFilter />
-      <Spacer size={[24, 40]} />
+      <Spacer size={24} />
+      <div sx={{ flex: "row", mb: 14 }}>
+        <CreateXYKPoolModalButton
+          sx={{ ml: "auto", width: ["100%", "auto"] }}
+          disabled={xylPools.isInitialLoading}
+        />
+      </div>
       {xylPools.isInitialLoading ? (
         <PoolsTableSkeleton isXyk />
       ) : filteredPools.length ? (

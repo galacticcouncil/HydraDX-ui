@@ -69,12 +69,13 @@ export const SSelectAssetButton = styled(Button)`
 
   padding: 0;
   margin-right: 20px;
+  padding: 6px 2px;
   color: white;
 
   :hover {
-    all: unset;
+    border: unset;
     margin-right: 20px;
-    color: ${theme.colors.brightBlue200};
     cursor: pointer;
+    background: rgba(${theme.rgbColors.white}, 0.06);
   }
 `

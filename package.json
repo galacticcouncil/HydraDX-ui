@@ -41,6 +41,7 @@
     "@galacticcouncil/ui": "^3.1.4",
     "@galacticcouncil/xcm-cfg": "^1.10.11",
     "@galacticcouncil/xcm-sdk": "^2.3.1",
+    "@hookform/resolvers": "^3.3.4",
     "@lit-labs/react": "^1.1.0",
     "@polkadot/api": "10.9.1",
     "@polkadot/apps-config": "^0.132.1",

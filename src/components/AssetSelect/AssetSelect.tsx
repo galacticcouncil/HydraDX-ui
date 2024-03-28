@@ -40,6 +40,8 @@ export const AssetSelect = (props: {
   const asset = assets.getAsset(props.id)
   const { decimals, symbol } = asset
 
+  const isAssetFound = !!asset?.id
+
   const isTablet = useMedia(theme.viewport.gte.sm)
 
   const spotPriceId =
@@ -142,7 +144,7 @@ export const AssetSelect = (props: {
             onChange={props.onChange}
             displayValue={displayValue}
             placeholder="0.00"
-            unit={isTablet ? symbol : ""}
+            unit={isTablet && isAssetFound ? symbol : ""}
             error={props.error}
             css={css`
               & > label {
