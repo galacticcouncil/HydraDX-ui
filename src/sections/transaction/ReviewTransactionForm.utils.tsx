@@ -17,6 +17,8 @@ import { useUserReferrer } from "api/referrals"
 import { HYDRADX_CHAIN_KEY } from "sections/xcm/XcmPage.utils"
 import { useReferralCodesStore } from "sections/referrals/store/useReferralCodesStore"
 import { useEvmPaymentFee } from "api/evm"
+import { useProviderRpcUrlStore } from "api/provider"
+import { useMemo } from "react"
 
 export const useTransactionValues = ({
   xcallMeta,
@@ -280,4 +282,18 @@ export const useEditFeePaymentAsset = (
     editFeePaymentAssetModal,
     isOpenEditFeePaymentAssetModal,
   }
+}
+
+export const usePolkadotJSTxUrl = (tx: SubmittableExtrinsic<"promise">) => {
+  const provider = useProviderRpcUrlStore()
+
+  const rpcUrl = encodeURIComponent(
+    provider.rpcUrl ?? import.meta.env.VITE_PROVIDER_URL,
+  )
+
+  return useMemo(() => {
+    return tx
+      ? `https://polkadot.js.org/apps/?rpc=${rpcUrl}#/extrinsics/decode/${tx.method.toHex()}`
+      : ""
+  }, [rpcUrl, tx])
 }

@@ -285,6 +285,7 @@
   "liquidity.reviewTransaction.modal.confirmButton.invalidEvmPaymentAsset.msg": "Please change your fee payment asset to {{symbol}}",
   "liquidity.reviewTransaction.modal.confirmButton.loading": "Waiting for signature",
   "liquidity.reviewTransaction.modal.confirmButton.warning": "Please sign using your wallet extension.",
+  "liquidity.reviewTransaction.modal.confirmButton.openPolkadotJS": "Open in Polkadot.js.org",
   "liquidity.reviewTransaction.modal.cancel": "Cancel",
   "liquidity.reviewTransaction.modal.edit": "Edit",
   "liquidity.reviewTransaction.modal.selectAsset": "Select fee payment asset",

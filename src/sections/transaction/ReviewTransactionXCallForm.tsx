@@ -22,6 +22,7 @@ type Props = TxProps & {
   title?: string
   onCancel: () => void
   onEvmSigned: (data: { evmTx: TransactionResponse }) => void
+  onSignError?: (error: unknown) => void
 }
 
 export const ReviewTransactionXCallForm: FC<Props> = ({
@@ -30,6 +31,7 @@ export const ReviewTransactionXCallForm: FC<Props> = ({
   xcallMeta,
   onEvmSigned,
   onCancel,
+  onSignError,
 }) => {
   const { t } = useTranslation()
   const { account } = useEvmAccount()
@@ -37,22 +39,26 @@ export const ReviewTransactionXCallForm: FC<Props> = ({
   const { wallet } = useWallet()
 
   const { mutate: signTx, isLoading } = useMutation(async () => {
-    if (!account?.address) throw new Error("Missing active account")
-    if (!wallet) throw new Error("Missing wallet")
-    if (!wallet.signer) throw new Error("Missing signer")
-    if (!isEvmXCall(xcall)) throw new Error("Missing xcall")
+    try {
+      if (!account?.address) throw new Error("Missing active account")
+      if (!wallet) throw new Error("Missing wallet")
+      if (!wallet.signer) throw new Error("Missing signer")
+      if (!isEvmXCall(xcall)) throw new Error("Missing xcall")
 
-    if (wallet?.signer instanceof MetaMaskSigner) {
-      const { srcChain } = xcallMeta
+      if (wallet?.signer instanceof MetaMaskSigner) {
+        const { srcChain } = xcallMeta
 
-      const evmTx = await wallet.signer.sendTransaction({
-        chain: srcChain,
-        from: account.address,
-        to: xcall.to,
-        data: xcall.data,
-      })
+        const evmTx = await wallet.signer.sendTransaction({
+          chain: srcChain,
+          from: account.address,
+          to: xcall.to,
+          data: xcall.data,
+        })
 
-      onEvmSigned({ evmTx })
+        onEvmSigned({ evmTx })
+      }
+    } catch (error) {
+      onSignError?.(error)
     }
   })
 
