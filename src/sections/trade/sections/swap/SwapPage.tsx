@@ -12,6 +12,10 @@ import { useProviderRpcUrlStore } from "api/provider"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useDisplayAssetStore } from "utils/displayAsset"
+import { isEvmAddress } from "utils/evm"
+import { NATIVE_ASSET_ID } from "utils/api"
+
+const defaultEvmTokenId: string = import.meta.env.VITE_EVM_NATIVE_ASSET_ID
 
 export const SwapApp = createComponent({
   tagName: "gc-trade",
@@ -49,6 +53,8 @@ export function SwapPage() {
   const { account } = useAccount()
   const { createTransaction } = useStore()
   const { stableCoinId } = useDisplayAssetStore()
+
+  const isEvm = isEvmAddress(account?.displayAddress ?? "")
 
   const preference = useProviderRpcUrlStore()
   const rpcUrl = preference.rpcUrl ?? import.meta.env.VITE_PROVIDER_URL
@@ -93,9 +99,15 @@ export function SwapPage() {
   }
 
   const assetIn =
-    search.success && search.data.assetIn ? search.data.assetIn : ""
+    search.success && search.data.assetIn
+      ? search.data.assetIn
+      : isEvm
+      ? defaultEvmTokenId
+      : stableCoinId ?? stableCoinAssetId
   const assetOut =
-    search.success && search.data.assetOut ? search.data.assetOut : ""
+    search.success && search.data.assetOut
+      ? search.data.assetOut
+      : NATIVE_ASSET_ID
 
   return (
     <SContainer>
