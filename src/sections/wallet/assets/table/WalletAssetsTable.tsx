@@ -28,6 +28,7 @@ import { AssetsTableData } from "./data/WalletAssetsTableData.utils"
 import { EmptyState } from "components/Table/EmptyState"
 import EmptyStateIcon from "assets/icons/NoActivities.svg?react"
 import { LINKS } from "utils/navigation"
+import { CreateTokenModal } from "sections/wallet/createToken/CreateTokenModal"
 
 type Props = {
   data: AssetsTableData[]
@@ -41,6 +42,7 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
   const { t } = useTranslation()
   const [row, setRow] = useState<AssetsTableData | undefined>(undefined)
   const [addToken, setAddToken] = useState(false)
+  const [createToken, setCreateToken] = useState(false)
   const [transferAsset, setTransferAsset] = useState<string | null>(null)
 
   const isDesktop = useMedia(theme.viewport.gte.sm)
@@ -65,6 +67,16 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
               : t("wallet.header.assets")}
           </Text>
           <div sx={{ flex: "row", gap: 32 }}>
+            <Button
+              type="button"
+              size="micro"
+              sx={{ gap: 4 }}
+              onClick={() => setCreateToken(true)}
+            >
+              <div sx={{ flex: "row", align: "center", gap: 4 }}>
+                Create token
+              </div>
+            </Button>
             {addTokenEnabled && (
               <Button
                 type="button"
@@ -185,6 +197,9 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
         )}
       </TableContainer>
       {addToken && <AddTokenModal onClose={() => setAddToken(false)} />}
+      {createToken && (
+        <CreateTokenModal onClose={() => setCreateToken(false)} />
+      )}
     </>
   )
 }

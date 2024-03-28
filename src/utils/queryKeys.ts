@@ -403,4 +403,5 @@ export const QUERY_KEYS = {
   ],
   externalAssetRegistry: ["externalAssetRegistry"],
   assetHubAssetRegistry: ["assetHubAssetRegistry"],
+  assetHubApi: ["assetHubApi"],
 } as const

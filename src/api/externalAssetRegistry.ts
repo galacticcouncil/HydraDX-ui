@@ -4,15 +4,35 @@ import { QUERY_KEYS } from "utils/queryKeys"
 import { chainsMap } from "@galacticcouncil/xcm-cfg"
 import { SubstrateApis } from "@galacticcouncil/xcm-sdk"
 
-export const getAssetHubAssets = async () => {
-  const parachain = chainsMap.get("assethub")
+const parachain = chainsMap.get("assethub")
+const assetHubProvider = new WsProvider(parachain?.ws)
+const assetHubRococoProvider = new WsProvider(
+  "wss://rococo-asset-hub-rpc.dwellir.com",
+)
 
+export const useAssetHubApi = () => {
+  return useQuery(
+    QUERY_KEYS.assetHubApi,
+    async () => {
+      const apiPool = SubstrateApis.getInstance()
+      const api = await apiPool.api(assetHubRococoProvider.endpoint)
+
+      return api
+    },
+    {
+      retry: false,
+      refetchOnWindowFocus: false,
+      cacheTime: 1000 * 60 * 60 * 24, // 24 hours,
+      staleTime: 1000 * 60 * 60 * 1, // 1 hour
+    },
+  )
+}
+
+export const getAssetHubAssets = async () => {
   try {
     if (parachain) {
-      const provider = new WsProvider(parachain.ws)
-
       const apiPool = SubstrateApis.getInstance()
-      const api = await apiPool.api(provider.endpoint)
+      const api = await apiPool.api(assetHubRococoProvider.endpoint)
 
       const dataRaw = await api.query.assets.metadata.entries()
 
