@@ -27,23 +27,37 @@ const getVariantStyles = (variant: ItemVariant) => {
       return css`
         background: ${theme.colors.brightBlue700};
       `
+    case "tertiary":
+      return css`
+        color: ${theme.colors.brightBlue100};
+        background: rgba(${theme.rgbColors.primaryA0}, 0.35);
+      `
   }
 }
 
 const getSizeStyles = (size: ItemSize) => {
   switch (size) {
+    case "extra-small":
+      return css`
+        border-radius: ${theme.borderRadius.default}px;
+        font-size: 12px;
+        padding: 4px 8px;
+      `
     case "small":
       return css`
+        border-radius: 9999px;
         font-size: 13px;
         padding: 8px 20px;
       `
     case "medium":
       return css`
+        border-radius: 9999px;
         font-size: 14px;
         padding: 10px 32px;
       `
     case "large":
       return css`
+        border-radius: 9999px;
         font-size: 14px;
         padding: 14px 38px;
       `
@@ -62,8 +76,6 @@ export const SToggleItem = styled(Item)<
   text-align: center;
 
   color: rgba(255, 255, 255, 0.7);
-
-  border-radius: 9999px;
 
   cursor: pointer;
 

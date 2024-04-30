@@ -9,7 +9,7 @@ type DataValueSize = "small" | "medium" | "large" | "extra-large"
 
 const LABEL_SIZES: Record<DataValueSize, TextProps> = {
   small: {
-    fs: 12,
+    fs: 13,
     lh: 16,
   },
   medium: {
@@ -49,7 +49,7 @@ export type DataValueProps = {
   label: ReactNode
   children: ReactNode
   className?: string
-  tooltip?: string
+  tooltip?: ReactNode
   size?: DataValueSize
   font?: TextProps["font"]
   labelColor?: TextProps["color"]

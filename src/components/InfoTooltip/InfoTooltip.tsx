@@ -62,6 +62,7 @@ export function InfoTooltip({
           sideOffset={3}
           alignOffset={-10}
           collisionPadding={12}
+          sx={{ maxWidth: 300 }}
         >
           {typeof text === "string" ? (
             <Text fs={11} fw={500}>

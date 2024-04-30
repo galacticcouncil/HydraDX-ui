@@ -6,12 +6,12 @@ import {
   useQuery,
 } from "@tanstack/react-query"
 import { useShallow } from "hooks/useShallow"
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { usePrevious } from "react-use"
 
 import { WalletConnect } from "sections/web3-connect/wallets/WalletConnect"
 import { POLKADOT_APP_NAME } from "utils/api"
-import { H160, getEvmAddress, isEvmAddress } from "utils/evm"
+import { H160, getEvmAddress, isEvmAccount, isEvmAddress } from "utils/evm"
 import { safeConvertAddressSS58 } from "utils/formatting"
 import { QUERY_KEYS } from "utils/queryKeys"
 import {
@@ -26,6 +26,7 @@ import { isMetaMask, requestNetworkSwitch } from "utils/metamask"
 import { genesisHashToChain } from "utils/helpers"
 import { WalletAccount } from "sections/web3-connect/types"
 import { EVM_PROVIDERS } from "sections/web3-connect/constants/providers"
+import { useIsEvmAccountBound } from "api/evm"
 import { useAddressStore } from "components/AddressBook/AddressBook.utils"
 export type { WalletProvider } from "./wallets"
 export { WalletProviderType, getSupportedWallets }
@@ -47,35 +48,50 @@ export const useEvmAccount = () => {
   const { account } = useAccount()
   const { wallet } = useWallet()
 
-  const address = account?.displayAddress ?? ""
+  const address = account?.address ?? ""
+
+  const isEvm = isEvmAccount(address)
+
+  const evmAddress = useMemo(() => {
+    if (!address) return ""
+    if (isEvm) return H160.fromAccount(address)
+    return H160.fromSS58(address)
+  }, [isEvm, address])
+
+  const accountBinding = useIsEvmAccountBound(isEvm ? "" : evmAddress)
+  const isBound = isEvm ? true : !!accountBinding.data
 
   const evm = useQuery(
     QUERY_KEYS.evmChainInfo(address),
     async () => {
       const chainId = isMetaMask(wallet?.extension)
         ? await wallet?.extension?.request({ method: "eth_chainId" })
-        : null
+        : import.meta.env.VITE_EVM_CHAIN_ID
 
       return {
         chainId: Number(chainId),
       }
     },
     {
-      enabled: !!address,
+      enabled: !!address && !!wallet?.extension,
     },
   )
 
   if (!address) {
     return {
+      isBound: false,
+      isLoading: false,
       account: null,
     }
   }
 
   return {
+    isBound,
+    isLoading: accountBinding.isLoading || evm.isLoading,
     account: {
-      ...evm.data,
+      chainId: evm.data?.chainId ?? null,
       name: account?.name ?? "",
-      address: account?.displayAddress,
+      address: isBound ? evmAddress : "",
     },
   }
 }
@@ -211,6 +227,10 @@ export const useEnableWallet = (
   options?: MutationObserverOptions,
 ) => {
   const { wallet } = getWalletProviderByType(provider)
+  const disconnect = useWeb3ConnectStore(
+    useShallow((state) => state.disconnect),
+  )
+
   const { add: addToAddressBook } = useAddressStore()
   const meta = useWeb3ConnectStore(useShallow((state) => state.meta))
   const { mutate: enable, ...mutation } = useMutation(
@@ -253,6 +273,7 @@ export const useEnableWallet = (
 
   return {
     enable,
+    disconnect,
     ...mutation,
   }
 }

@@ -1,4 +1,5 @@
 import { encodeAddress, decodeAddress } from "@polkadot/util-crypto"
+import { u8aToHex } from "@polkadot/util"
 import { Buffer } from "buffer"
 import { HYDRA_ADDRESS_PREFIX } from "utils/api"
 
@@ -53,6 +54,12 @@ export class H160 {
     return (
       safeConvertAddressH160(Buffer.from(addressBytes).toString("hex")) ?? ""
     )
+  }
+
+  static fromSS58 = (address: string) => {
+    const decodedBytes = decodeAddress(address)
+    const slicedBytes = decodedBytes.slice(0, 20)
+    return u8aToHex(slicedBytes)
   }
 }
 

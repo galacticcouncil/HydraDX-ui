@@ -7,6 +7,7 @@ import { ReactElement } from "react"
 import BigNumber from "bignumber.js"
 import { StepProps } from "components/Stepper/Stepper"
 import { XCall } from "@galacticcouncil/xcm-sdk"
+import { TransactionRequest } from "@ethersproject/providers"
 
 export interface ToastMessage {
   onLoading?: ReactElement
@@ -25,6 +26,10 @@ export interface Account {
 export interface TransactionInput {
   title?: string
   tx?: SubmittableExtrinsic
+  evmTx?: {
+    data: TransactionRequest
+    abi?: string
+  }
   xcall?: XCall
   xcallMeta?: Record<string, string>
   overrides?: {

@@ -48,12 +48,16 @@ export const ReviewTransactionXCallForm: FC<Props> = ({
       if (wallet?.signer instanceof MetaMaskSigner) {
         const { srcChain } = xcallMeta
 
-        const evmTx = await wallet.signer.sendTransaction({
-          chain: srcChain,
-          from: account.address,
-          to: xcall.to,
-          data: xcall.data,
-        })
+        const evmTx = await wallet.signer.sendTransaction(
+          {
+            from: account.address,
+            to: xcall.to,
+            data: xcall.data,
+          },
+          {
+            chain: srcChain,
+          },
+        )
 
         onEvmSigned({ evmTx })
       }

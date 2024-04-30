@@ -370,6 +370,10 @@ export const QUERY_KEYS = {
   fee: (assetId?: string) => ["fee", assetId],
   evmTxCost: (data: string) => ["evmTxCost", data],
   evmChainInfo: (address: string) => ["evmChainInfo", address],
+  evmBoundAccountId: (address: string) => [
+    QUERY_KEY_PREFIX,
+    "evmBoundAccountId",
+  ],
   evmPaymentFee: (txHex: string, address?: string) => [
     "evmPaymentFee",
     txHex,
