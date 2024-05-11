@@ -393,4 +393,9 @@ export const QUERY_KEYS = {
   ],
   externalAssetRegistry: ["externalAssetRegistry"],
   assetHubAssetRegistry: ["assetHubAssetRegistry"],
+  assetHubTokenBalance: (address: string, id: string) => [
+    "assetHubTokenBalance",
+    address,
+    id,
+  ],
 } as const

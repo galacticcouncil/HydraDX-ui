@@ -1,11 +1,17 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQueries, useQuery } from "@tanstack/react-query"
 import { QUERY_KEYS } from "utils/queryKeys"
 import { chainsMap } from "@galacticcouncil/xcm-cfg"
 import { SubstrateApis } from "@galacticcouncil/xcm-sdk"
+import { u32 } from "@polkadot/types"
+import { AccountId32 } from "@polkadot/types/interfaces"
+import { Maybe } from "utils/helpers"
 import {
   ASSET_HUB_ID,
   TExternalAsset,
 } from "sections/wallet/addToken/AddToken.utils"
+
+export const HYDRADX_PARACHAIN_ACCOUNT =
+  "13cKp89Uh2yWgTG28JA1QEvPUMjEPKejqkjHKf9zqLiFKjH6"
 
 type TRegistryChain = {
   assetCnt: string
@@ -91,6 +97,62 @@ export const useAssetHubAssetRegistry = () => {
   )
 }
 
+export const getAssetHubTokenBalance =
+  (account: AccountId32 | string, id: string | u32) => async () => {
+    const parachain = chainsMap.get("assethub")
+    try {
+      if (parachain) {
+        const apiPool = SubstrateApis.getInstance()
+        const api = await apiPool.api(parachain.ws)
+        const codec = await api.query.assets.account(id, account)
+
+        return {
+          accountId: account,
+          assetId: id,
+          // @ts-ignore
+          balance: codec.unwrap().balance.toBigNumber(),
+        }
+      }
+    } catch (e) {}
+  }
+
+export const useAssetHubTokenBalance = (
+  account: AccountId32 | string,
+  id: string | u32,
+) => {
+  return useQuery(
+    QUERY_KEYS.assetHubTokenBalance(account.toString(), id.toString()),
+    getAssetHubTokenBalance(account, id),
+    {
+      retry: false,
+      refetchOnWindowFocus: false,
+      cacheTime: 1000 * 60 * 60 * 24, // 24 hours,
+      staleTime: 1000 * 60 * 60 * 1, // 1 hour
+    },
+  )
+}
+
+export const useAssetHubTokenBalances = (
+  account: AccountId32 | string,
+  ids: Maybe<u32 | string>[],
+) => {
+  const tokenIds = ids.filter((id): id is u32 => !!id)
+
+  return useQueries({
+    queries: tokenIds.map((id) => ({
+      queryKey: QUERY_KEYS.assetHubTokenBalance(
+        account.toString(),
+        id.toString(),
+      ),
+      queryFn: getAssetHubTokenBalance(account, id),
+      enabled: !!id,
+      retry: false,
+      refetchOnWindowFocus: false,
+      cacheTime: 1000 * 60 * 60 * 24, // 24 hours,
+      staleTime: 1000 * 60 * 60 * 1, // 1 hour
+    })),
+  })
+}
 export const usePolkadotRegistry = () => {
   return useQuery(["polkadotRegistry"], async () => {
     const res = await fetch(

@@ -14,6 +14,7 @@ import { Interpolation, Theme } from "@emotion/react"
 import { Web3Connect } from "sections/web3-connect/Web3Connect"
 import { ReferralsConnect } from "sections/referrals/ReferralsConnect"
 import { useRpcProvider } from "providers/rpcProvider"
+import { ExternalAssetsRugCheck } from "sections/assets/external/ExternalAssetsRugCheck"
 
 type Props = {
   className?: string
@@ -28,7 +29,7 @@ export const Page = ({
   subHeader,
   subHeaderStyle,
 }: Props) => {
-  const { featureFlags } = useRpcProvider()
+  const { featureFlags, isLoaded } = useRpcProvider()
   const ref = useRef<HTMLDivElement>(null)
   const location = useLocation()
 
@@ -41,6 +42,7 @@ export const Page = ({
 
   return (
     <>
+      {isLoaded && <ExternalAssetsRugCheck />}
       <SPage ref={ref}>
         <div
           sx={{ flex: "column", height: "100%" }}
