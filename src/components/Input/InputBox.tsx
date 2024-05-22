@@ -1,6 +1,6 @@
 import { forwardRef } from "react"
 import { InputProps } from "./Input"
-import { SInputBoxContainer, SInputBox } from "./Input.styled"
+import { SInputBoxContainer, SInputBox, SError } from "./Input.styled"
 import { Text } from "components/Typography/Text/Text"
 
 export const InputBox = forwardRef<HTMLInputElement, InputProps>(
@@ -17,8 +17,8 @@ export const InputBox = forwardRef<HTMLInputElement, InputProps>(
       ...p
     },
     ref,
-  ) => {
-    return (
+  ) => (
+    <>
       <SInputBoxContainer error={!!p.error} disabled={p.disabled}>
         <div
           sx={{
@@ -59,6 +59,7 @@ export const InputBox = forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
       </SInputBoxContainer>
-    )
-  },
+      {p.error && <SError>{p.error}</SError>}
+    </>
+  ),
 )

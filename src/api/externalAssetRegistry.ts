@@ -5,7 +5,8 @@ import {
   ASSET_HUB_ID,
   TExternalAsset,
 } from "sections/wallet/addToken/AddToken.utils"
-import { Parachain } from "@galacticcouncil/xcm-core"
+import { Parachain, SubstrateApis } from "@galacticcouncil/xcm-core"
+import { WsProvider } from "@polkadot/api"
 
 type TRegistryChain = {
   assetCnt: string
@@ -17,12 +18,35 @@ type TRegistryChain = {
 
 const HYDRA_PARACHAIN_ID = 2034
 
-export const getAssetHubAssets = async () => {
-  const provider = chainsMap.get("assethub") as Parachain
+const parachain = chainsMap.get("assethub")
+const assetHubProvider = new WsProvider(parachain?.ws)
+const assetHubRococoProvider = new WsProvider(
+  "wss://rococo-asset-hub-rpc.dwellir.com",
+)
 
+export const useAssetHubApi = () => {
+  return useQuery(
+    QUERY_KEYS.assetHubApi,
+    async () => {
+      const apiPool = SubstrateApis.getInstance()
+      const api = await apiPool.api(assetHubRococoProvider.endpoint)
+
+      return api
+    },
+    {
+      retry: false,
+      refetchOnWindowFocus: false,
+      cacheTime: 1000 * 60 * 60 * 24, // 24 hours,
+      staleTime: 1000 * 60 * 60 * 1, // 1 hour
+    },
+  )
+}
+
+export const getAssetHubAssets = async () => {
   try {
-    if (provider) {
-      const api = await provider.api
+    if (parachain) {
+      const apiPool = SubstrateApis.getInstance()
+      const api = await apiPool.api(assetHubRococoProvider.endpoint)
 
       const dataRaw = await api.query.assets.metadata.entries()
 

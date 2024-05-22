@@ -157,3 +157,10 @@ export const SInputBox = styled.input<{ error?: string }>`
     pointer-events: none;
   }
 `
+
+export const SError = styled.p`
+  color: ${theme.colors.error};
+
+  font-size: 12px;
+  line-height: 14px;
+`
