@@ -300,8 +300,9 @@ export const useSendDispatchPermit = (
     ? getChainByKey(xcallMeta.dstChain)
     : undefined
 
-  const bridge = destChain?.isEvmChain() ? "substrate" : undefined
-
+  const bridge = destChain?.isEvmChain() || true ? "substrate" : undefined
+  console.log(bridge, "brideg")
+  console.log("brideg")
   return {
     ...sendTx,
     txState,
@@ -380,7 +381,7 @@ export const useSendTransactionMutation = (
     ? getChainByKey(xcallMeta.dstChain)
     : undefined
 
-  const bridge = destChain?.isEvmChain() ? "substrate" : undefined
+  const bridge = destChain?.isEvmChain() || true ? "substrate" : undefined
 
   return {
     ...sendTx,
