@@ -63,47 +63,45 @@ export function ProviderSelectModal(props: {
         title={t("rpc.change.modal.title")}
       >
         <>
-          {import.meta.env.VITE_ENV !== "production" && (
-            <form onSubmit={form.handleSubmit((a) => mutation.mutate(a))}>
-              <Controller
-                name="address"
-                control={form.control}
-                rules={{
-                  required: t("wallet.assets.transfer.error.required"),
-                  validate: {
-                    duplicate: (value) => {
-                      const isDuplicate = rpcList.find(
-                        (rpc) => rpc.url === `wss://${value}`,
-                      )
-                      return (
-                        !isDuplicate || t("rpc.change.modal.errors.duplicate")
-                      )
-                    },
+          <form onSubmit={form.handleSubmit((a) => mutation.mutate(a))}>
+            <Controller
+              name="address"
+              control={form.control}
+              rules={{
+                required: t("wallet.assets.transfer.error.required"),
+                validate: {
+                  duplicate: (value) => {
+                    const isDuplicate = rpcList.find(
+                      (rpc) => rpc.url === `wss://${value}`,
+                    )
+                    return (
+                      !isDuplicate || t("rpc.change.modal.errors.duplicate")
+                    )
                   },
-                }}
-                render={({
-                  field: { name, value, onChange },
-                  fieldState: { error },
-                }) => (
-                  <ProviderInput
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    error={error?.message}
-                    button={
-                      <Button
-                        size="small"
-                        type="submit"
-                        isLoading={mutation.isLoading}
-                      >
-                        {t("add")}
-                      </Button>
-                    }
-                  />
-                )}
-              />
-            </form>
-          )}
+                },
+              }}
+              render={({
+                field: { name, value, onChange },
+                fieldState: { error },
+              }) => (
+                <ProviderInput
+                  name={name}
+                  value={value}
+                  onChange={onChange}
+                  error={error?.message}
+                  button={
+                    <Button
+                      size="small"
+                      type="submit"
+                      isLoading={mutation.isLoading}
+                    >
+                      {t("add")}
+                    </Button>
+                  }
+                />
+              )}
+            />
+          </form>
 
           <SContainer>
             <SHeader>
@@ -138,27 +136,26 @@ export function ProviderSelectModal(props: {
               )
             })}
 
-            {import.meta.env.VITE_ENV !== "production" &&
-              rpcList?.map((rpc, index) => (
-                <Fragment key={rpc.url}>
-                  <ProviderItem
-                    name={
-                      rpc.name ??
-                      t("rpc.change.modal.name.label", { index: index + 1 })
-                    }
-                    url={rpc.url}
-                    isActive={rpc.url === userRpcUrl}
-                    onClick={() => setUserRpcUrl(rpc.url)}
-                    custom
-                    onRemove={(rpc) => {
-                      setRemoveRpcUrl(rpc)
-                    }}
-                  />
-                  {index + 1 < PROVIDERS.length && (
-                    <Separator color="alpha0" opacity={0.06} />
-                  )}
-                </Fragment>
-              ))}
+            {rpcList?.map((rpc, index) => (
+              <Fragment key={rpc.url}>
+                <ProviderItem
+                  name={
+                    rpc.name ??
+                    t("rpc.change.modal.name.label", { index: index + 1 })
+                  }
+                  url={rpc.url}
+                  isActive={rpc.url === userRpcUrl}
+                  onClick={() => setUserRpcUrl(rpc.url)}
+                  custom
+                  onRemove={(rpc) => {
+                    setRemoveRpcUrl(rpc)
+                  }}
+                />
+                {index + 1 < PROVIDERS.length && (
+                  <Separator color="alpha0" opacity={0.06} />
+                )}
+              </Fragment>
+            ))}
           </SContainer>
 
           <Button
