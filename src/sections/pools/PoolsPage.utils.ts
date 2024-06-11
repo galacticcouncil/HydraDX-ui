@@ -47,6 +47,8 @@ import {
   is_sell_allowed,
 } from "@galacticcouncil/math-omnipool"
 import { useUserDeposits } from "api/deposits"
+import { useQueryClient } from "@tanstack/react-query"
+import { QUERY_KEYS } from "utils/queryKeys"
 
 export const XYK_TVL_VISIBILITY = 5000
 
@@ -679,4 +681,15 @@ export const useXYKDepositValues = (depositNfts: TMiningNftPosition[]) => {
   ])
 
   return { data, isLoading }
+}
+
+export const useRefetchPositions = () => {
+  const queryClient = useQueryClient()
+  const { account } = useAccount()
+
+  return () => {
+    queryClient.refetchQueries(
+      QUERY_KEYS.accountOmnipoolPositions(account?.address),
+    )
+  }
 }

@@ -219,7 +219,7 @@
   "liquidity.xyk.asset.positions.title": "Your position",
   "liquidity.xyk.asset.position.title": "{{symbol}} Liquidity",
   "liquidity.xyk.asset.position.availableShares": "Available Shares",
-  "liquidity.xyk.addLiquidity.warning": " Specified amount for adding liquidity is too low",
+  "liquidity.xyk.addLiquidity.warning": "Specified amount for adding liquidity is too low",
   "liquidity.asset.details.24hours": "24h volume",
   "liquidity.stablepool.remove.removing": "Removing liquidity",
   "liquidity.asset.details.24hours.tooltip": "USD value is derived from the last known exchange rate.",

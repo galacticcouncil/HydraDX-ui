@@ -3,31 +3,155 @@ import {
   calculate_shares,
   verify_asset_cap,
 } from "@galacticcouncil/math-omnipool"
-import { u32 } from "@polkadot/types"
-import { useTokenBalance } from "api/balances"
-import { useApiIds, useMaxAddLiquidityLimit } from "api/consts"
-import { useOmnipoolAsset, useOmnipoolFee } from "api/omnipool"
+import { useTokenBalance, useTokensBalances } from "api/balances"
+import { useMaxAddLiquidityLimit } from "api/consts"
+import {
+  useOmnipoolAsset,
+  useOmnipoolFee,
+  useOmnipoolMinLiquidity,
+} from "api/omnipool"
 import BigNumber from "bignumber.js"
 import { useMemo } from "react"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { OMNIPOOL_ACCOUNT_ADDRESS } from "utils/api"
-import { getFixedPointAmount } from "utils/balance"
 import { BN_10 } from "utils/constants"
 import { useDisplayPrice } from "utils/displayAsset"
 import { useRpcProvider } from "providers/rpcProvider"
+import { useTranslation } from "react-i18next"
+import { z } from "zod"
+import { maxBalance, positive, required } from "utils/validators"
 
-export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
+export const useZodSchema = (assetId: string) => {
+  const { t } = useTranslation()
+  const { account } = useAccount()
+  const { assets } = useRpcProvider()
+
+  const { decimals, symbol } = assets.getAsset(assetId)
+
+  const { data: minPoolLiquidity } = useOmnipoolMinLiquidity()
+
+  const { data: assetBalance } = useTokenBalance(assetId, account?.address)
+
+  const { data: omnipoolAsset } = useOmnipoolAsset(assetId)
+  const { data: hubBalance } = useTokenBalance(
+    assets.hub.id,
+    OMNIPOOL_ACCOUNT_ADDRESS,
+  )
+  const { data: poolBalance } = useTokenBalance(
+    assetId,
+    OMNIPOOL_ACCOUNT_ADDRESS,
+  )
+  const { data: maxAddLiquidityLimit } = useMaxAddLiquidityLimit()
+
+  if (
+    assetBalance === undefined ||
+    minPoolLiquidity === undefined ||
+    omnipoolAsset === undefined ||
+    hubBalance === undefined ||
+    poolBalance === undefined ||
+    maxAddLiquidityLimit === undefined
+  )
+    return undefined
+
+  const assetReserve = poolBalance.balance.toString()
+  const assetHubReserve = omnipoolAsset.hubReserve.toString()
+  const assetShares = omnipoolAsset.shares.toString()
+  const assetCap = omnipoolAsset.cap.toString()
+  const totalHubReserve = hubBalance.total.toString()
+
+  const circuitBreakerLimit = maxAddLiquidityLimit
+    .multipliedBy(assetReserve)
+    .shiftedBy(-decimals)
+
+  return z.object({
+    amount: required
+      .pipe(positive)
+      .pipe(maxBalance(assetBalance.balance, decimals))
+      .refine(
+        (value) => BigNumber(value).shiftedBy(decimals).gte(minPoolLiquidity),
+        {
+          message: t("liquidity.add.modal.validation.minPoolLiquidity"),
+        },
+      )
+      .refine(
+        (value) => {
+          if (!value) return true
+
+          const hubIn = calculate_liquidity_hub_in(
+            assetReserve,
+            assetHubReserve,
+            assetShares,
+            BigNumber(value).shiftedBy(decimals).toString(),
+          )
+
+          const isWithinLimit = verify_asset_cap(
+            assetHubReserve,
+            assetCap,
+            hubIn,
+            totalHubReserve,
+          )
+
+          return isWithinLimit
+        },
+        {
+          message: t("liquidity.add.modal.warningLimit.cap"),
+          path: ["cap"],
+        },
+      )
+      .refine(
+        (value) => {
+          if (!value) return true
+
+          const isWithinCircuitBreakerLimit =
+            BigNumber(circuitBreakerLimit).gte(value)
+
+          return isWithinCircuitBreakerLimit
+        },
+        {
+          message: t("liquidity.add.modal.warningLimit.circuitBreaker", {
+            amount: circuitBreakerLimit,
+            symbol,
+          }),
+          path: ["circuitBreaker"],
+        },
+      ),
+  })
+}
+
+export const useXYKZodSchema = (assetAId: string, assetBId: string) => {
+  const { account } = useAccount()
+  const { assets } = useRpcProvider()
+
+  const [{ data: assetABalance }, { data: assetBBalance }] = useTokensBalances(
+    [assetAId, assetBId],
+    account?.address,
+  )
+
+  const [assetAMeta, assetBMeta] = assets.getAssets([assetAId, assetBId])
+
+  if (assetABalance === undefined || assetBBalance === undefined)
+    return undefined
+
+  return z.object({
+    assetA: required
+      .pipe(positive)
+      .pipe(maxBalance(assetABalance.balance, assetAMeta.decimals)),
+
+    assetB: required
+      .pipe(positive)
+      .pipe(maxBalance(assetBBalance.balance, assetBMeta.decimals)),
+  })
+}
+
+export const useAddLiquidity = (assetId: string, assetValue?: string) => {
   const { assets } = useRpcProvider()
   const omnipoolBalance = useTokenBalance(assetId, OMNIPOOL_ACCOUNT_ADDRESS)
   const ommipoolAsset = useOmnipoolAsset(assetId)
-  const assetMeta = assets.getAsset(assetId.toString())
+  const assetMeta = assets.getAsset(assetId)
 
   const { data: spotPrice } = useDisplayPrice(assetId)
 
   const { data: omnipoolFee } = useOmnipoolFee()
-
-  const { account } = useAccount()
-  const { data: assetBalance } = useTokenBalance(assetId, account?.address)
 
   const calculatedShares = useMemo(() => {
     if (ommipoolAsset.data && assetValue && assetMeta) {
@@ -50,87 +174,14 @@ export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
     return null
   }, [omnipoolBalance, assetValue, ommipoolAsset, assetMeta])
 
-  return { calculatedShares, spotPrice, omnipoolFee, assetMeta, assetBalance }
+  return { calculatedShares, spotPrice, omnipoolFee, assetMeta }
 }
 
-export const useVerifyLimits = ({
-  assetId,
-  amount,
-  decimals,
-}: {
-  assetId: string
-  amount: string
-  decimals: number
-}) => {
-  const { assets } = useRpcProvider()
-  const apiIds = useApiIds()
-  const asset = useOmnipoolAsset(assetId)
-  const assetMeta = assets.getAsset(assetId)
-  const hubBalance = useTokenBalance(
-    apiIds.data?.hubId,
-    OMNIPOOL_ACCOUNT_ADDRESS,
-  )
-  const poolBalance = useTokenBalance(assetId, OMNIPOOL_ACCOUNT_ADDRESS)
-  const maxAddLiquidityLimit = useMaxAddLiquidityLimit()
+export const getXYKPoolShare = (
+  total: BigNumber | undefined,
+  add: BigNumber | undefined,
+) => {
+  if (!total || !add) return undefined
 
-  const queries = [apiIds, hubBalance, maxAddLiquidityLimit]
-  const isLoading = queries.some((q) => q.isLoading)
-
-  const data = useMemo(() => {
-    if (
-      !apiIds.data ||
-      !asset.data ||
-      !hubBalance.data ||
-      !poolBalance.data ||
-      !amount ||
-      !maxAddLiquidityLimit.data
-    )
-      return undefined
-
-    const assetReserve = poolBalance.data.balance.toString()
-    const assetHubReserve = asset.data.hubReserve.toString()
-    const assetShares = asset.data.shares.toString()
-    const assetCap = asset.data.cap.toString()
-    const totalHubReserve = hubBalance.data.total.toString()
-    const amountIn = getFixedPointAmount(amount, decimals).toFixed(0)
-    const circuitBreakerLimit = maxAddLiquidityLimit.data
-      .multipliedBy(assetReserve)
-      .div(BN_10.pow(assetMeta.decimals))
-      .toFixed(4)
-    const isWithinCircuitBreakerLimit =
-      BigNumber(circuitBreakerLimit).gte(amount)
-
-    const hubIn = calculate_liquidity_hub_in(
-      assetReserve,
-      assetHubReserve,
-      assetShares,
-      amountIn,
-    )
-
-    const isWithinLimit = verify_asset_cap(
-      assetHubReserve,
-      assetCap,
-      hubIn,
-      totalHubReserve,
-    )
-
-    return {
-      cap: isWithinLimit,
-      circuitBreaker: {
-        isWithinLimit: isWithinCircuitBreakerLimit,
-        maxValue: circuitBreakerLimit,
-      },
-    }
-  }, [
-    apiIds.data,
-    asset.data,
-    hubBalance.data,
-    poolBalance.data,
-    amount,
-    decimals,
-    maxAddLiquidityLimit.data,
-    assetMeta,
-  ])
-
-  return { data, isLoading }
+  return add.div(total.plus(add)).multipliedBy(100)
 }

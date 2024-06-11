@@ -1,6 +1,4 @@
 import { Controller, useForm } from "react-hook-form"
-import BigNumber from "bignumber.js"
-import { BN_10 } from "utils/constants"
 import { WalletTransferAssetSelect } from "sections/wallet/transfer/WalletTransferAssetSelect"
 import { SummaryRow } from "components/Summary/SummaryRow"
 import { Spacer } from "components/Spacer/Spacer"
@@ -8,20 +6,18 @@ import { Text } from "components/Typography/Text/Text"
 import { Summary } from "components/Summary/Summary"
 import { Trans, useTranslation } from "react-i18next"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
-import { AddLiquidityLimitWarning } from "./AddLiquidityLimitWarning"
 import { PoolAddLiquidityInformationCard } from "./AddLiquidityInfoCard"
 import { Separator } from "components/Separator/Separator"
 import { Button } from "components/Button/Button"
 import { FormValues } from "utils/helpers"
 import { getFixedPointAmount } from "utils/balance"
-import { useAddLiquidity, useVerifyLimits } from "./AddLiquidity.utils"
+import { useAddLiquidity, useZodSchema } from "./AddLiquidity.utils"
 import { useStore } from "state/store"
-import { useEffect, useState } from "react"
 import { useRpcProvider } from "providers/rpcProvider"
-import { useDebounce } from "react-use"
-import { useQueryClient } from "@tanstack/react-query"
-import { QUERY_KEYS } from "utils/queryKeys"
-import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useDebouncedValue } from "hooks/useDebouncedValue"
+import { Alert } from "components/Alert/Alert"
+import { useRefetchPositions } from "sections/pools/PoolsPage.utils"
 
 type Props = {
   assetId: string
@@ -36,40 +32,27 @@ export const AddLiquidityForm = ({
   onAssetOpen,
   initialAmount,
 }: Props) => {
-  const queryClient = useQueryClient()
-  const { account } = useAccount()
-  const { t } = useTranslation()
-  const [assetValue, setAssetValue] = useState("")
-
-  const form = useForm<{ amount: string }>({
-    mode: "onChange",
-    defaultValues: { amount: initialAmount },
-  })
-
-  const amountIn = form.watch("amount")
-
-  const [, cancel] = useDebounce(() => setAssetValue(amountIn), 300, [amountIn])
-
-  useEffect(() => {
-    return () => {
-      cancel()
-    }
-  }, [cancel])
-
-  const { calculatedShares, spotPrice, omnipoolFee, assetMeta, assetBalance } =
-    useAddLiquidity(assetId, assetValue)
-
   const {
     api,
     assets: { native },
   } = useRpcProvider()
   const { createTransaction } = useStore()
+  const { t } = useTranslation()
 
-  const { data: limits } = useVerifyLimits({
-    assetId: assetId.toString(),
-    amount: amountIn,
-    decimals: assetMeta.decimals,
+  const refetch = useRefetchPositions()
+
+  const zodSchema = useZodSchema(assetId)
+
+  const form = useForm<{ amount: string }>({
+    mode: "onChange",
+    defaultValues: { amount: initialAmount },
+    resolver: zodSchema ? zodResolver(zodSchema) : undefined,
   })
+
+  const [debouncedAmount] = useDebouncedValue(form.watch("amount"), 300)
+
+  const { calculatedShares, spotPrice, omnipoolFee, assetMeta } =
+    useAddLiquidity(assetId, debouncedAmount)
 
   const onSubmit = async (values: FormValues<typeof form>) => {
     if (assetMeta.decimals == null) throw new Error("Missing asset meta")
@@ -82,11 +65,7 @@ export const AddLiquidityForm = ({
     return await createTransaction(
       { tx: api.tx.omnipool.addLiquidity(assetId, amount) },
       {
-        onSuccess: () => {
-          queryClient.refetchQueries(
-            QUERY_KEYS.accountOmnipoolPositions(account?.address),
-          )
-        },
+        onSuccess: () => refetch(),
         onSubmitted: () => {
           onClose()
           form.reset()
@@ -141,6 +120,11 @@ export const AddLiquidityForm = ({
     )
   }
 
+  const customErrors = form.formState.errors.amount as unknown as {
+    cap?: { message: string }
+    circuitBreaker?: { message: string }
+  }
+
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
@@ -155,50 +139,6 @@ export const AddLiquidityForm = ({
         <Controller
           name="amount"
           control={form.control}
-          rules={{
-            required: t("wallet.assets.transfer.error.required"),
-            validate: {
-              validNumber: (value) => {
-                try {
-                  if (!new BigNumber(value).isNaN()) return true
-                } catch {}
-                return t("error.validNumber")
-              },
-              positive: (value) =>
-                new BigNumber(value).gt(0) || t("error.positive"),
-              maxBalance: (value) => {
-                try {
-                  if (assetMeta?.decimals == null)
-                    throw new Error("Missing asset meta")
-                  if (
-                    assetBalance?.balance.gte(
-                      BigNumber(value).multipliedBy(
-                        BN_10.pow(assetMeta?.decimals),
-                      ),
-                    )
-                  )
-                    return true
-                } catch {}
-                return t("liquidity.add.modal.validation.notEnoughBalance")
-              },
-              minPoolLiquidity: (value) => {
-                try {
-                  if (assetMeta?.decimals == null)
-                    throw new Error("Missing asset meta")
-
-                  const minimumPoolLiquidity =
-                    api.consts.omnipool.minimumPoolLiquidity.toBigNumber()
-
-                  const amount = BigNumber(value).multipliedBy(
-                    BN_10.pow(assetMeta?.decimals),
-                  )
-
-                  if (amount.gte(minimumPoolLiquidity)) return true
-                } catch {}
-                return t("liquidity.add.modal.validation.minPoolLiquidity")
-              },
-            },
-          }}
           render={({
             field: { name, value, onChange },
             fieldState: { error },
@@ -207,7 +147,7 @@ export const AddLiquidityForm = ({
               title={t("wallet.assets.transfer.asset.label_mob")}
               name={name}
               value={value}
-              onBlur={setAssetValue}
+              onBlur={onChange}
               onChange={onChange}
               asset={assetId}
               error={error?.message}
@@ -263,17 +203,18 @@ export const AddLiquidityForm = ({
           {t("liquidity.add.modal.warning")}
         </Text>
 
-        {limits?.cap === false ? (
-          <AddLiquidityLimitWarning type="cap" />
-        ) : limits?.circuitBreaker.isWithinLimit === false ? (
-          <AddLiquidityLimitWarning
-            type="circuitBreaker"
-            limit={{
-              value: limits?.circuitBreaker.maxValue,
-              symbol: assetMeta?.symbol,
-            }}
-          />
+        {customErrors?.cap ? (
+          <Alert variant="warning" css={{ marginBottom: 8 }}>
+            {customErrors.cap.message}
+          </Alert>
         ) : null}
+
+        {customErrors?.circuitBreaker ? (
+          <Alert variant="warning" css={{ marginBottom: 8 }}>
+            {customErrors.circuitBreaker.message}
+          </Alert>
+        ) : null}
+
         <PoolAddLiquidityInformationCard />
         <Spacer size={20} />
       </div>
@@ -288,11 +229,7 @@ export const AddLiquidityForm = ({
       <Button
         variant="primary"
         type="submit"
-        disabled={
-          limits?.cap === false ||
-          !form.formState.isValid ||
-          !limits?.circuitBreaker.isWithinLimit
-        }
+        disabled={!form.formState.isValid || !zodSchema}
       >
         {t("liquidity.add.modal.confirmButton")}
       </Button>

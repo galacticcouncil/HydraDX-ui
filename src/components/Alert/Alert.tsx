@@ -48,7 +48,7 @@ export function Alert(props: {
 
       <div sx={{ flex: "column" }}>
         {typeof props.children === "string" ? (
-          <Text fs={12} lh={16} fw={500}>
+          <Text fs={13} lh={16} fw={500}>
             {props.children}
           </Text>
         ) : (

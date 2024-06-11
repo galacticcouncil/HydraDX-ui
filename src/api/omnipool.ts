@@ -77,6 +77,17 @@ export const useOmnipoolPosition = (
   )
 }
 
+export const useOmnipoolMinLiquidity = () => {
+  const { api } = useRpcProvider()
+  return useQuery(QUERY_KEYS.omnipoolMinLiquidity, getOmnipoolMinLiquidity(api))
+}
+
+const getOmnipoolMinLiquidity = (api: ApiPromise) => async () => {
+  const data = await api.consts.omnipool.minimumPoolLiquidity
+
+  return data.toBigNumber()
+}
+
 export const useOmnipoolFee = () => {
   const { api } = useRpcProvider()
   return useQuery(QUERY_KEYS.omnipoolFee, getOmnipoolFee(api))

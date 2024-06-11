@@ -1,11 +1,14 @@
-import { useQueryClient } from "@tanstack/react-query"
 import { useTokenBalance } from "api/balances"
 import { SSeparator } from "components/Separator/Separator.styled"
 import { Text } from "components/Typography/Text/Text"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { TPoolFullData, TXYKPoolFullData } from "sections/pools/PoolsPage.utils"
+import {
+  TPoolFullData,
+  TXYKPoolFullData,
+  useRefetchPositions,
+} from "sections/pools/PoolsPage.utils"
 import { FarmingPositionWrapper } from "sections/pools/farms/FarmingPositionWrapper"
 import { useAllOmnipoolDeposits } from "sections/pools/farms/position/FarmingPosition.utils"
 import { LiquidityPositionWrapper } from "sections/pools/pool/positions/LiquidityPositionWrapper"
@@ -13,14 +16,14 @@ import { XYKPosition } from "sections/pools/pool/xykPosition/XYKPosition"
 import { StablepoolPosition } from "sections/pools/stablepool/positions/StablepoolPosition"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { BN_0 } from "utils/constants"
-import { QUERY_KEYS } from "utils/queryKeys"
 
 export const MyPositions = ({ pool }: { pool: TPoolFullData }) => {
   const { assets } = useRpcProvider()
   const { account } = useAccount()
   const { t } = useTranslation()
+  const refetch = useRefetchPositions()
+
   const meta = assets.getAsset(pool.id)
-  const queryClient = useQueryClient()
 
   const miningPositions = useAllOmnipoolDeposits()
 
@@ -58,12 +61,6 @@ export const MyPositions = ({ pool }: { pool: TPoolFullData }) => {
     !stablepoolBalance.data?.freeBalance
   )
     return null
-
-  const refetchPositions = () => {
-    queryClient.refetchQueries(
-      QUERY_KEYS.accountOmnipoolPositions(account?.address),
-    )
-  }
 
   const totalStableAndOmni = totalOmnipool.plus(stablepoolAmountPrice)
 
@@ -111,14 +108,14 @@ export const MyPositions = ({ pool }: { pool: TPoolFullData }) => {
           pool={pool}
           amount={stablepoolAmount}
           amountPrice={stablepoolAmountPrice}
-          refetchPositions={refetchPositions}
+          refetchPositions={refetch}
         />
       )}
 
       <LiquidityPositionWrapper
         pool={pool}
         positions={pool.omnipoolNftPositions}
-        refetchPositions={refetchPositions}
+        refetchPositions={refetch}
       />
       <FarmingPositionWrapper pool={pool} positions={pool.miningNftPositions} />
     </div>
