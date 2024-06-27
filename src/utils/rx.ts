@@ -95,3 +95,7 @@ export function mergeArrays<TArr, TKey extends keyof TArr>(
 
   return mergedArray
 }
+
+export function zipArrays<A, B>(a: A[], b: B[]): [A, B][] {
+  return a.map((item, index) => [item, b[index]])
+}

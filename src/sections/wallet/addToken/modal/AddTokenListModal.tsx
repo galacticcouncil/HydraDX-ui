@@ -1,5 +1,4 @@
 import { useExternalAssetRegistry } from "api/externalAssetRegistry"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
 import { EmptySearchState } from "components/EmptySearchState/EmptySearchState"
 import { Icon } from "components/Icon/Icon"
 import { ModalScrollableContent } from "components/Modal/Modal"
@@ -17,6 +16,7 @@ import { AssetRow } from "sections/wallet/addToken/modal/AddTokenModal.styled"
 import { SourceFilter } from "sections/wallet/addToken/modal/filter/SourceFilter"
 import { AddTokenListSkeleton } from "sections/wallet/addToken/modal/skeleton/AddTokenListSkeleton"
 import { theme } from "theme"
+import { AssetLogo } from "components/AssetIcon/AssetIcon"
 
 type Props = {
   onAssetSelect?: (asset: TExternalAsset) => void

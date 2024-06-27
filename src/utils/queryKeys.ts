@@ -419,5 +419,10 @@ export const QUERY_KEYS = {
   externalAssetRegistry: ["externalAssetRegistry"],
   assetHubAssetRegistry: ["assetHubAssetRegistry"],
   pendulumAssetRegistry: ["pendulumAssetRegistry"],
+  assetHubTokenBalance: (address: string, id: string) => [
+    "assetHubTokenBalance",
+    address,
+    id,
+  ],
   bridgeLink: (hash: string) => ["bridgeLink", hash],
 } as const

@@ -4,6 +4,7 @@ import MoreIcon from "assets/icons/MoreDotsIcon.svg?react"
 import TransferIcon from "assets/icons/TransferIcon.svg?react"
 import MetamaskLogo from "assets/icons/MetaMask.svg?react"
 import PlusIcon from "assets/icons/PlusIcon.svg?react"
+import WarningIcon from "assets/icons/WarningIcon.svg?react"
 import DollarIcon from "assets/icons/DollarIcon.svg?react"
 import { ButtonTransparent } from "components/Button/Button"
 import { Dropdown, TDropdownItem } from "components/Dropdown/Dropdown"
@@ -20,9 +21,12 @@ import { LINKS } from "utils/navigation"
 import { useNavigate } from "@tanstack/react-location"
 import { AssetsTableData } from "sections/wallet/assets/table/data/WalletAssetsTableData.utils"
 import { useRpcProvider } from "providers/rpcProvider"
-import { useExternalTokenMeta } from "sections/wallet/addToken/AddToken.utils"
 import { ExternalAssetImportModal } from "sections/trade/modal/ExternalAssetImportModal"
 import { useState } from "react"
+import { useExternalTokenMeta } from "sections/wallet/addToken/AddToken.utils"
+
+import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
+import { ExternalAssetUpdateModal } from "sections/trade/modal/ExternalAssetUpdateModal"
 
 type Props = {
   toggleExpanded: () => void
@@ -36,6 +40,7 @@ export const WalletAssetsTableActions = (props: Props) => {
   const setFeeAsPayment = useSetAsFeePayment()
   const { account } = useAccount()
   const { featureFlags } = useRpcProvider()
+  const rugCheck = useExternalTokensRugCheck()
 
   const navigate = useNavigate()
 
@@ -48,6 +53,8 @@ export const WalletAssetsTableActions = (props: Props) => {
     couldBeSetAsPaymentFee,
     tradability: { inTradeRouter, canBuy },
   } = props.asset
+
+  const hasRugCheckWarnings = !!rugCheck.tokensMap.get(id)?.warnings?.length
 
   const couldWatchMetaMaskAsset =
     isMetaMask(window?.ethereum) &&
@@ -160,7 +167,9 @@ export const WalletAssetsTableActions = (props: Props) => {
       }}
     >
       <>
-        {props.asset.isExternal && !props.asset.name ? (
+        {hasRugCheckWarnings ? (
+          <UpdateTokenDataAction id={props.asset.id} />
+        ) : props.asset.isExternal && !props.asset.name ? (
           <AddTokenAction id={props.asset.id} />
         ) : (
           <div
@@ -216,6 +225,42 @@ export const WalletAssetsTableActions = (props: Props) => {
         <ChevronDownIcon />
       </ButtonTransparent>
     </div>
+  )
+}
+
+export const UpdateTokenDataAction = ({
+  id,
+  className,
+}: {
+  id: string
+  className?: string
+}) => {
+  const { t } = useTranslation()
+  const { account } = useAccount()
+  const [modalOpen, setModalOpen] = useState(false)
+  return (
+    <>
+      <TableAction
+        variant="warning"
+        icon={<WarningIcon />}
+        onClick={() => {
+          setModalOpen(true)
+        }}
+        disabled={account?.isExternalWalletConnected}
+        className={className}
+      >
+        {t("wallet.assets.table.actions.update")}
+      </TableAction>
+      {modalOpen && (
+        <ExternalAssetUpdateModal
+          open={modalOpen}
+          assetId={id}
+          onClose={() => {
+            setModalOpen(false)
+          }}
+        />
+      )}
+    </>
   )
 }
 

@@ -102,7 +102,6 @@ export const SModalSection = styled.div`
   height: 100%;
   padding-bottom: env(safe-area-inset-bottom);
   background: ${theme.colors.darkBlue700};
-  box-shadow: ${theme.shadows.modal};
 
   @media ${theme.viewport.gte.sm} {
     height: auto;

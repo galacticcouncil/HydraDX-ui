@@ -31,6 +31,7 @@ import { AssetsTableData } from "./data/WalletAssetsTableData.utils"
 import { EmptyState } from "components/Table/EmptyState"
 import EmptyStateIcon from "assets/icons/NoActivities.svg?react"
 import { LINKS } from "utils/navigation"
+import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
 
 type Props = {
   data: AssetsTableData[]
@@ -45,6 +46,7 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
   const [row, setRow] = useState<AssetsTableData | undefined>(undefined)
   const [addToken, setAddToken] = useState(false)
   const [transferAsset, setTransferAsset] = useState<string | null>(null)
+  const rugCheck = useExternalTokensRugCheck()
 
   const isDesktop = useMedia(theme.viewport.gte.sm)
 
@@ -129,13 +131,25 @@ export const WalletAssetsTable = ({ data, setShowAll, showAll }: Props) => {
                         !isDesktop && setRow(row.original)
                       }}
                     >
-                      <TableData
-                        colSpan={isDesktop ? table.getAllColumns().length : 2}
-                      >
-                        <ExternalAssetRow row={row.original} />
-                      </TableData>
+                      <ExternalAssetRow type="unknown" row={row.original} />
                     </TableRow>
                   )
+
+                const rugCheckData = rugCheck.tokensMap.get(row.original.id)
+
+                if (rugCheckData?.warnings.length) {
+                  return (
+                    <TableRow
+                      key={row.original.id}
+                      onClick={() => {
+                        !isDesktop && setRow(row.original)
+                      }}
+                    >
+                      <ExternalAssetRow type="changed" row={row.original} />
+                    </TableRow>
+                  )
+                }
+
                 return (
                   <Fragment key={row.original.id}>
                     <TableRow

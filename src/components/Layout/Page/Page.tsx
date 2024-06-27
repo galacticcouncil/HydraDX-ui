@@ -19,6 +19,7 @@ import {
   MIGRATION_TRIGGER_DOMAIN,
   useMigrationStore,
 } from "sections/migration/MigrationProvider.utils"
+import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
 
 type Props = {
   className?: string
@@ -37,6 +38,8 @@ export const Page = ({
   const ref = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const { migrationCompleted, setMigrationCompleted } = useMigrationStore()
+
+  useExternalTokensRugCheck()
 
   useEffect(() => {
     ref.current?.scrollTo({

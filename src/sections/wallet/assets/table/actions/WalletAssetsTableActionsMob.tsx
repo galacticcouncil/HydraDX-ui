@@ -22,7 +22,10 @@ import {
   useUnlockTokens,
 } from "sections/wallet/assets/table/data/WalletAssetsTableData.utils"
 import Skeleton from "react-loading-skeleton"
-import { AddTokenAction } from "./WalletAssetsTableActions"
+import {
+  AddTokenAction,
+  UpdateTokenDataAction,
+} from "./WalletAssetsTableActions"
 import { isEvmAccount } from "utils/evm"
 import { TOAST_MESSAGES } from "state/toasts"
 import { ToastMessage } from "state/store"
@@ -31,6 +34,7 @@ import { BN_0 } from "utils/constants"
 import { SLocksContainer } from "sections/wallet/assets/table/details/WalletAssetsTableDetails.styled"
 import { useRpcProvider } from "providers/rpcProvider"
 import { enableUnlockTokens } from "sections/wallet/assets/table/details/WalletAssetsTableDetails"
+import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
 
 type Props = {
   row?: AssetsTableData
@@ -50,6 +54,7 @@ export const WalletAssetsTableActionsMob = ({
   const { account } = useAccount()
   const setFeeAsPayment = useSetAsFeePayment()
   const { featureFlags } = useRpcProvider()
+  const rugCheck = useExternalTokensRugCheck()
 
   if (!row) return null
 
@@ -60,6 +65,7 @@ export const WalletAssetsTableActionsMob = ({
     : true
 
   const isUnknownExternalAsset = row.isExternal && !row.name
+  const hasWarnings = !!rugCheck.tokensMap.get(row.id)?.warnings.length
 
   return (
     <Modal open={!!row} isDrawer onClose={onClose} title="">
@@ -78,9 +84,15 @@ export const WalletAssetsTableActionsMob = ({
             flexWrap: "wrap",
           }}
         >
-          {isUnknownExternalAsset ? (
+          {hasWarnings ? (
+            <>
+              <Text fs={13} color="warningOrange200" sx={{ p: 8 }}>
+                {t("wallet.assets.table.addToken.changed")}
+              </Text>{" "}
+            </>
+          ) : isUnknownExternalAsset ? (
             <Text fs={13} color="whiteish500" sx={{ p: 8 }}>
-              {t("wallet.assets.table.addToken.desc")}
+              {t("wallet.assets.table.addToken.unknown")}
             </Text>
           ) : (
             <>
@@ -111,7 +123,12 @@ export const WalletAssetsTableActionsMob = ({
           )}
         </div>
         <SActionButtonsContainer>
-          {isUnknownExternalAsset ? (
+          {hasWarnings ? (
+            <UpdateTokenDataAction
+              id={row.id}
+              css={{ width: "100%", marginTop: 20 }}
+            />
+          ) : isUnknownExternalAsset ? (
             <AddTokenAction
               id={row.id}
               css={{ width: "100%", marginTop: 20 }}

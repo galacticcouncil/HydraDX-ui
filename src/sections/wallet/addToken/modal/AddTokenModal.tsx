@@ -1,7 +1,7 @@
+import { useState } from "react"
 import { Modal } from "components/Modal/Modal"
 import { useModalPagination } from "components/Modal/Modal.utils"
 import { ModalContents } from "components/Modal/contents/ModalContents"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   SELECTABLE_PARACHAINS_IDS,
@@ -45,6 +45,8 @@ export const AddTokenModal = ({
         onBack={() => selectedAssetSet(undefined)}
         contents={[
           {
+            title: t("wallet.addToken.header.addCustom"),
+            headerVariant: "GeistMono",
             noPadding: true,
             content: (
               <AddTokenListModal

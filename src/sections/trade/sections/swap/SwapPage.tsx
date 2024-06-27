@@ -18,6 +18,8 @@ import { useRemount } from "hooks/useRemount"
 import { ExternalAssetImportModal } from "sections/trade/modal/ExternalAssetImportModal"
 import { AddTokenModal } from "sections/wallet/addToken/modal/AddTokenModal"
 import { useState } from "react"
+import { Asset } from "@galacticcouncil/sdk"
+import { ExternalAssetUpdateModal } from "sections/trade/modal/ExternalAssetUpdateModal"
 
 const defaultEvmTokenId: string = import.meta.env.VITE_EVM_NATIVE_ASSET_ID
 
@@ -29,7 +31,10 @@ const SwapApp = createComponent({
     onTxNew: "gc:tx:new" as EventName<CustomEvent<TxInfo>>,
     onDcaSchedule: "gc:tx:scheduleDca" as EventName<CustomEvent<TxInfo>>,
     onDcaTerminate: "gc:tx:terminateDca" as EventName<CustomEvent<TxInfo>>,
-    onNewAssetClick: "gc:external:new" as EventName<CustomEvent<TxInfo>>,
+    onNewAssetClick: "gc:external:new" as EventName<CustomEvent<void>>,
+    onCheckAssetDataClick: "gc:external:checkData" as EventName<
+      CustomEvent<Asset>
+    >,
   },
 })
 
@@ -58,6 +63,7 @@ export function SwapPage() {
   const { createTransaction } = useStore()
   const { stableCoinId } = useDisplayAssetStore()
   const [addToken, setAddToken] = useState(false)
+  const [tokenCheck, setTokenCheck] = useState<Asset | null>(null)
 
   const isEvm = isEvmAccount(account?.address)
   const version = useRemount([isEvm])
@@ -141,9 +147,17 @@ export function SwapPage() {
         onDcaSchedule={(e) => handleSubmit(e)}
         onDcaTerminate={(e) => handleSubmit(e)}
         onNewAssetClick={() => setAddToken(true)}
+        onCheckAssetDataClick={(e) => setTokenCheck(e.detail)}
         isTestnet={activeProvider.dataEnv === "testnet"}
       />
       {isLoaded && <ExternalAssetImportModal assetIds={[assetIn, assetOut]} />}
+      {isLoaded && tokenCheck && (
+        <ExternalAssetUpdateModal
+          assetId={tokenCheck.id}
+          open={!!tokenCheck}
+          onClose={() => setTokenCheck(null)}
+        />
+      )}
       {addToken && (
         <AddTokenModal
           css={{ zIndex: 9999 }}

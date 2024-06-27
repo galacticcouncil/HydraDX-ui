@@ -226,6 +226,25 @@ const variantStyles: Record<ButtonVariant, SerializedStyles> = {
       border: 1px solid ${theme.colors.red400};
     }
   `,
+  warning: css`
+    border-radius: 4px;
+    background: rgba(${theme.rgbColors.warning300}, 0.2);
+    color: ${theme.colors.warning300};
+    border: 1px solid rgba(${theme.rgbColors.warning300}, 0.5);
+    box-shadow: unset;
+
+    :hover {
+      background: rgba(${theme.rgbColors.warning300}, 0.1);
+      color: ${theme.colors.warning300};
+      border: 1px solid ${theme.colors.warning300};
+    }
+
+    :active {
+      background: ${theme.colors.warning300};
+      color: ${theme.colors.warning300};
+      border: 1px solid ${theme.colors.warning300};
+    }
+  `,
   gradient: css`
     background: ${theme.gradients.pinkLightPink};
     color: ${theme.colors.white};

@@ -8,6 +8,7 @@ export type ButtonVariant =
   | "mutedSecondary"
   | "error"
   | "mutedError"
+  | "warning"
   | "gradient"
   | "outline"
   | "transparent"

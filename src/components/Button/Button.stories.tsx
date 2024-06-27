@@ -7,24 +7,35 @@ export default {
 
 export const Primary = () => (
   <>
-    <Button variant="primary">Button primary</Button>
+    <Button variant="primary">Button</Button>
   </>
 )
 export const PrimarySmall = () => (
   <Button variant="primary" size="small">
-    Button primary
+    Button
   </Button>
 )
 export const PrimaryDisabled = () => (
   <>
     <Button variant="primary" disabled>
-      Button primary
+      Button
     </Button>
   </>
 )
-export const Secondary = () => <Button>Button primary</Button>
-export const Loading = () => <Button isLoading>Button primary</Button>
-export const Gradient = () => <Button variant="gradient">Button primary</Button>
+export const Secondary = () => <Button>Button</Button>
+
+export const MutedSecondary = () => (
+  <Button variant="mutedSecondary">Button</Button>
+)
+export const Error = () => <Button variant="error">Button</Button>
+export const MutedError = () => <Button variant="mutedError">Button</Button>
+export const Warning = () => <Button variant="warning">Button</Button>
+export const Outline = () => <Button variant="outline">Button</Button>
+export const Transparent = () => <Button variant="transparent">Button</Button>
+export const Blue = () => <Button variant="blue">Button</Button>
+export const Green = () => <Button variant="green">Button</Button>
+export const Loading = () => <Button isLoading>Button</Button>
+export const Gradient = () => <Button variant="gradient">Button</Button>
 export const TabLink = () => (
   <Button
     variant="outline"

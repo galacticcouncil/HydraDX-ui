@@ -9,6 +9,8 @@ import { BN_0 } from "utils/constants"
 import { useDisplayPrices } from "utils/displayAsset"
 import { isNotNil } from "utils/helpers"
 
+export const MASTER_KEY_WHITELIST = ["23", "31337", "42069", "17", "8889"]
+
 const useMissingExternalAssets = (ids: string[]) => {
   const { assets } = useRpcProvider()
   const externalAssets = useAssetHubAssetRegistry()

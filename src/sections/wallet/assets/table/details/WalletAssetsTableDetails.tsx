@@ -27,6 +27,7 @@ import { AssetTableName } from "components/AssetTableName/AssetTableName"
 import { WalletAssetsTableActions } from "sections/wallet/assets/table/actions/WalletAssetsTableActions"
 import { useMedia } from "react-use"
 import { theme } from "theme"
+import { TableData } from "components/Table/Table.styled"
 
 const chains = Array.from(chainsMap.values())
 
@@ -290,25 +291,44 @@ const AssetDetails = ({
   )
 }
 
-export const ExternalAssetRow = ({ row }: { row: AssetsTableData }) => {
+export const ExternalAssetRow = ({
+  row,
+  type,
+}: {
+  row: AssetsTableData
+  type: "unknown" | "changed"
+}) => {
   const { t } = useTranslation()
   const isDesktop = useMedia(theme.viewport.gte.sm)
   return (
-    <div sx={{ flex: "row", justify: "space-between", align: "center" }}>
-      <AssetTableName {...row} />
+    <>
+      <TableData colSpan={isDesktop ? 1 : 2}>
+        <AssetTableName {...row} />
+      </TableData>
       {isDesktop && (
-        <>
-          <Text fs={13} color="whiteish500">
-            {t("wallet.assets.table.addToken.desc")}
-          </Text>
+        <TableData colSpan={2}>
+          <>
+            <Text
+              fs={13}
+              color={type === "changed" ? "warningOrange200" : "whiteish500"}
+            >
+              {type === "changed"
+                ? t("wallet.assets.table.addToken.changed")
+                : t("wallet.assets.table.addToken.unknown")}
+            </Text>
+          </>
+        </TableData>
+      )}
+      {isDesktop && (
+        <TableData>
           <WalletAssetsTableActions
             toggleExpanded={() => null}
             isExpanded={false}
             onTransferClick={() => null}
             asset={row}
           />
-        </>
+        </TableData>
       )}
-    </div>
+    </>
   )
 }
