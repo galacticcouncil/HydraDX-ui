@@ -118,7 +118,10 @@ export const useAssetsData = ({
 
     const result = isAllAssets
       ? allAssets.reduce<typeof rowsWithBalance>(
-          (acc, { id, symbol, name, decimals, isExternal }) => {
+          (
+            acc,
+            { id, symbol, name, decimals, isExternal, externalId, parachainId },
+          ) => {
             const tokenWithBalance = rowsWithBalance.find(
               (row) => row.id === id,
             )
@@ -136,23 +139,25 @@ export const useAssetsData = ({
                 inTradeRouter,
               }
 
-              if (symbol) {
-                acc.push({
-                  id,
-                  symbol,
-                  name,
-                  decimals,
-                  isPaymentFee: false,
-                  couldBeSetAsPaymentFee: false,
-                  reserved: BN_0,
-                  reservedDisplay: BN_0,
-                  total: BN_0,
-                  totalDisplay: BN_0,
-                  transferable: BN_0,
-                  transferableDisplay: BN_0,
-                  tradability,
-                  isExternal,
-                })
+              const asset = {
+                id,
+                symbol,
+                name,
+                decimals,
+                isPaymentFee: false,
+                couldBeSetAsPaymentFee: false,
+                reserved: BN_0,
+                reservedDisplay: BN_0,
+                total: BN_0,
+                totalDisplay: BN_0,
+                transferable: BN_0,
+                transferableDisplay: BN_0,
+                tradability,
+                isExternal,
+              }
+
+              if (asset.symbol) {
+                acc.push(asset)
               }
             }
             return acc
@@ -166,11 +171,11 @@ export const useAssetsData = ({
       if (a.id === NATIVE_ASSET_ID) return -1
       if (b.id === NATIVE_ASSET_ID) return 1
 
-      if (a.isExternal && !a.name) return 1
-      if (b.isExternal && !b.name) return -1
-
       if (a.transferableDisplay.isNaN()) return 1
       if (b.transferableDisplay.isNaN()) return -1
+
+      if (a.isExternal && !a.symbol) return 1
+      if (b.isExternal && !b.symbol) return -1
 
       if (!b.transferableDisplay.eq(a.transferableDisplay))
         return b.transferableDisplay.minus(a.transferableDisplay).toNumber()

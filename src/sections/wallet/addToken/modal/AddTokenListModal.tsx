@@ -5,6 +5,7 @@ import { Icon } from "components/Icon/Icon"
 import { ModalScrollableContent } from "components/Modal/Modal"
 import { Search } from "components/Search/Search"
 import { Text } from "components/Typography/Text/Text"
+import { useShallow } from "hooks/useShallow"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
 import { useMedia } from "react-use"
@@ -16,6 +17,7 @@ import {
 import { AssetRow } from "sections/wallet/addToken/modal/AddTokenModal.styled"
 import { SourceFilter } from "sections/wallet/addToken/modal/filter/SourceFilter"
 import { AddTokenListSkeleton } from "sections/wallet/addToken/modal/skeleton/AddTokenListSkeleton"
+import { useSettingsStore } from "state/store"
 import { theme } from "theme"
 
 type Props = {
@@ -37,6 +39,7 @@ export const AddTokenListModal: React.FC<Props> = ({
 }) => {
   const { t } = useTranslation()
   const { assets, isLoaded } = useRpcProvider()
+  const degenMode = useSettingsStore(useShallow((s) => s.degenMode))
 
   const isDesktop = useMedia(theme.viewport.gte.sm)
 
@@ -45,7 +48,10 @@ export const AddTokenListModal: React.FC<Props> = ({
 
   const selectedParachain = assetRegistry?.[parachainId]
 
-  const externalAssets = selectedParachain.data ?? []
+  const externalAssets = selectedParachain.data
+    ? Array.from(selectedParachain.data.values())
+    : []
+
   const internalAssets =
     assets?.tokens?.filter(
       (asset) => asset.parachainId === parachainId.toString(),
@@ -60,7 +66,7 @@ export const AddTokenListModal: React.FC<Props> = ({
     )
     if (isChainStored) return false
 
-    const isUserStored = isAdded(asset.id)
+    const isUserStored = degenMode || isAdded(asset.id)
     if (isUserStored) return false
 
     const isSearched = search.length

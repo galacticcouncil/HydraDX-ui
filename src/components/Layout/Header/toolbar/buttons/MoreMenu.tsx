@@ -65,6 +65,7 @@ export const MoreMenuContents = ({
             <HeaderDropdownItems>
               {filteredMenuItems.map((item) => (
                 <HeaderDropdownItem
+                  variant="navigation"
                   to={item.href}
                   search={resetSearchParams(search)}
                   key={item.key}

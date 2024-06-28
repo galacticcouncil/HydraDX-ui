@@ -71,7 +71,7 @@ export const MigrationImportModal: FC<{ data?: string }> = ({ data }) => {
             reloadAppWithTimestamp()
           }}
         >
-          {t("toast.close")}
+          {t("close")}
         </Button>
         {data && (
           <Button

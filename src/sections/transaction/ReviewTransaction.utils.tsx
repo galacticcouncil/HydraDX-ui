@@ -11,12 +11,15 @@ import { ISubmittableResult } from "@polkadot/types/types"
 import { MutationObserverOptions, useMutation } from "@tanstack/react-query"
 import { useNextEvmPermitNonce } from "api/transaction"
 import { decodeError } from "ethers-decode-error"
+import { useShallow } from "hooks/useShallow"
 import { useRpcProvider } from "providers/rpcProvider"
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useMountedState } from "react-use"
+import { useUserExternalTokenStore } from "sections/wallet/addToken/AddToken.utils"
 import { useEvmAccount } from "sections/web3-connect/Web3Connect.utils"
 import { PermitResult } from "sections/web3-connect/signer/EthereumSigner"
+import { useSettingsStore } from "state/store"
 import { useToast } from "state/toasts"
 import {
   H160,
@@ -416,6 +419,28 @@ function getReferralCodeFromTx(tx: SubmittableExtrinsic<"promise">) {
   return code
 }
 
+function getAssetIdsFromTx(tx: SubmittableExtrinsic<"promise">) {
+  if (!tx) return []
+
+  try {
+    const { method, section }: any = tx.method.toHuman()
+    const json: any = tx.method.toJSON()
+    const callName = `${section}.${method}`
+
+    switch (callName) {
+      case "router.sell":
+      case "router.buy":
+        return [json.args.asset_in, json.args.asset_out]
+          .filter(Boolean)
+          .map(String)
+      default:
+        return []
+    }
+  } catch {
+    return []
+  }
+}
+
 const useBoundReferralToast = () => {
   const { t } = useTranslation()
   const { loading, success, remove } = useToast()
@@ -462,12 +487,43 @@ const useBoundReferralToast = () => {
   }
 }
 
+const useStoreExternalAssetsOnSign = () => {
+  const { assets } = useRpcProvider()
+  const { addToken, isAdded } = useUserExternalTokenStore()
+  const degenMode = useSettingsStore(useShallow((s) => s.degenMode))
+
+  return useCallback(
+    (assetIds: string[]) => {
+      if (!degenMode) return
+      assetIds.forEach((id) => {
+        const asset = assets.getAsset(id)
+        if (
+          !isAdded(asset.externalId) &&
+          asset.isExternal &&
+          asset.externalId
+        ) {
+          addToken({
+            id: asset.externalId,
+            decimals: asset.decimals,
+            symbol: asset.symbol,
+            name: asset.name,
+            origin: Number(asset.parachainId),
+            internalId: asset.id,
+          })
+        }
+      })
+    },
+    [addToken, assets, degenMode, isAdded],
+  )
+}
+
 export const useSendTx = () => {
   const [txType, setTxType] = useState<"default" | "evm" | "permit" | null>(
     null,
   )
 
   const boundReferralToast = useBoundReferralToast()
+  const storeExternalAssetsOnSign = useStoreExternalAssetsOnSign()
 
   const { incrementPermitNonce, revertPermitNonce, setPendingPermit } =
     useNextEvmPermitNonce()
@@ -475,6 +531,7 @@ export const useSendTx = () => {
   const sendTx = useSendTransactionMutation({
     onMutate: ({ tx }) => {
       boundReferralToast.onLoading(tx)
+      storeExternalAssetsOnSign(getAssetIdsFromTx(tx))
       setTxType("default")
     },
     onSuccess: boundReferralToast.onSuccess,
@@ -482,7 +539,10 @@ export const useSendTx = () => {
 
   const sendEvmTx = useSendEvmTransactionMutation({
     onMutate: ({ tx }) => {
-      if (tx) boundReferralToast.onLoading(tx)
+      if (tx) {
+        boundReferralToast.onLoading(tx)
+        storeExternalAssetsOnSign(getAssetIdsFromTx(tx))
+      }
       setTxType("evm")
     },
     onSuccess: boundReferralToast.onSuccess,

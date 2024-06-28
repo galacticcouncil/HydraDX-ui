@@ -65,7 +65,7 @@ export const AssetSelectButton = ({ onClick, assetId, className }: Props) => {
       )}
 
       {isAssetFound && (
-        <div sx={{ flex: "column", justify: "space-between" }}>
+        <div sx={{ flex: "column", justify: "space-between", minWidth: 0 }}>
           <Text fw={700} font="GeistMedium" lh={16} color="white">
             {symbol}
           </Text>
@@ -74,6 +74,8 @@ export const AssetSelectButton = ({ onClick, assetId, className }: Props) => {
             lh={13}
             css={{
               whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
               color: `rgba(${theme.rgbColors.whiteish500}, 0.6)`,
               display: isTablet ? "block" : "none",
             }}

@@ -6,10 +6,20 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { SettingsContents } from "components/Layout/Header/toolbar/buttons/Settings"
 import { theme } from "theme"
+import { useSettingsStore } from "state/store"
+import { DegenModeModal } from "components/Layout/Header/DegenMode/DegenModeModal"
 
 export const HeaderSettingsMobile = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [degenModalOpen, setDegenModalOpen] = useState(false)
+  const { degenMode, toggleDegenMode } = useSettingsStore()
+
+  const onDegenModalClose = () => setDegenModalOpen(false)
+  const onDegenModalAccept = () => {
+    toggleDegenMode()
+    setDegenModalOpen(false)
+  }
 
   return (
     <>
@@ -30,8 +40,24 @@ export const HeaderSettingsMobile = () => {
         </Text>
       </div>
       <Modal open={open}>
-        <SettingsContents onClose={() => setOpen(false)} />
+        <SettingsContents
+          onClose={() => setOpen(false)}
+          onDegenModeChange={() => {
+            if (degenMode) {
+              toggleDegenMode()
+            } else {
+              setDegenModalOpen(true)
+            }
+          }}
+        />
       </Modal>
+      {degenModalOpen && (
+        <DegenModeModal
+          open={degenModalOpen}
+          onClose={onDegenModalClose}
+          onAccept={onDegenModalAccept}
+        />
+      )}
     </>
   )
 }

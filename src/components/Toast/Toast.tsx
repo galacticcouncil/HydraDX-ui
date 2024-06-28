@@ -81,7 +81,7 @@ export const Toast: FC<Props> = ({
             />
           </SProgressContainer>
         </ToastContent>
-        <SClose aria-label={t("toast.close")} onClick={onClose}>
+        <SClose aria-label={t("close")} onClick={onClose}>
           <CrossIcon />
         </SClose>
       </motion.div>

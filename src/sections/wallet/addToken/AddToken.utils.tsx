@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 import { ExternalAssetCursor } from "@galacticcouncil/apps"
 import { useRpcProvider } from "providers/rpcProvider"
-import { ToastMessage, useStore } from "state/store"
+import { ToastMessage, useSettingsStore, useStore } from "state/store"
 import {
   HydradxRuntimeXcmAssetLocation,
   XcmV3Junction,
@@ -15,11 +15,12 @@ import {
   PENDULUM_ID,
   useExternalAssetRegistry,
 } from "api/externalAssetRegistry"
-import { useProviderRpcUrlStore } from "api/provider"
+import { TEnv, useProviderRpcUrlStore } from "api/provider"
 import { isNotNil } from "utils/helpers"
 import { u32 } from "@polkadot/types"
 import { useMemo } from "react"
 import { omit } from "utils/rx"
+import { useShallow } from "hooks/useShallow"
 
 const pink = {
   decimals: 10,
@@ -350,10 +351,10 @@ export const useExternalTokenMeta = (id: string | undefined) => {
   const externalRegistry = useExternalAssetRegistry()
 
   const externalAsset = useMemo(() => {
-    if (asset?.isExternal && !asset?.symbol) {
+    if (asset?.externalId && asset?.isExternal && !asset?.symbol) {
       for (const parachain in externalRegistry) {
-        const externalAsset = externalRegistry[Number(parachain)].data?.find(
-          (externalAsset) => externalAsset.id === asset.externalId,
+        const externalAsset = externalRegistry[Number(parachain)]?.data?.get(
+          asset.externalId,
         )
         if (externalAsset) {
           const meta = assets.external.find(
@@ -379,4 +380,63 @@ export const useExternalTokenMeta = (id: string | undefined) => {
   }, [asset, externalRegistry, assets.external])
 
   return externalAsset
+}
+
+export const updateExternalAssetsCursor = (
+  externalAssets: TRegisteredAsset[],
+  options: { degenMode: boolean; dataEnv: TEnv },
+) => {
+  const { degenMode, dataEnv } = options
+  const externalTokenState = useUserExternalTokenStore.getState()
+
+  if (degenMode) {
+    ExternalAssetCursor.reset({
+      state: {
+        tokens: {
+          ...externalTokenState.tokens,
+          [dataEnv]: externalAssets,
+        },
+      },
+      version,
+    })
+  } else {
+    ExternalAssetCursor.reset({
+      state: {
+        tokens: externalTokenState.tokens,
+      },
+      version,
+    })
+  }
+}
+
+export const useRegisteredExternalTokens = () => {
+  const degenMode = useSettingsStore(useShallow((s) => s.degenMode))
+  const { getDataEnv } = useProviderRpcUrlStore()
+  const tokens = useUserExternalTokenStore(useShallow((s) => s.tokens))
+  const dataEnv = getDataEnv()
+  const { isLoaded, assets } = useRpcProvider()
+
+  const externalAssets = useExternalAssetRegistry(degenMode)
+
+  return useMemo(() => {
+    if (degenMode && isLoaded) {
+      const data = assets.external.reduce((acc, asset) => {
+        const externalAsset = externalAssets[
+          Number(asset.parachainId)
+        ]?.data?.get(asset.externalId ?? "")
+
+        if (externalAsset) {
+          acc.push({
+            ...externalAsset,
+            internalId: asset.id,
+          })
+        }
+
+        return acc
+      }, [] as TRegisteredAsset[])
+      return data
+    } else {
+      return tokens[dataEnv]
+    }
+  }, [assets.external, dataEnv, isLoaded, degenMode, externalAssets, tokens])
 }

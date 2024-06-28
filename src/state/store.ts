@@ -138,3 +138,21 @@ export const useRpcStore = create<RpcStore>()(
     },
   ),
 )
+
+type SettingsStore = {
+  degenMode: boolean
+  toggleDegenMode: () => void
+}
+
+export const useSettingsStore = create<SettingsStore>()(
+  persist(
+    (set) => ({
+      degenMode: false,
+      toggleDegenMode: () => set((store) => ({ degenMode: !store.degenMode })),
+    }),
+    {
+      name: "settings",
+      version: 1,
+    },
+  ),
+)

@@ -78,4 +78,8 @@ export const SSelectAssetButton = styled(Button)`
     cursor: pointer;
     background: rgba(${theme.rgbColors.white}, 0.06);
   }
+
+  & > span {
+    min-width: 0;
+  }
 `

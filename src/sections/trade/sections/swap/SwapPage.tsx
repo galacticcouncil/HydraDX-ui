@@ -119,7 +119,7 @@ export function SwapPage() {
   return (
     <SContainer>
       <SwapApp
-        key={version}
+        key={`swap-app-${version}`}
         ref={(r) => {
           if (r) {
             r.setAttribute("chart", "")

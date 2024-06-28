@@ -41,7 +41,7 @@ export const MigrationExportModal: FC<{
         color="darkBlue401"
       />
       <div sx={{ flex: "row", justify: "space-between" }}>
-        <Button onClick={onCancel}>{t("toast.close")}</Button>
+        <Button onClick={onCancel}>{t("close")}</Button>
 
         <Button
           variant="primary"

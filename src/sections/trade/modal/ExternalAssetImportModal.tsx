@@ -2,6 +2,7 @@ import { useExternalAssetRegistry } from "api/externalAssetRegistry"
 import { Modal } from "components/Modal/Modal"
 import { useModalPagination } from "components/Modal/Modal.utils"
 import { ModalContents } from "components/Modal/contents/ModalContents"
+import { useShallow } from "hooks/useShallow"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -10,6 +11,7 @@ import {
   useUserExternalTokenStore,
 } from "sections/wallet/addToken/AddToken.utils"
 import { AddTokenFormModal } from "sections/wallet/addToken/modal/AddTokenFormModal"
+import { useSettingsStore } from "state/store"
 import { isNotNil } from "utils/helpers"
 
 type Props = {
@@ -26,10 +28,16 @@ export const ExternalAssetImportModal: React.FC<Props> = ({
   const { assets } = useRpcProvider()
   const { isAdded } = useUserExternalTokenStore()
   const { page, direction, paginateTo } = useModalPagination()
+  const degenMode = useSettingsStore(useShallow((s) => s.degenMode))
 
-  const externalAssets = useExternalAssetRegistry()
+  const assetsMeta = assets.getAssets(assetIds).filter(({ id, externalId }) => {
+    const isChainStored = assets.external.some((asset) => asset.id === id)
+    const isUserStored = degenMode || isAdded(externalId)
+    return isChainStored && !isUserStored
+  })
 
-  const assetsMeta = assets.getAssets(assetIds)
+  const externalAssets = useExternalAssetRegistry(assetsMeta.length > 0)
+
   const assetsToAddRef = useRef<TExternalAsset[]>([])
 
   const onCloseHandler = () => {
@@ -39,15 +47,10 @@ export const ExternalAssetImportModal: React.FC<Props> = ({
 
   useEffect(() => {
     const assetsToAdd = assetsMeta
-      .filter(({ id, externalId }) => {
-        const isChainStored = assets.external.some((asset) => asset.id === id)
-        const isUserStored = isAdded(externalId)
-        return isChainStored && !isUserStored
-      })
       .map(({ parachainId, externalId }) => {
-        if (!parachainId) return null
+        if (!parachainId || !externalId) return null
         const assets = externalAssets?.[+parachainId]
-        return assets?.data?.find(({ id }) => id === externalId)
+        return assets?.data?.get(externalId)
       })
       .filter(isNotNil)
 
