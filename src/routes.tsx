@@ -101,6 +101,10 @@ const ReferralsWrapper = lazy(async () => ({
   default: (await import("sections/referrals/ReferralsPage")).ReferralsWrapper,
 }))
 
+const MemepadPage = lazy(async () => ({
+  default: (await import("sections/memepad/MemepadPage")).MemepadPage,
+}))
+
 export const routes: Route[] = [
   {
     path: "/",
@@ -362,6 +366,14 @@ export const routes: Route[] = [
     element: (
       <Suspense fallback={<ReferralsSkeleton />}>
         <ReferralsWrapper />
+      </Suspense>
+    ),
+  },
+  {
+    path: "memepad",
+    element: (
+      <Suspense>
+        <MemepadPage />
       </Suspense>
     ),
   },

@@ -42,6 +42,7 @@ export const LINKS = {
   stakingDashboard: "/staking/dashboard",
   stakingGovernance: "/staking/governance",
   referrals: "/referrals",
+  memepad: "/memepad",
 }
 
 export const MENU_ITEMS = [
@@ -144,6 +145,18 @@ export const MENU_ITEMS = [
     tabVisible: true,
     mobOrder: 6,
     asyncEnabled: true,
+  },
+  {
+    key: "memepad",
+    href: LINKS.memepad,
+    Icon: ChainlinkIcon,
+    subItems: undefined,
+    enabled: true,
+    external: false,
+    mobVisible: false,
+    tabVisible: true,
+    mobOrder: 7,
+    asyncEnabled: false,
   },
 ] as const
 

@@ -117,6 +117,7 @@
   "header.stats": "Stats",
   "header.staking": "Staking",
   "header.referrals": "Referrals",
+  "header.memepad": "Memepad",
   "header.documentation.tooltip": "Documentation",
   "header.notification.pending.tooltip": "{{number}} Pending Transactions",
   "header.notification.tooltip": "Notifications",
@@ -534,6 +535,10 @@
   "wallet.addToken.form.name": "Asset name",
   "wallet.addToken.form.symbol": "Symbol",
   "wallet.addToken.form.decimals": "Amount of decimals",
+  "wallet.addToken.form.supply": "Supply",
+  "wallet.addToken.form.creatorAccount": "Creator account",
+  "wallet.addToken.form.assetToTransfer": "Asset to transfer",
+  "wallet.addToken.form.hydrationAddress": "To Hydration address",
   "wallet.addToken.form.multilocation.placeholder": "Paste multillocation here",
   "wallet.addToken.form.multilocation.label": "Multilocation",
   "wallet.addToken.form.button.register.hydra": "Register on Hydration",
@@ -926,5 +931,8 @@
   "migration.import.confirm.title": "You have opened a migration link",
   "migration.import.confirm.description": "Do you want to import new app settings?",
   "migration.import.confirm.button": "Yes, import settings",
-  "migration.warning.text": "You can transfer Your app settings from HydraDX to Hydration"
+  "migration.warning.text": "You can transfer Your app settings from HydraDX to Hydration",
+  "memepad.modal.routeBlock.title": "Cancel Transaction",
+  "memepad.modal.routeBlock.description": "Are you sure you want to cancel? All of the progress will be lost.",
+  "memepad.modal.routeBlock.accept": "Yes, close."
 }

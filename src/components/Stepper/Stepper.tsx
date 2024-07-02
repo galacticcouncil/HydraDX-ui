@@ -16,7 +16,11 @@ const STEP_STATES = ["active", "done", "todo"] as const
 
 type StepState = (typeof STEP_STATES)[number]
 
-type StepperProps = { steps: Array<StepProps> }
+type StepperProps = {
+  steps: Array<StepProps>
+  fullWidth?: boolean
+  className?: string
+}
 
 export type StepProps = {
   label: string
@@ -39,8 +43,13 @@ const Step = ({ label, state }: StepProps) => {
       </SCircle>
       <Text
         fs={12}
+        lh={18}
         color={state === "active" ? "brightBlue600" : "basic500"}
-        css={{ position: "absolute", bottom: 0, whiteSpace: "nowrap" }}
+        css={{
+          position: "absolute",
+          top: "100%",
+          whiteSpace: "nowrap",
+        }}
       >
         {label}
       </Text>
@@ -48,7 +57,11 @@ const Step = ({ label, state }: StepProps) => {
   )
 }
 
-export const Stepper = ({ steps }: StepperProps) => {
+export const Stepper = ({
+  steps,
+  className,
+  fullWidth = false,
+}: StepperProps) => {
   const isDesktop = useMedia(theme.viewport.gte.sm)
   const { t } = useTranslation()
 
@@ -56,7 +69,7 @@ export const Stepper = ({ steps }: StepperProps) => {
 
   if (isDesktop) {
     return (
-      <SStepperContainer>
+      <SStepperContainer className={className} fullWidth={fullWidth}>
         {steps.map((step, index) => (
           <Fragment key={index}>
             <Step {...step} />
