@@ -35,6 +35,7 @@ const useWalletProviders = (mode: WalletMode, chain?: string) => {
     const defaultProviders = wallets
       .filter((provider) => {
         if (isEvmMode) return EVM_PROVIDERS.includes(provider.type)
+
         const byScreen = isDesktop
           ? DESKTOP_PROVIDERS.includes(provider.type)
           : MOBILE_PROVIDERS.includes(provider.type)
@@ -68,7 +69,7 @@ const useWalletProviders = (mode: WalletMode, chain?: string) => {
       defaultProviders,
       alternativeProviders,
     }
-  }, [isDesktop, mode, chain])
+  }, [mode, isDesktop, chain])
 }
 
 export const Web3ConnectProviders = () => {

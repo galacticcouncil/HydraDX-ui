@@ -10,6 +10,7 @@ import { H160, isEvmAddress } from "utils/evm"
 import { SubWalletEvm } from "sections/web3-connect/wallets/SubWalletEvm"
 import { SubWallet } from "sections/web3-connect/wallets/SubWallet"
 import { EIP6963AnnounceProviderEvent } from "sections/web3-connect/types"
+import { NovaWalletEvm } from "sections/web3-connect/wallets/NovaWalletEvm"
 
 export enum WalletProviderType {
   MetaMask = "metamask",
@@ -19,6 +20,7 @@ export enum WalletProviderType {
   SubwalletEvm = "subwallet-evm",
   PolkadotJS = "polkadot-js",
   NovaWallet = "nova-wallet",
+  NovaWalletEvm = "nova-wallet-evm",
   Phantom = "phantom",
   Enkrypt = "enkrypt",
   WalletConnect = "walletconnect",
@@ -54,6 +56,11 @@ const onMetaMaskLikeAccountChange =
   }
 
 const novaWallet: Wallet = new NovaWallet()
+const novaWalletEvm: Wallet = new NovaWalletEvm({
+  onAccountsChanged: onMetaMaskLikeAccountChange(
+    WalletProviderType.NovaWalletEvm,
+  ),
+})
 const talismanEvm: Wallet = new TalismanEvm({
   onAccountsChanged: onMetaMaskLikeAccountChange(
     WalletProviderType.TalismanEvm,
@@ -95,6 +102,7 @@ export let SUPPORTED_WALLET_PROVIDERS: WalletProvider[] = [
   subwalletEvm,
   subwallet,
   novaWallet,
+  novaWalletEvm,
   walletConnect,
   externalWallet,
 ].map((wallet) => ({

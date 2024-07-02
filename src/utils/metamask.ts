@@ -6,7 +6,12 @@ import UniversalProvider from "@walletconnect/universal-provider/dist/types/Univ
 import { chainsMap } from "@galacticcouncil/xcm-cfg"
 import { EvmParachain } from "@galacticcouncil/xcm-core"
 
-const METAMASK_LIKE_CHECKS = ["isTalisman", "isSubWallet", "isPhantom"] as const
+const METAMASK_LIKE_CHECKS = [
+  "isTalisman",
+  "isSubWallet",
+  "isPhantom",
+  "isNovaWallet",
+] as const
 type MetaMaskLikeChecksValues = (typeof METAMASK_LIKE_CHECKS)[number]
 
 type MetaMaskLikeChecks = {
@@ -74,6 +79,12 @@ export function isSubWallet(provider: Maybe<ExternalProvider>) {
 
 export function isPhantom(provider: Maybe<ExternalProvider>) {
   return isMetaMaskLike(provider) && !!provider?.isPhantom
+}
+
+export function isNovaWalletEvm(
+  provider: Maybe<ExternalProvider>,
+): provider is Required<MetaMaskLikeProvider> {
+  return isMetaMaskLike(provider) && !!provider?.isNovaWallet
 }
 
 export function isEthereumProvider(

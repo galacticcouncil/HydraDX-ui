@@ -44,7 +44,7 @@ export const Web3ConnectProviderButton: FC<Props> = ({ type, wallet }) => {
   }
 
   return (
-    <SProviderButton onClick={onClick}>
+    <SProviderButton onClick={onClick} type="button">
       <img src={logo.src} alt={logo.alt} width={40} height={40} />
       <Text fs={18} css={{ flexGrow: 1 }}>
         {title}
