@@ -355,6 +355,7 @@ export const useExternalTokenMeta = (id: string | undefined) => {
         const externalAsset = externalRegistry[Number(parachain)].data?.find(
           (externalAsset) => externalAsset.id === asset.externalId,
         )
+
         if (externalAsset) {
           const meta = assets.external.find(
             (asset) => asset.externalId === externalAsset.id,

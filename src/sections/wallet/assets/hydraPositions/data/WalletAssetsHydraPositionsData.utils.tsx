@@ -6,10 +6,11 @@ import { TLPData, useLiquidityPositionData } from "utils/omnipool"
 import { useAccountsBalances } from "api/accountBalances"
 import { useDisplayShareTokenPrice } from "utils/displayAsset"
 import { BN_NAN } from "utils/constants"
-import { TShareToken, useAcountAssets } from "api/assetDetails"
+import { useAcountAssets } from "api/assetDetails"
 import { useAccountNFTPositions } from "api/deposits"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useTotalIssuances } from "api/totalIssuance"
+import { useShareTokens } from "api/xyk"
 
 export const useOmnipoolPositionsData = ({
   search,
@@ -54,68 +55,72 @@ export const useOmnipoolPositionsData = ({
 export const useXykPositionsData = ({ search }: { search?: string } = {}) => {
   const { assets } = useRpcProvider()
   const { account } = useAccount()
+  const shareTokens = useShareTokens()
   const accountBalances = useAcountAssets(account?.address)
 
-  const accountShareTokens = accountBalances.filter((accountBalance) =>
-    assets.isShareToken(accountBalance.asset),
-  )
+  const accountShareTokens = accountBalances
+    .map((accountBalance) => {
+      const shareToken = shareTokens.data?.find(
+        (shareToken) => shareToken.shareTokenId === accountBalance.asset.id,
+      )
 
-  const shareTokensId = accountShareTokens?.map((pool) => pool.asset.id) ?? []
+      if (shareToken) return { ...accountBalance, shareToken }
+      return undefined
+    })
+    .filter(isNotNil)
+
+  const shareTokensId = accountShareTokens.map((pool) => pool.asset.id)
+  const shareTokensAddresses = accountShareTokens.map(
+    (pool) => pool.shareToken.poolAddress,
+  )
 
   const totalIssuances = useTotalIssuances(shareTokensId)
-
-  const poolBalances = useAccountsBalances(
-    accountShareTokens?.map(
-      (pool) => (pool.asset as TShareToken).poolAddress,
-    ) ?? [],
-  )
-
+  const poolBalances = useAccountsBalances(shareTokensAddresses)
   const spotPrices = useDisplayShareTokenPrice(shareTokensId)
 
   const isLoading =
     totalIssuances.some((totalIssuance) => totalIssuance.isInitialLoading) ||
     poolBalances.isInitialLoading ||
-    spotPrices.isInitialLoading
+    spotPrices.isInitialLoading ||
+    shareTokens.isInitialLoading
 
   const data = useMemo(() => {
     if (!accountShareTokens.length || !totalIssuances || !poolBalances.data)
       return []
 
     const rows = accountShareTokens.map((myPool) => {
-      const meta = assets.getAsset(myPool.asset.id) as TShareToken
-
       const totalIssuance = totalIssuances.find(
-        (totalIssuance) => totalIssuance.data?.token === meta.id,
+        (totalIssuance) =>
+          totalIssuance.data?.token === myPool.shareToken.shareTokenId,
       )?.data?.total
 
       const poolBalance = poolBalances.data?.find(
-        (poolBalance) => poolBalance.accountId.toString() === meta.poolAddress,
+        (poolBalance) =>
+          poolBalance.accountId.toString() === myPool.shareToken.poolAddress,
       )
-      const balances = meta.assets.map((assetId) => {
-        const balanceMeta = assets.getAsset(assetId)
+      const balances = myPool.shareToken.assets.map((asset) => {
         const balance =
-          assetId === assets.native.id
+          asset.id === assets.native.id
             ? poolBalance?.native.freeBalance
-            : poolBalance?.balances.find((balance) => balance.id === assetId)
+            : poolBalance?.balances.find((balance) => balance.id === asset.id)
                 ?.freeBalance
 
         const myShare = myPool.balance.total.div(totalIssuance ?? 1)
 
         const balanceHuman =
-          balance?.shiftedBy(-balanceMeta.decimals).multipliedBy(myShare) ??
-          BN_NAN
+          balance?.shiftedBy(-asset.decimals).multipliedBy(myShare) ?? BN_NAN
 
-        return { amount: balanceHuman, symbol: balanceMeta.symbol }
+        return { amount: balanceHuman, symbol: asset.symbol }
       })
 
       const spotPrice = spotPrices.data.find(
-        (spotPrice) => spotPrice.tokenIn === meta.id,
+        (spotPrice) => spotPrice.tokenIn === myPool.shareToken.shareTokenId,
       )
 
       const amount =
         totalIssuance
           ?.times(myPool.balance.total.div(totalIssuance ?? 1))
-          .shiftedBy(-meta.decimals) ?? BN_NAN
+          .shiftedBy(-myPool.shareToken.meta.decimals) ?? BN_NAN
 
       const valueDisplay = amount.multipliedBy(spotPrice?.spotPrice ?? 1)
 
@@ -123,10 +128,10 @@ export const useXykPositionsData = ({ search }: { search?: string } = {}) => {
         amount,
         valueDisplay,
         value: BN_NAN,
-        id: meta.id,
-        assetId: meta.id,
-        name: meta.name,
-        symbol: meta.symbol,
+        id: myPool.shareToken.meta.id,
+        assetId: myPool.shareToken.meta.id,
+        name: myPool.shareToken.meta.name,
+        symbol: myPool.shareToken.meta.symbol,
         balances,
         isXykPosition: true,
       }

@@ -12,6 +12,7 @@ import {
 import { useProviderData, useProviderRpcUrlStore } from "api/provider"
 import { ReactNode, createContext, useContext, useMemo } from "react"
 import { useWindowFocus } from "hooks/useWindowFocus"
+import { useShareToken } from "api/xyk"
 
 type IContextAssets = Awaited<ReturnType<typeof getAssets>>["assets"] & {
   all: (TToken | TBond | TStableSwap | TShareToken)[]
@@ -70,13 +71,7 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
         external: externalRaw,
       } = providerData.data.assets
 
-      const all = [
-        ...tokens,
-        ...bonds,
-        ...stableswap,
-        ...shareTokens,
-        ...externalRaw,
-      ]
+      const all = [...tokens, ...bonds, ...stableswap, ...externalRaw]
 
       const allTokensObject = all.reduce<Record<string, TAsset>>(
         (acc, asset) => ({ ...acc, [asset.id]: asset }),

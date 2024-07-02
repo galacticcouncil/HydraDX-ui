@@ -25,8 +25,7 @@ import { TokensConversion } from "./components/TokensConvertion/TokensConversion
 import { useTokensBalances } from "api/balances"
 import IconWarning from "assets/icons/WarningIcon.svg?react"
 import * as xyk from "@galacticcouncil/math-xyk"
-import { useXYKConsts } from "api/xyk"
-import { TShareToken } from "api/assetDetails"
+import { useShareTokensByIds, useXYKConsts } from "api/xyk"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 
 type Props = {
@@ -42,13 +41,12 @@ const opposite = (value: "assetA" | "assetB") =>
 
 export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
   const queryClient = useQueryClient()
-  const { assets } = useRpcProvider()
   const { account } = useAccount()
   const xykConsts = useXYKConsts()
   const { t } = useTranslation()
 
-  const shareTokenMeta = assets.getAsset(pool.id) as TShareToken
-  const [assetA, assetB] = assets.getAssets(shareTokenMeta.assets)
+  const [shareToken] = useShareTokensByIds([pool.id]).data ?? []
+  const [assetA, assetB] = shareToken.assets
 
   const [formAssets] = useState({
     assetA,
@@ -185,7 +183,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
             QUERY_KEYS.accountNFTPositions(account?.address),
           )
           queryClient.refetchQueries(
-            QUERY_KEYS.tokenBalance(shareTokenMeta.id, account?.address),
+            QUERY_KEYS.tokenBalance(pool.id, account?.address),
           )
         },
         onSubmitted: () => {
@@ -201,7 +199,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
               i18nKey="liquidity.add.modal.xyk.toast.onLoading"
               tOptions={{
                 shares: calculatedShares,
-                fixedPointScale: shareTokenMeta.decimals,
+                fixedPointScale: shareToken.meta.decimals,
               }}
             >
               <span />
@@ -214,7 +212,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
               i18nKey="liquidity.add.modal.xyk.toast.onLoading"
               tOptions={{
                 shares: calculatedShares,
-                fixedPointScale: shareTokenMeta.decimals,
+                fixedPointScale: shareToken.meta.decimals,
               }}
             >
               <span />
@@ -227,7 +225,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
               i18nKey="liquidity.add.modal.xyk.toast.onLoading"
               tOptions={{
                 shares: calculatedShares,
-                fixedPointScale: shareTokenMeta.decimals,
+                fixedPointScale: shareToken.meta.decimals,
               }}
             >
               <span />
@@ -403,7 +401,7 @@ export const AddLiquidityFormXYK = ({ pool, onClose }: Props) => {
           label="Received amount of Pool Shares:"
           content={t("value.token", {
             value: calculatedShares,
-            fixedPointScale: shareTokenMeta.decimals,
+            fixedPointScale: shareToken.meta.decimals,
           })}
         />
 

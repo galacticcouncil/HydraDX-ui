@@ -12,7 +12,6 @@ import { useRpcProvider } from "providers/rpcProvider"
 import { useShareTokensByIds } from "api/xyk"
 import { isNotNil } from "./helpers"
 import { useShareOfPools } from "api/pools"
-import { TShareToken } from "api/assetDetails"
 
 type Props = { id: string; amount: BigNumber }
 
@@ -61,46 +60,43 @@ export const useDisplayPrice = (id: string | u32 | undefined) => {
 export const useDisplayShareTokenPrice = (ids: string[]) => {
   const { assets } = useRpcProvider()
 
-  const shareTokenIds = ids
-    .filter((id) => assets.isShareToken(assets.getAsset(id.toString())))
-    .map((shareTokenId) => shareTokenId.toString())
+  const pools = useShareTokensByIds(ids)
 
-  const pools = useShareTokensByIds(shareTokenIds)
-
-  const poolsAddress = useMemo(
-    () =>
-      new Map(pools.data?.map((pool) => [pool.shareTokenId, pool.poolAddress])),
-    [pools.data],
-  )
+  const poolsAddress = pools.data?.map((pool) => pool.poolAddress) ?? []
 
   const poolBalances = useAccountsBalances(Array.from(poolsAddress.values()))
-  const totalIssuances = useShareOfPools(shareTokenIds)
+  const totalIssuances = useShareOfPools(ids)
 
   const shareTokensTvl = useMemo(() => {
-    return shareTokenIds
-      .map((shareTokenId) => {
-        const meta = assets.getAsset(shareTokenId) as TShareToken
-        const poolAddress = poolsAddress.get(shareTokenId)
-        const poolBalance = poolBalances.data?.find(
-          (poolBalance) => poolBalance.accountId === poolAddress,
-        )
+    return !pools.data
+      ? []
+      : pools.data
+          .map((shareToken) => {
+            const { poolAddress } = shareToken
+            const poolBalance = poolBalances.data?.find(
+              (poolBalance) => poolBalance.accountId === poolAddress,
+            )
 
-        const assetA = poolBalance?.balances.find((balance) =>
-          meta.assets.includes(balance.id),
-        )
+            const assetA = poolBalance?.balances.find((balance) =>
+              shareToken.assets.some((asset) => asset.id === balance.id),
+            )
 
-        if (!assetA) return undefined
+            if (!assetA) return undefined
 
-        const assetABalance = assetA.freeBalance.shiftedBy(
-          -assets.getAsset(assetA.id.toString()).decimals,
-        )
+            const assetABalance = assetA.freeBalance.shiftedBy(
+              -assets.getAsset(assetA.id.toString()).decimals,
+            )
 
-        const tvl = assetABalance.multipliedBy(2)
+            const tvl = assetABalance.multipliedBy(2)
 
-        return { spotPriceId: assetA.id.toString(), tvl, shareTokenId }
-      })
-      .filter(isNotNil)
-  }, [assets, poolBalances.data, poolsAddress, shareTokenIds])
+            return {
+              spotPriceId: assetA.id.toString(),
+              tvl,
+              shareTokenId: shareToken.shareTokenId,
+            }
+          })
+          .filter(isNotNil)
+  }, [pools.data, poolBalances.data, assets])
 
   const spotPrices = useDisplayPrices(
     shareTokensTvl.map((shareTokenTvl) => shareTokenTvl.spotPriceId),

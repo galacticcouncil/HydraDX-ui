@@ -45,7 +45,6 @@ export const PoolDetails = ({
   const { t } = useTranslation()
   const { account } = useAccount()
   const { assets } = useRpcProvider()
-  const asset = assets.getAsset(pool.id)
 
   const [addLiquidityPool, setAddLiquidityPool] = useState<
     TPoolFullData | TXYKPoolFullData | undefined

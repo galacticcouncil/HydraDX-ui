@@ -8,21 +8,49 @@ import { useAccountBalances } from "./accountBalances"
 import BN from "bignumber.js"
 import { format } from "date-fns"
 import { useRpcProvider } from "providers/rpcProvider"
-import { Asset, PoolService, PoolType, TradeRouter } from "@galacticcouncil/sdk"
+import {
+  Asset,
+  AssetClient,
+  PoolService,
+  PoolType,
+  TradeRouter,
+} from "@galacticcouncil/sdk"
 import { BN_0 } from "utils/constants"
-import { useUserExternalTokenStore } from "sections/wallet/addToken/AddToken.utils"
+import {
+  useExternalTokenMeta,
+  useUserExternalTokenStore,
+} from "sections/wallet/addToken/AddToken.utils"
 import { omit } from "utils/rx"
 import { useProviderRpcUrlStore } from "./provider"
 import { PENDULUM_ID } from "./externalAssetRegistry"
 import { getGeneralIndex, getGeneralKey } from "utils/externalAssets"
+import { useShareTokens, useShareTokenById, useShareToken } from "./xyk"
+
+const useAssetMeta = (id: string) => {
+  const { assets } = useRpcProvider()
+  const shareToken = useShareTokenById(id).data
+
+  //const getAsset = (id) => {}
+
+  const getShareToken = (shareTokenId: string) => undefined
+}
 
 export const useAcountAssets = (address: Maybe<AccountId32 | string>) => {
   const { assets } = useRpcProvider()
-  const accountBalances = useAccountBalances(address)
+  const accountBalances = useAccountBalances(address, true)
+  const shareTokens = useShareToken()
+
+  if (!accountBalances.data) return []
 
   const tokenBalances = accountBalances.data?.balances
     ? accountBalances.data.balances.map((balance) => {
         const asset = assets.getAsset(balance.id)
+
+        if (!asset.id) {
+          const meta = shareTokens.getShareToken(balance.id)?.meta
+
+          return { asset: meta ?? asset, balance }
+        }
 
         return { asset, balance }
       })
@@ -136,6 +164,8 @@ export const getAssets = async (api: ApiPromise) => {
   const rawAssetsMeta = api.query.assetRegistry.assetMetadataMap
     ? await api.query.assetRegistry.assetMetadataMap.entries()
     : undefined
+
+  const assetClient = new AssetClient(api)
 
   const [
     system,
@@ -427,7 +457,7 @@ export const getAssets = async (api: ApiPromise) => {
   const hub = tokens.find(
     (token) => token.id === hubAssetId.toString(),
   ) as TToken
-
+  console.log(shareTokensRaw, "shareTokensRaw")
   const shareTokens = shareTokensRaw.reduce<Array<TShareToken>>(
     (acc, shareToken) => {
       if (!shareToken.assets) return acc
@@ -471,6 +501,32 @@ export const getAssets = async (api: ApiPromise) => {
   // pass external tokens to trade router
   await poolService.syncRegistry(externalTokens[dataEnv])
 
+  const sdk = await assetClient.getOnChainAssets(externalTokens[dataEnv])
+  //const pools = await tradeRouter.getPools()
+
+  const adjustedSdk = sdk.map((asset) => {
+    const { type, meta } = asset
+
+    const isToken = type === "Token"
+    const isBond = type === "Bond"
+    const isStableSwap = type === "StableSwap"
+    const isExternal = type === "External"
+
+    return {
+      ...asset,
+      iconId: meta ? Object.keys(meta) : asset.id,
+      isToken,
+      isBond,
+      isStableSwap,
+      isExternal,
+      parachainId: asset.origin?.toString(),
+      existentialDeposit: BN(asset.existentialDeposit),
+    }
+  })
+
+  console.log(sdk, "sdk")
+  console.log(adjustedSdk, "adjustedSdk")
+
   try {
     rawTradeAssets = await tradeRouter.getAllAssets()
   } catch (e) {}
@@ -485,7 +541,7 @@ export const getAssets = async (api: ApiPromise) => {
 
   return {
     assets: {
-      tokens,
+      tokens: adjustedSdk,
       bonds: tradableBonds,
       stableswap,
       shareTokens,

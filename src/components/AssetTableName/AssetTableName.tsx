@@ -5,6 +5,7 @@ import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { useRpcProvider } from "providers/rpcProvider"
 import { Icon } from "components/Icon/Icon"
 import { useExternalTokenMeta } from "sections/wallet/addToken/AddToken.utils"
+import { useShareTokenById } from "api/xyk"
 
 export const AssetTableName = ({
   large,
@@ -17,14 +18,13 @@ export const AssetTableName = ({
 }) => {
   const { t } = useTranslation()
   const { assets } = useRpcProvider()
+
   const asset = assets.getAsset(id)
 
   const externalAsset = useExternalTokenMeta(id)
+  const shareToken = useShareTokenById(id).data
 
-  const iconIds =
-    assets.isStableSwap(asset) || assets.isShareToken(asset)
-      ? asset.assets
-      : externalAsset?.id ?? asset.id
+  const iconIds = externalAsset?.id ?? shareToken?.meta.iconId ?? asset.iconId
 
   return (
     <div sx={{ width: ["max-content", "inherit"] }}>

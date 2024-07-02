@@ -13,7 +13,6 @@ import { SContainer, SMaxButton } from "./AssetSelect.styled"
 import { useRpcProvider } from "providers/rpcProvider"
 import { AssetSelectButton } from "./AssetSelectButton"
 import { useMedia } from "react-use"
-import { useDisplayShareTokenPrice } from "utils/displayAsset"
 
 export const AssetSelect = (props: {
   name: string
@@ -46,16 +45,10 @@ export const AssetSelect = (props: {
 
   const spotPriceId =
     assets.isBond(asset) && !asset.isTradable ? asset.assetId : asset.id
-  const isShareToken = asset.isShareToken
 
-  const spotPriceAsset = useDisplayPrice(isShareToken ? undefined : spotPriceId)
-  const spotPriceShareToken = useDisplayShareTokenPrice(
-    isShareToken ? [spotPriceId] : [],
-  )
+  const spotPriceAsset = useDisplayPrice(spotPriceId)
 
-  const spotPrice = isShareToken
-    ? spotPriceShareToken.data?.[0]
-    : spotPriceAsset.data
+  const spotPrice = spotPriceAsset.data
 
   const displayValue = useMemo(() => {
     if (!props.value) return 0

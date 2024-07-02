@@ -56,12 +56,22 @@ const NonClickableContainer = ({
   )
 }
 
-const AssetTableName = ({ id }: { id: string }) => {
+const AssetTableName = ({
+  id,
+  iconId,
+  name,
+  symbol,
+}: {
+  id: string
+  name: string
+  symbol: string
+  iconId: string | string[]
+}) => {
   const { assets } = useRpcProvider()
   const asset = assets.getAsset(id)
 
   const farms = useFarms([id])
-  const iconIds = asset.iconId
+  const iconIds = iconId
 
   return (
     <NonClickableContainer sx={{ flex: "row", gap: 8, align: "center" }}>
@@ -95,7 +105,7 @@ const AssetTableName = ({ id }: { id: string }) => {
             font="GeistMedium"
             css={{ whiteSpace: "nowrap" }}
           >
-            {asset.symbol}
+            {symbol}
           </Text>
           {asset.isStableSwap && (
             <div css={{ position: "relative" }}>
@@ -122,7 +132,7 @@ const AssetTableName = ({ id }: { id: string }) => {
 
         {asset.isStableSwap && (
           <Text fs={11} color="white" css={{ opacity: 0.61 }}>
-            {asset.name}
+            {name}
           </Text>
         )}
         {farms.data?.length ? <GlobalFarmRowMulti farms={farms.data} /> : null}
@@ -305,7 +315,7 @@ export const usePoolTable = (
         id: "name",
         header: t("liquidity.table.header.poolAsset"),
         sortingFn: (a, b) => a.original.name.localeCompare(b.original.name),
-        cell: ({ row }) => <AssetTableName id={row.original.id} />,
+        cell: ({ row }) => <AssetTableName {...row.original} />,
       }),
       accessor("tvlDisplay", {
         id: "tvlDisplay",

@@ -12,8 +12,7 @@ import { RemoveLiquidityReward } from "./components/RemoveLiquidityReward"
 import { RemoveLiquidityInput } from "./components/RemoveLiquidityInput"
 import { useRpcProvider } from "providers/rpcProvider"
 import { TXYKPool } from "sections/pools/PoolsPage.utils"
-import { useXYKTotalLiquidity } from "api/xyk"
-import { TShareToken } from "api/assetDetails"
+import { useShareTokensByIds, useXYKTotalLiquidity } from "api/xyk"
 import { useAccountBalances } from "api/accountBalances"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 
@@ -32,13 +31,13 @@ export const RemoveXYKLiquidityForm = ({
   const form = useForm<{ value: number }>({ defaultValues: { value: 25 } })
 
   const { api, assets } = useRpcProvider()
-  const shareTokenMeta = assets.getAsset(pool.id) as TShareToken
+  const [shareToken] = useShareTokensByIds([pool.id]).data ?? []
   const { createTransaction } = useStore()
   const { account } = useAccount()
-  const [assetAMeta, assetBMeta] = assets.getAssets(shareTokenMeta.assets)
+  const [assetAMeta, assetBMeta] = shareToken.assets
 
   const totalLiquidity = useXYKTotalLiquidity(pool.poolAddress)
-  const shareTokenBalance = useTokenBalance(shareTokenMeta.id, account?.address)
+  const shareTokenBalance = useTokenBalance(pool.id, account?.address)
   const poolBalance = useAccountBalances(pool.poolAddress)
 
   const value = form.watch("value")
@@ -48,12 +47,12 @@ export const RemoveXYKLiquidityForm = ({
       ?.multipliedBy(value)
       .dividedToIntegerBy(100) ?? BN_0
 
-  const removeAmount = shareTokenMeta.assets.map((assetId) => {
-    const isNative = assetId === assets.native.id
+  const removeAmount = shareToken.assets.map((asset) => {
+    const isNative = asset.id === assets.native.id
 
     const balance = isNative
       ? poolBalance.data?.native.freeBalance
-      : poolBalance.data?.balances.find((balance) => balance.id === assetId)
+      : poolBalance.data?.balances.find((balance) => balance.id === asset.id)
           ?.freeBalance
 
     return removeShareToken &&
@@ -87,7 +86,7 @@ export const RemoveXYKLiquidityForm = ({
               i18nKey="liquidity.remove.modal.xyk.toast.onLoading"
               tOptions={{
                 value: removeShareToken,
-                fixedPointScale: shareTokenMeta.decimals,
+                fixedPointScale: shareToken.meta.decimals,
               }}
             >
               <span />
@@ -100,7 +99,7 @@ export const RemoveXYKLiquidityForm = ({
               i18nKey="liquidity.remove.modal.xyk.toast.onSuccess"
               tOptions={{
                 value: removeShareToken,
-                fixedPointScale: shareTokenMeta.decimals,
+                fixedPointScale: shareToken.meta.decimals,
               }}
             >
               <span />
@@ -128,7 +127,7 @@ export const RemoveXYKLiquidityForm = ({
             {t("liquidity.remove.modal.value", {
               value: getFloatingPointAmount(
                 removeShareToken,
-                shareTokenMeta.decimals,
+                shareToken.meta.decimals,
               ),
             })}
           </Text>
@@ -145,7 +144,7 @@ export const RemoveXYKLiquidityForm = ({
                 balance={t("liquidity.remove.modal.shares", {
                   shares: getFloatingPointAmount(
                     shareTokenBalance.data?.balance ?? 0,
-                    shareTokenMeta.decimals,
+                    shareToken.meta.decimals,
                   ),
                 })}
               />
