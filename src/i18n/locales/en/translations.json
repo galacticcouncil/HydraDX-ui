@@ -287,6 +287,7 @@
   "liquidity.remove.modal.tokenFee.value": "<0>≈ {{feeAmount, bignumber(type: 'token')}} {{symbol}}</0> <1>({{feePercentage, bignumber(type:'percentage, fixedPointScale: 0')}}%)</1>",
   "liquidity.remove.modal.confirm": "Remove liquidity",
   "liquidity.remove.modal.fee.warning": "Liquidity withdrawals for this asset are temporarily not possible due to short-term volatility. Please try again soon",
+  "liquidity.remove.modal.remaining.warning": "Remaining liquidity is below the minimum allowed limit. Please adjust your position or remove it entirely.",
   "liquidity.remove.modal.toast.withLrna": " and {{lrna, bignumber(type: 'token')}} LRNA",
   "liquidity.remove.modal.toast.onLoading": "<0>Withdrawing </0><1>{{amount, bignumber(type: 'token')}} {{symbol}}{{ withLrna }}</1><0> from </0><1>Omnipool</1>...",
   "liquidity.remove.modal.toast.onSuccess": "<0>Withdrawn </0><1>{{amount, bignumber(type: 'token')}} {{symbol}}{{ withLrna }}</1><0> from </0><1>Omnipool</1>.",

@@ -59,32 +59,36 @@ export const useRemoveLiquidity = (
     (omnipoolAsset) => omnipoolAsset.id === assetId,
   )
 
-  const { removeShares, totalValue, removeValue } = useMemo(() => {
-    if (isPositionMultiple) {
-      const totalShares = position.reduce(
-        (acc, pos) => acc.plus(pos.shares),
-        BN_0,
-      )
+  const { removeShares, totalValue, remainingValue, removeValue } =
+    useMemo(() => {
+      if (isPositionMultiple) {
+        const totalShares = position.reduce(
+          (acc, pos) => acc.plus(pos.shares),
+          BN_0,
+        )
 
-      const totalRemoveValue = position.reduce(
-        (acc, pos) => acc.plus(pos.totalValueShifted),
-        BN_0,
-      )
-      return {
-        removeShares: totalShares,
-        removeValue: totalRemoveValue,
-        totalValue: totalRemoveValue,
+        const totalRemoveValue = position.reduce(
+          (acc, pos) => acc.plus(pos.totalValueShifted),
+          BN_0,
+        )
+        return {
+          removeShares: totalShares,
+          removeValue: totalRemoveValue,
+          totalValue: totalRemoveValue,
+          remainingValue: BN_0,
+        }
       }
-    }
 
-    const totalShares = position.shares
+      const totalShares = position.shares
+      const removeValue = position.totalValueShifted.div(100).times(percentage)
 
-    return {
-      totalValue: position.totalValueShifted,
-      removeValue: position.totalValueShifted.div(100).times(percentage),
-      removeShares: totalShares.div(100).times(percentage),
-    }
-  }, [isPositionMultiple, position, percentage])
+      return {
+        totalValue: position.totalValueShifted,
+        removeValue,
+        remainingValue: position.totalValueShifted.minus(removeValue),
+        removeShares: totalShares.div(100).times(percentage),
+      }
+    }, [isPositionMultiple, position, percentage])
 
   const calculateLiquidityValues = useCallback(
     (position: TLPData, removeSharesValue: BN) => {
@@ -248,6 +252,7 @@ export const useRemoveLiquidity = (
     values,
     totalValue,
     removeValue,
+    remainingValue,
     isFeeExceeded,
     meta,
     mutation,
