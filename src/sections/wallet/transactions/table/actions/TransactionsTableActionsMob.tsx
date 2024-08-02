@@ -1,10 +1,9 @@
 import BuyIcon from "assets/icons/BuyIcon.svg?react"
 import SellIcon from "assets/icons/SellIcon.svg?react"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Badge } from "components/Badge/Badge"
 import { Button } from "components/Button/Button"
 import { Modal } from "components/Modal/Modal"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { Text } from "components/Typography/Text/Text"
 import { useTranslation } from "react-i18next"
 import { SActionRow } from "sections/wallet/transactions/table/actions/TransactionsTableActionsMob.styled"
@@ -65,12 +64,8 @@ export const TransactionsTableActionsMob = ({
             {t("wallet.transactions.table.header.amount")}
           </Text>
           <div sx={{ flex: "row", gap: 8, align: "center" }}>
-            <MultipleIcons
-              size={16}
-              icons={row.assetIconIds.map((id) => ({
-                icon: <AssetLogo key={id} id={id} />,
-              }))}
-            />
+            <MultipleAssetLogo size={16} iconId={row.assetIconIds} />
+
             <Text fs={13} css={{ whiteSpace: "nowrap" }}>
               {t("value.tokenWithSymbol", {
                 value: row.amountDisplay,

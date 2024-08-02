@@ -8,6 +8,7 @@ import { u8aToHex } from "@polkadot/util"
 import { decodeAddress } from "@polkadot/util-crypto"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import BN from "bignumber.js"
+import { TAsset, useAssets } from "providers/assets"
 
 export type Bond = {
   assetId: string
@@ -388,7 +389,7 @@ const getHistoricalPoolBalance =
   }
 
 export const useLBPAveragePrice = (poolAddress?: string) => {
-  const { assets } = useRpcProvider()
+  const { getAssets } = useAssets()
   return useQuery(
     QUERY_KEYS.lbpAveragePrice(poolAddress),
     poolAddress
@@ -396,10 +397,10 @@ export const useLBPAveragePrice = (poolAddress?: string) => {
           const { historicalVolumes } = await getLBPAveragePrice(poolAddress)()
           const { assetAId, assetBId, averagePrice, id } =
             historicalVolumes?.[0] ?? []
-          const [assetAMeta, assetBMeta] = assets.getAssets([
+          const [assetAMeta, assetBMeta] = getAssets([
             assetAId?.toString(),
             assetBId?.toString(),
-          ])
+          ]) as TAsset[]
 
           const price = BN(averagePrice).shiftedBy(
             assetBMeta.decimals - assetAMeta.decimals,

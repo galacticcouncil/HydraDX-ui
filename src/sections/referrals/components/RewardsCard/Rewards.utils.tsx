@@ -8,13 +8,12 @@ import { TOAST_MESSAGES } from "state/toasts"
 import { QUERY_KEYS } from "utils/queryKeys"
 import BN from "bignumber.js"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { useAssets } from "providers/assets"
 
 const potAddress = "7L53bUTCCAvmCxhe15maHwJZbjQYH89LkXuyTnTi1J58xyFC"
 
 export const useAccountRewards = (accountAddress?: string) => {
-  const {
-    assets: { native },
-  } = useRpcProvider()
+  const { native } = useAssets()
   const referralShares = useAccountReferralShares(accountAddress)
   const potBalance = useTokenBalance(
     accountAddress ? native.id : undefined,

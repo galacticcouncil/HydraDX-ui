@@ -8,7 +8,7 @@ import { useTotalIssuance } from "api/totalIssuance"
 import { normalizeBigNumber } from "utils/balance"
 import { BN_0 } from "utils/constants"
 import BigNumber from "bignumber.js"
-import { TAsset } from "api/assetDetails"
+import { TAsset } from "providers/assets"
 
 type Args = {
   poolId: string

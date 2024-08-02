@@ -4,7 +4,7 @@ import BN from "bignumber.js"
 import { Farm, getMinAndMaxAPR, useFarmAprs, useFarms } from "api/farms"
 import { useMemo } from "react"
 import { BN_0 } from "utils/constants"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 const APYFarmStatsCard = ({ farms, apy }: { farms: Farm[]; apy: number }) => {
   const { t } = useTranslation()
@@ -48,9 +48,7 @@ const APYStatsCard = ({
   fee: BN
 }) => {
   const { t } = useTranslation()
-  const {
-    assets: { native },
-  } = useRpcProvider()
+  const { native } = useAssets()
   const farms = useFarms([assetId])
 
   if (farms.data?.length)

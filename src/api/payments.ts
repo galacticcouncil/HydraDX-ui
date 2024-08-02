@@ -9,10 +9,11 @@ import { AccountId32 } from "@open-web3/orml-types/interfaces"
 import { usePaymentInfo } from "./transaction"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
-import { useAcountAssets } from "api/assetDetails"
+import { useAssets } from "providers/assets"
 import { useMemo } from "react"
 import { uniqBy } from "utils/rx"
 import { NATIVE_EVM_ASSET_ID, isEvmAccount } from "utils/evm"
+import { useAcountAssets } from "./assetDetails"
 
 export const getAcceptedCurrency = (api: ApiPromise) => async () => {
   const dataRaw =
@@ -30,12 +31,11 @@ export const getAcceptedCurrency = (api: ApiPromise) => async () => {
 }
 
 export const useAcceptedCurrencies = (ids: string[]) => {
-  const {
-    api,
-    assets: { native },
-  } = useRpcProvider()
+  const { api, isLoaded } = useRpcProvider()
+  const { native } = useAssets()
 
   return useQuery(QUERY_KEYS.acceptedCurrencies, getAcceptedCurrency(api), {
+    enabled: isLoaded,
     select: (assets) => {
       return ids.map((id) => {
         const response = assets.find((asset) => asset.id === id)
@@ -51,12 +51,13 @@ export const useAcceptedCurrencies = (ids: string[]) => {
 }
 
 export const useSetAsFeePayment = () => {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { native } = useAssets()
   const { account } = useAccount()
   const { createTransaction } = useStore()
   const queryClient = useQueryClient()
   const { data: paymentInfoData } = usePaymentInfo(
-    api.tx.currencies.transfer("", assets.native.id, "0"),
+    api.tx.currencies.transfer("", native.id, "0"),
   )
 
   return async (tokenId?: string, toast?: ToastMessage) => {
@@ -103,15 +104,16 @@ export const useAccountCurrency = (address: Maybe<string | AccountId32>) => {
 }
 
 export const useAccountFeePaymentAssets = () => {
-  const { assets, featureFlags } = useRpcProvider()
+  const { featureFlags } = useRpcProvider()
   const { account } = useAccount()
+  const { getAsset } = useAssets()
   const accountAssets = useAcountAssets(account?.address)
   const accountFeePaymentAsset = useAccountCurrency(account?.address)
   const feePaymentAssetId = accountFeePaymentAsset.data
 
   const allowedFeePaymentAssetsIds = useMemo(() => {
     if (isEvmAccount(account?.address) && !featureFlags.dispatchPermit) {
-      const evmNativeAssetId = assets.getAsset(NATIVE_EVM_ASSET_ID).id
+      const evmNativeAssetId = getAsset(NATIVE_EVM_ASSET_ID)?.id
       return uniqBy(
         identity,
         [evmNativeAssetId, feePaymentAssetId].filter(isNotNil),
@@ -120,7 +122,13 @@ export const useAccountFeePaymentAssets = () => {
 
     const assetIds = accountAssets.map((accountAsset) => accountAsset.asset.id)
     return uniqBy(identity, [...assetIds, feePaymentAssetId].filter(isNotNil))
-  }, [featureFlags, account?.address, accountAssets, assets, feePaymentAssetId])
+  }, [
+    account?.address,
+    featureFlags.dispatchPermit,
+    accountAssets,
+    feePaymentAssetId,
+    getAsset,
+  ])
 
   const acceptedFeePaymentAssets = useAcceptedCurrencies(
     allowedFeePaymentAssetsIds,

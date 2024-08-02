@@ -42,7 +42,7 @@
     "@galacticcouncil/math-stableswap": "^1.0.0",
     "@galacticcouncil/math-staking": "^1.0.0",
     "@galacticcouncil/math-xyk": "^1.0.0",
-    "@galacticcouncil/sdk": "^4.1.0",
+    "@galacticcouncil/sdk": "^4.2.0",
     "@galacticcouncil/ui": "^4.1.2",
     "@galacticcouncil/xcm-cfg": "^3.2.0",
     "@galacticcouncil/xcm-core": "^2.2.0",

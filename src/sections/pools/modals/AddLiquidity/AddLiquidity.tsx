@@ -5,19 +5,21 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { AssetsModalContent } from "sections/assets/AssetsModal"
 import { AddLiquidityForm } from "./AddLiquidityForm"
-import { TPool, TXYKPool, isXYKPoolType } from "sections/pools/PoolsPage.utils"
+import { isXYKPoolType } from "sections/pools/PoolsPage.utils"
 
 import { AddLiquidityFormXYK } from "./AddLiquidityFormXYK"
+import { usePoolData } from "sections/pools/pool/Pool"
 
 type Props = {
-  pool: TPool | TXYKPool
   isOpen: boolean
   onClose: () => void
 }
 
-export const AddLiquidity = ({ pool, isOpen, onClose }: Props) => {
+export const AddLiquidity = ({ isOpen, onClose }: Props) => {
+  const { pool } = usePoolData()
   const [assetId, setAssetId] = useState<string>(pool.id)
   const { t } = useTranslation()
+
   const { page, direction, back, next } = useModalPagination()
 
   const isXYK = isXYKPoolType(pool)

@@ -17,6 +17,7 @@ import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { Web3ConnectModalButton } from "sections/web3-connect/modal/Web3ConnectModalButton"
 import { useProcessedVotesIds } from "api/staking"
+import { useAssets } from "providers/assets"
 
 export const Stake = ({
   loading,
@@ -31,8 +32,8 @@ export const Stake = ({
 }) => {
   const { t } = useTranslation()
   const queryClient = useQueryClient()
-
-  const { api, assets } = useRpcProvider()
+  const { native } = useAssets()
+  const { api } = useRpcProvider()
   const { createTransaction } = useStore()
   const { account } = useAccount()
   const form = useForm<{ amount: string }>()
@@ -96,7 +97,7 @@ export const Stake = ({
     await queryClient.invalidateQueries(QUERY_KEYS.stake(account?.address))
     await queryClient.invalidateQueries(QUERY_KEYS.circulatingSupply)
     await queryClient.invalidateQueries(
-      QUERY_KEYS.tokenBalance(assets.native.id, account?.address),
+      QUERY_KEYS.tokenBalance(native.id, account?.address),
     )
   }
 
@@ -169,7 +170,7 @@ export const Stake = ({
                 name={name}
                 value={value}
                 onChange={onChange}
-                asset={assets.native.id}
+                asset={native.id}
                 error={error?.message}
                 withoutMaxBtn
               />

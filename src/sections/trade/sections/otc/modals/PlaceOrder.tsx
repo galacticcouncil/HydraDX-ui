@@ -19,6 +19,7 @@ import { OrderAssetRate } from "./cmp/AssetXRate"
 import { PartialOrderToggle } from "./cmp/PartialOrderToggle"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { useAssets } from "providers/assets"
 
 type PlaceOrderProps = {
   assetOut?: u32 | string
@@ -37,6 +38,7 @@ export const PlaceOrder = ({
 }: PlaceOrderProps) => {
   const { t } = useTranslation()
   const { account } = useAccount()
+  const { getAssetWithFallback } = useAssets()
 
   const [aOut, setAOut] = useState(assetOut)
   const [aIn, setAIn] = useState(assetIn)
@@ -51,10 +53,10 @@ export const PlaceOrder = ({
     mode: "onChange",
   })
 
-  const { api, assets } = useRpcProvider()
-  const assetOutMeta = aOut ? assets.getAsset(aOut.toString()) : undefined
+  const { api } = useRpcProvider()
+  const assetOutMeta = aOut ? getAssetWithFallback(aOut.toString()) : undefined
   const assetOutBalance = useTokenBalance(aOut, account?.address)
-  const assetInMeta = aIn ? assets.getAsset(aIn.toString()) : undefined
+  const assetInMeta = aIn ? getAssetWithFallback(aIn.toString()) : undefined
   const assetInBalance = useTokenBalance(aIn, account?.address)
 
   useEffect(() => {

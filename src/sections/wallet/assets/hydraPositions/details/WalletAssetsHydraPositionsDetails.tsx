@@ -5,9 +5,9 @@ import { useTranslation } from "react-i18next"
 import { theme } from "theme"
 import { LrnaPositionTooltip } from "sections/pools/components/LrnaPositionTooltip"
 import { useMedia } from "react-use"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useSpotPrice } from "api/spotPrice"
 import { BN_0, BN_1 } from "utils/constants"
+import { useAssets } from "providers/assets"
 
 type PairAsset = { amount: BN; symbol: string }
 
@@ -27,8 +27,8 @@ export const WalletAssetsHydraPositionsDetails = ({
   assetId,
 }: Props) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
-  const meta = assets.getAsset(assetId.toString())
+  const { getAsset } = useAssets()
+  const meta = getAsset(assetId.toString())
 
   return (
     <div sx={{ flex: "column", align: ["end", "start"] }}>
@@ -86,10 +86,10 @@ const LrnaValue = ({
 }) => {
   const isDesktop = useMedia(theme.viewport.gte.sm)
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { getAsset, hub } = useAssets()
 
-  const meta = assetId ? assets.getAsset(assetId.toString()) : undefined
-  const lrnaSpotPrice = useSpotPrice(assets.getAsset("1").id, assetId)
+  const meta = assetId ? getAsset(assetId.toString()) : undefined
+  const lrnaSpotPrice = useSpotPrice(hub.id, assetId)
 
   const lrnaPositionPrice =
     lrna?.multipliedBy(lrnaSpotPrice.data?.spotPrice ?? BN_1) ?? BN_0

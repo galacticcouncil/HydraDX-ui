@@ -12,7 +12,6 @@ import { FarmDetailsCard } from "sections/pools/farms/components/detailsCard/Far
 import { FarmDetailsModal } from "sections/pools/farms/modals/details/FarmDetailsModal"
 import { SJoinFarmContainer } from "./JoinFarmsModal.styled"
 import { useBestNumber } from "api/chain"
-import { useRpcProvider } from "providers/rpcProvider"
 import { Alert } from "components/Alert/Alert"
 import { Controller, useForm } from "react-hook-form"
 import { scaleHuman } from "utils/balance"
@@ -23,32 +22,34 @@ import { Spacer } from "components/Spacer/Spacer"
 import { FormValues } from "utils/helpers"
 import { FarmRedepositMutationType } from "utils/farms/redeposit"
 import { TLPData } from "utils/omnipool"
-import { TMiningNftPosition } from "sections/pools/PoolsPage.utils"
+import { usePoolData } from "sections/pools/pool/Pool"
+import { TDeposit } from "api/deposits"
 
 type JoinFarmModalProps = {
   onClose: () => void
-  poolId: string
   position?: TLPData
   farms: Farm[]
   mutation: FarmDepositMutationType | FarmRedepositMutationType
-  depositNft?: TMiningNftPosition
+  depositNft?: TDeposit
 }
 
 export const JoinFarmModal = ({
   onClose,
-  poolId,
   position,
   farms,
   mutation,
   depositNft,
 }: JoinFarmModalProps) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const {
+    pool: { meta, id: poolId },
+  } = usePoolData()
+
   const [selectedFarmId, setSelectedFarmId] = useState<{
     yieldFarmId: u32
     globalFarmId: u32
   } | null>(null)
-  const meta = assets.getAsset(poolId)
+
   const bestNumber = useBestNumber()
   const shouldValidate =
     !!position?.amount || (meta.isShareToken && !depositNft)
@@ -127,7 +128,6 @@ export const JoinFarmModal = ({
                     return (
                       <FarmDetailsCard
                         key={i}
-                        poolId={poolId}
                         farm={farm}
                         onSelect={() => {
                           setSelectedFarmId({
@@ -217,7 +217,6 @@ export const JoinFarmModal = ({
             title: t("farms.modal.details.title"),
             content: selectedFarm && (
               <FarmDetailsModal
-                poolId={poolId}
                 farm={selectedFarm}
                 currentBlock={currentBlock?.toNumber()}
               />

@@ -27,6 +27,7 @@ import { useState } from "react"
 import { useExternalTokenMeta } from "sections/wallet/addToken/AddToken.utils"
 import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
 import { ExternalAssetUpdateModal } from "sections/trade/modal/ExternalAssetUpdateModal"
+import { useAssets } from "providers/assets"
 
 type Props = {
   toggleExpanded: () => void
@@ -39,8 +40,9 @@ export const WalletAssetsTableActions = (props: Props) => {
   const { t } = useTranslation()
   const setFeeAsPayment = useSetAsFeePayment()
   const { account } = useAccount()
-  const { featureFlags, assets } = useRpcProvider()
+  const { featureFlags } = useRpcProvider()
   const rugCheck = useExternalTokensRugCheck()
+  const { isExternal } = useAssets()
   const [assetCheckModalOpen, setAssetCheckModalOpen] = useState(false)
 
   const navigate = useNavigate()
@@ -157,7 +159,7 @@ export const WalletAssetsTableActions = (props: Props) => {
             }),
         }
       : null,
-    assets.isExternal(props.asset.meta)
+    isExternal(props.asset.meta)
       ? {
           key: "checkData",
           icon: <InfoIcon width={18} height={18} />,

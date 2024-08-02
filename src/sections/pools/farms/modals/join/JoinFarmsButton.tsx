@@ -43,7 +43,6 @@ export const JoinFarmsButton = (props: {
       {joinFarm && farms.data && (
         <JoinFarmModal
           farms={farms.data}
-          poolId={props.poolId}
           onClose={() => setJoinFarm(false)}
           position={props.position}
           mutation={mutation}

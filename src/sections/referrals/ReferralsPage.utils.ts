@@ -2,7 +2,7 @@ import { useReferrerInfo } from "api/referrals"
 import BN from "bignumber.js"
 import { useAccountRewards } from "./components/RewardsCard/Rewards.utils"
 import { useMemo } from "react"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const REFERRAL_PROD_HOST = "hydration.net"
 export const REFERRAL_PARAM_NAME = "referral"
@@ -21,9 +21,7 @@ export const referralRewards: Record<
 }
 
 export const useReferrerTierData = (referrerAddress?: string) => {
-  const {
-    assets: { native },
-  } = useRpcProvider()
+  const { native } = useAssets()
   const referrerInfo = useReferrerInfo(referrerAddress)
   const accountRewards = useAccountRewards(referrerAddress)
 

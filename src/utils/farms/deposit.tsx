@@ -8,6 +8,7 @@ import { TOAST_MESSAGES } from "state/toasts"
 import { scale } from "utils/balance"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { isEvmAccount } from "utils/evm"
+import { useAssets } from "providers/assets"
 
 export type FarmDepositMutationType = ReturnType<typeof useFarmDepositMutation>
 
@@ -19,18 +20,21 @@ export const useFarmDepositMutation = (
   onSuccess: () => void,
 ) => {
   const { createTransaction } = useStore()
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
   const { t } = useTranslation()
   const { account } = useAccount()
+  const { getAsset, isShareToken } = useAssets()
   const isEvm = isEvmAccount(account?.address)
 
-  const meta = assets.getAsset(poolId)
-  const isXYK = assets.isShareToken(meta)
+  const meta = getAsset(poolId)
+  const isXYK = isShareToken(meta)
 
   return useMutation(
     async ({ shares, value }: { shares: string; value: string }) => {
       const [firstFarm, ...restFarm] = farms ?? []
+
       if (firstFarm == null) throw new Error("Missing farm")
+      if (!meta) throw new Error("Missing asset meta")
 
       const toast = TOAST_MESSAGES.reduce((memo, type) => {
         const msType = type === "onError" ? "onLoading" : type

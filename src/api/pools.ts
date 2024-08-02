@@ -2,6 +2,9 @@ import { useMemo } from "react"
 import { useTotalIssuances } from "./totalIssuance"
 import { useTokensBalances } from "./balances"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { useRpcProvider } from "providers/rpcProvider"
+import { useQuery } from "@tanstack/react-query"
+import { QUERY_KEYS } from "utils/queryKeys"
 
 export const useShareOfPools = (assets: string[]) => {
   const { account } = useAccount()
@@ -53,4 +56,16 @@ export const useShareOfPools = (assets: string[]) => {
   }, [assets, totalIssuances, totalBalances])
 
   return { isLoading, isInitialLoading: isLoading, data }
+}
+
+export const useSDKPools = () => {
+  const { isLoaded, tradeRouter } = useRpcProvider()
+
+  return useQuery({
+    queryKey: QUERY_KEYS.pools,
+    queryFn: async () => {
+      return await tradeRouter.getPools()
+    },
+    enabled: isLoaded,
+  })
 }

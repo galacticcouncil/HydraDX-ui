@@ -21,13 +21,12 @@ import { useTokensBalances } from "api/balances"
 import { pluck } from "utils/rx"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { DOC_LINK } from "utils/constants"
+import { useAssets } from "providers/assets"
 
 export const WhyBonds = () => {
   const { t } = useTranslation()
-  const {
-    assets: { bonds },
-    isLoaded,
-  } = useRpcProvider()
+  const { isLoaded } = useRpcProvider()
+  const { bonds } = useAssets()
 
   const [expanded, setExpanded] = useState<boolean | undefined>(undefined)
 

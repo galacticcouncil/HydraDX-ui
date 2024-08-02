@@ -1,6 +1,8 @@
 import {
   TPool,
+  TPoolFullData,
   TXYKPool,
+  TXYKPoolFullData,
   usePoolDetails,
   useXYKPoolDetails,
 } from "sections/pools/PoolsPage.utils"
@@ -12,6 +14,17 @@ import {
 import { isXYKPoolType } from "sections/pools/PoolsPage.utils"
 import { PoolSkeleton } from "sections/pools/pool/PoolSkeleton"
 import { SPoolContainer } from "./Pool.styled"
+import { createContext, useContext } from "react"
+
+const PoolContext = createContext<{
+  pool: TPoolFullData | TXYKPoolFullData
+  isXYK: boolean
+}>({
+  pool: {} as TPoolFullData,
+  isXYK: false,
+})
+
+export const usePoolData = () => useContext(PoolContext)
 
 export const PoolWrapper = ({ pool }: { pool: TPool | TXYKPool }) => {
   const isXYK = isXYKPoolType(pool)
@@ -25,10 +38,14 @@ const Pool = ({ pool }: { pool: TPool }) => {
   if (poolDetails.isInitialLoading) return <PoolSkeleton />
 
   return (
-    <SPoolContainer sx={{ mt: [-22, "inherit"] }}>
-      <PoolDetails pool={{ ...pool, ...poolDetails.data }} />
-      <MyPositions pool={{ ...pool, ...poolDetails.data }} />
-    </SPoolContainer>
+    <PoolContext.Provider
+      value={{ pool: { ...pool, ...poolDetails.data }, isXYK: false }}
+    >
+      <SPoolContainer>
+        <PoolDetails />
+        <MyPositions />
+      </SPoolContainer>
+    </PoolContext.Provider>
   )
 }
 
@@ -38,9 +55,13 @@ const XYKPool = ({ pool }: { pool: TXYKPool }) => {
   if (poolDetails.isInitialLoading) return <PoolSkeleton />
 
   return (
-    <SPoolContainer sx={{ mt: [-22, "inherit"] }}>
-      <PoolDetails pool={{ ...pool, ...poolDetails.data }} />
-      <MyXYKPositions pool={{ ...pool, ...poolDetails.data }} />
-    </SPoolContainer>
+    <PoolContext.Provider
+      value={{ pool: { ...pool, ...poolDetails.data }, isXYK: true }}
+    >
+      <SPoolContainer>
+        <PoolDetails />
+        <MyXYKPositions />
+      </SPoolContainer>
+    </PoolContext.Provider>
   )
 }

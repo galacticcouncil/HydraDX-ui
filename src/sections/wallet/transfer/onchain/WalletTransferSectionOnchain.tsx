@@ -32,6 +32,7 @@ import { useDebouncedValue } from "hooks/useDebouncedValue"
 import { usePaymentFees } from "./WalletTransferSectionOnchain.utils"
 import { useInsufficientFee } from "api/consts"
 import { Text } from "components/Typography/Text/Text"
+import { useAssets } from "providers/assets"
 
 export function WalletTransferSectionOnchain({
   asset,
@@ -48,20 +49,21 @@ export function WalletTransferSectionOnchain({
 }) {
   const { t } = useTranslation()
   const { account } = useAccount()
-  const { api, assets } = useRpcProvider()
+  const { native, getAssetWithFallback } = useAssets()
+  const { api } = useRpcProvider()
   const { createTransaction } = useStore()
 
   const isDesktop = useMedia(theme.viewport.gte.sm)
 
   const tokenBalance = useTokenBalance(asset, account?.address)
-  const assetMeta = assets.getAsset(asset.toString())
+  const assetMeta = getAssetWithFallback(asset.toString())
 
   const accountCurrency = useAccountCurrency(account?.address)
   const accountCurrencyMeta = accountCurrency.data
-    ? assets.getAsset(accountCurrency.data)
+    ? getAssetWithFallback(accountCurrency.data)
     : undefined
 
-  const spotPrice = useSpotPrice(assets.native.id, accountCurrencyMeta?.id)
+  const spotPrice = useSpotPrice(native.id, accountCurrencyMeta?.id)
 
   const isTransferingPaymentAsset = accountCurrency.data === asset.toString()
 
@@ -81,7 +83,7 @@ export function WalletTransferSectionOnchain({
 
   const insufficientFee = useInsufficientFee(asset, form.watch("dest"))
 
-  const nativeDecimals = assets.native.decimals
+  const nativeDecimals = native.decimals
   const nativeDecimalsDiff =
     nativeDecimals - (accountCurrencyMeta?.decimals ?? nativeDecimals)
 
@@ -114,10 +116,10 @@ export function WalletTransferSectionOnchain({
     return await createTransaction(
       {
         tx:
-          asset.toString() === assets.native.id
+          asset.toString() === native.id
             ? api.tx.currencies.transfer(
                 normalizedDest,
-                assets.native.id,
+                native.id,
                 amount.toFixed(),
               )
             : api.tx.tokens.transfer(normalizedDest, asset, amount.toFixed()),

@@ -12,6 +12,7 @@ export const SPoolContainer = styled.div`
   overflow: hidden;
 
   margin: 0 -12px;
+  margin-top: -22px;
 
   position: relative;
   height: 100%;

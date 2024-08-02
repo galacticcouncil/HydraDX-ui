@@ -2,7 +2,6 @@ import { z } from "zod"
 import { maxBalance, required } from "utils/validators"
 import { useTokenBalance } from "api/balances"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
-import { useRpcProvider } from "providers/rpcProvider"
 import { BN_0 } from "utils/constants"
 import { Farm, useOraclePrice } from "api/farms"
 import { useMemo } from "react"
@@ -10,6 +9,7 @@ import { scale, scaleHuman } from "utils/balance"
 import { useTranslation } from "react-i18next"
 import BigNumber from "bignumber.js"
 import { TLPData, useLiquidityPositionData } from "utils/omnipool"
+import { useAssets } from "providers/assets"
 
 export const useZodSchema = ({
   id,
@@ -25,12 +25,12 @@ export const useZodSchema = ({
   const assetId = enabled ? id : undefined
   const { t } = useTranslation()
   const { account } = useAccount()
-  const { assets } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
   const { data: balance } = useTokenBalance(assetId, account?.address)
   const { getData } = useLiquidityPositionData(assetId ? [assetId] : undefined)
 
-  const meta = assets.getAsset(id)
-  const isXyk = meta.isShareToken
+  const meta = getAssetWithFallback(id)
+
   const minDeposit = useMemo(() => {
     return farms.reduce<{ value: BigNumber; assetId?: string }>(
       (acc, farm) => {
@@ -96,7 +96,7 @@ export const useZodSchema = ({
       },
       t("farms.modal.join.minDeposit", {
         value: scaleHuman(
-          isXyk ? minDeposit.value : omnipoolMinDepositeValue,
+          meta.isShareToken ? minDeposit.value : omnipoolMinDepositeValue,
           meta.decimals,
         ).times(1.02),
         symbol: meta.symbol,

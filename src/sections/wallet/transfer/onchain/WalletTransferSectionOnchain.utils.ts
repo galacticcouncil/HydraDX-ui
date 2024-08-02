@@ -1,3 +1,4 @@
+import { useAssets } from "providers/assets"
 import { usePaymentInfo } from "api/transaction"
 import BN from "bignumber.js"
 import { useRpcProvider } from "providers/rpcProvider"
@@ -12,23 +13,24 @@ export function usePaymentFees({
   currentAmount: BN
   maxAmount: BN
 }) {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { native } = useAssets()
 
   const formattedCurrentAmount = !currentAmount?.isNaN()
     ? currentAmount.toString()
     : "0"
 
   const { data: currentData } = usePaymentInfo(
-    asset.toString() === assets.native.id
-      ? api.tx.currencies.transfer("", assets.native.id, formattedCurrentAmount)
+    asset.toString() === native.id
+      ? api.tx.currencies.transfer("", native.id, formattedCurrentAmount)
       : api.tx.tokens.transfer("", asset, formattedCurrentAmount),
   )
 
   const formattedMaxAmount = !maxAmount?.isNaN() ? maxAmount.toString() : "0"
 
   const { data: maxData } = usePaymentInfo(
-    asset.toString() === assets.native.id
-      ? api.tx.currencies.transfer("", assets.native.id, formattedMaxAmount)
+    asset.toString() === native.id
+      ? api.tx.currencies.transfer("", native.id, formattedMaxAmount)
       : api.tx.tokens.transfer("", asset, formattedMaxAmount),
   )
 

@@ -1,7 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-location"
-import { useTokensBalances } from "api/balances"
 import BN from "bignumber.js"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useMemo } from "react"
 import { useFarmDepositsTotal } from "sections/pools/farms/position/FarmingPosition.utils"
 import { useOmnipoolPositionsData } from "sections/wallet/assets/hydraPositions/data/WalletAssetsHydraPositionsData.utils"
@@ -9,6 +7,8 @@ import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { BN_0, BN_NAN } from "utils/constants"
 import { useDisplayShareTokenPrice } from "utils/displayAsset"
 import { useAssetsData } from "./table/data/WalletAssetsTableData.utils"
+import { useAccountBalances } from "api/accountBalances"
+import { useAssets } from "providers/assets"
 
 type AssetCategory = "all" | "assets" | "liquidity" | "farming"
 
@@ -47,20 +47,22 @@ export const useWalletAssetsTotals = ({
 }: {
   address?: string
 } = {}) => {
-  const {
-    assets: { shareTokens, getAsset },
-  } = useRpcProvider()
   const { account } = useAccount()
+  const { shareTokens } = useAssets()
   const assets = useAssetsData({ isAllAssets: false, address })
   const lpPositions = useOmnipoolPositionsData({ address })
   const farmsTotal = useFarmDepositsTotal(address)
+  const balances = useAccountBalances(address ?? account?.address, true)
 
-  const shareTokenIds = shareTokens.map((shareToken) => shareToken.id)
-  const shareTokenBalances = useTokensBalances(
-    shareTokenIds,
-    address ?? account?.address,
+  const shareTokenIds = shareTokens.map((shareToken) => shareToken.id) ?? []
+
+  const shareTokenBalances = balances.data?.balances.filter((token) =>
+    shareTokenIds.find((shareTokenId) => shareTokenId === token.accountId),
   )
-  const spotPrices = useDisplayShareTokenPrice(shareTokenIds)
+
+  const spotPrices = useDisplayShareTokenPrice(
+    shareTokenBalances?.map((token) => token.accountId) ?? [],
+  )
 
   const assetsTotal = useMemo(() => {
     if (!assets.data) return BN_0
@@ -83,19 +85,22 @@ export const useWalletAssetsTotals = ({
   }, [lpPositions.data])
 
   const xykTotal = useMemo(() => {
-    if (
-      shareTokenBalances.some((shareTokenBalance) => !shareTokenBalance.data) ||
-      !spotPrices.data
-    )
-      return BN_0
+    if (!shareTokenBalances || !spotPrices.data) return BN_0
     return shareTokenBalances.reduce<BN>((acc, shareTokenBalance) => {
-      if (shareTokenBalance.data && shareTokenBalance.data.freeBalance.gt(0)) {
-        const meta = getAsset(shareTokenBalance.data.assetId.toString())
+      const shareToken = shareTokens.find(
+        (shareToken) => shareToken.id === shareTokenBalance.accountId,
+      )
+      if (
+        shareTokenBalance &&
+        shareToken &&
+        shareTokenBalance.freeBalance.gt(0)
+      ) {
+        const meta = shareToken
         const spotPrice = spotPrices.data.find(
           (spotPrice) => spotPrice.tokenIn === meta.id,
         )
 
-        const value = shareTokenBalance.data.freeBalance
+        const value = shareTokenBalance.freeBalance
           .shiftedBy(-meta.decimals)
           .multipliedBy(spotPrice?.spotPrice ?? BN_NAN)
 
@@ -103,7 +108,7 @@ export const useWalletAssetsTotals = ({
       }
       return acc
     }, BN_0)
-  }, [getAsset, shareTokenBalances, spotPrices.data])
+  }, [shareTokenBalances, shareTokens, spotPrices.data])
 
   const balanceTotal = assetsTotal
     .plus(farmsTotal.value)

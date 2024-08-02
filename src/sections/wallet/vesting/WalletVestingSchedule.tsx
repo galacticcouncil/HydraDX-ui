@@ -19,13 +19,12 @@ import { useDisplayPrice } from "utils/displayAsset"
 import { SClaimButton, SInner, SSchedule } from "./WalletVestingSchedule.styled"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import { useAssets } from "providers/assets"
 
 export const WalletVestingSchedule = () => {
   const { t } = useTranslation()
-  const {
-    api,
-    assets: { native },
-  } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { native } = useAssets()
   const { createTransaction } = useStore()
   const { account } = useAccount()
   const { data: claimableBalance } = useVestingTotalClaimableBalance()

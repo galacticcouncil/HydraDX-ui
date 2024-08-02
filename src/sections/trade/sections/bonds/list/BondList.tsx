@@ -3,7 +3,7 @@ import { useLbpPool } from "api/bonds"
 import { Text } from "components/Typography/Text/Text"
 import { useTranslation } from "react-i18next"
 import { useBestNumber } from "api/chain"
-import { TBond } from "api/assetDetails"
+import { TBond } from "providers/assets"
 import { PastBondList } from "./PastBondList"
 
 type Props = {

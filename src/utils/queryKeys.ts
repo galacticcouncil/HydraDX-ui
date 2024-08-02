@@ -11,6 +11,8 @@ import { ChartType } from "sections/stats/components/ChartsWrapper/ChartsWrapper
 export const QUERY_KEY_PREFIX = "@block"
 
 export const QUERY_KEYS = {
+  assets: (rpc: string) => ["assets", rpc],
+  bondsAssets: ["bondsAssets"],
   providerAccounts: (provider: string | undefined) => [
     "web3Accounts",
     provider,
@@ -20,11 +22,6 @@ export const QUERY_KEYS = {
   assetsTable: (id: Maybe<AccountId32 | string>) => [
     QUERY_KEY_PREFIX,
     "assetsTable",
-    id?.toString(),
-  ],
-  omniPositionId: (id: u128 | string) => [
-    QUERY_KEY_PREFIX,
-    "omniPositionId",
     id?.toString(),
   ],
   miningPosition: (id: string) => ["miningPosition", id],
@@ -38,7 +35,7 @@ export const QUERY_KEYS = {
     "accountBalances",
     id?.toString(),
   ],
-  accountNFTPositions: (id: string | undefined) => ["accountNFTPositions", id],
+  accountPositions: (id: string | undefined) => ["accountPositions", id],
   accountsBalances: (ids: string[]) => [
     QUERY_KEY_PREFIX,
     "accountsBalances",
@@ -161,16 +158,6 @@ export const QUERY_KEYS = {
     "evmPermitNonce",
     account,
   ],
-  bestBuy: (params: Record<string, any>) => [
-    QUERY_KEY_PREFIX,
-    "bestBuy",
-    params,
-  ],
-  bestSell: (params: Record<string, any>) => [
-    QUERY_KEY_PREFIX,
-    "bestSell",
-    params,
-  ],
   mathLoyaltyRates: (
     plannedYieldingPeriods: u32,
     initialRewardPercentage: Maybe<u128>,
@@ -219,38 +206,6 @@ export const QUERY_KEYS = {
     address,
     asset,
   ],
-  uniques: (address?: string | AccountId32, collectionId?: string | u128) => [
-    "uniques",
-    address?.toString(),
-    collectionId?.toString(),
-  ],
-  uniquesLive: (
-    address?: string | AccountId32,
-    collectionId?: string | u128,
-  ) => [
-    QUERY_KEY_PREFIX,
-    "uniques",
-    address?.toString(),
-    collectionId?.toString(),
-  ],
-  uniquesAssets: (collectionId?: string | u128) => [
-    "uniquesAssets",
-    collectionId?.toString(),
-  ],
-  uniquesAssetsLive: (collectionId?: string | u128) => [
-    QUERY_KEY_PREFIX,
-    "uniquesAssets",
-    collectionId?.toString(),
-  ],
-  uniquesAsset: (collectionId: string | u128) => [
-    "uniquesAsset",
-    collectionId.toString(),
-  ],
-  uniquesAssetLive: (collectionId: string | u128) => [
-    QUERY_KEY_PREFIX,
-    "uniquesAsset",
-    collectionId.toString(),
-  ],
   omnipoolAssets: ["omnipoolAssets"],
   omnipoolAssetsLive: [QUERY_KEY_PREFIX, "omnipoolAssets"],
   hubAssetTradability: [QUERY_KEY_PREFIX, "hubAssetTradability"],
@@ -262,24 +217,7 @@ export const QUERY_KEYS = {
     id?.toString(),
   ],
   omnipoolPositions: [QUERY_KEY_PREFIX, "omnipoolPositions"],
-  omnipoolPositionsMulti: (itemIds: Array<string | undefined>) => [
-    "omnipoolPositionsMulti",
-    itemIds,
-  ],
-  omnipoolPositionsMultiLive: (itemIds: Array<string | undefined>) => [
-    QUERY_KEY_PREFIX,
-    "omnipoolPositionsMulti",
-    itemIds,
-  ],
-  omnipoolPosition: (id: string | undefined) => [
-    "omnipoolPosition",
-    id?.toString(),
-  ],
-  omnipoolPositionLive: (id: string | undefined) => [
-    QUERY_KEY_PREFIX,
-    "omnipoolPosition",
-    id?.toString(),
-  ],
+  allOmnipoolPositions: ["allOmnipoolPositions"],
   otcOrders: [QUERY_KEY_PREFIX, "otcOrders"],
   otcOrdersTable: [QUERY_KEY_PREFIX, "otcOrdersTable"],
   otcOrdersState: (orderId: Maybe<string | u32>) => [
@@ -297,7 +235,6 @@ export const QUERY_KEYS = {
     "accountCurrency",
     address,
   ],
-  apiIds: ["apiIds"],
   externalWalletKey: (walletAddress: string) => [
     "externalWallet",
     walletAddress,
@@ -362,10 +299,9 @@ export const QUERY_KEYS = {
     pool,
     block,
   ],
-  xykPools: ["xylPools"], //TODO: refresh each block??
+  xykPools: ["xykPools"], //TODO: refresh each block??
   xykConsts: ["xykConsts"],
-  shareTokens: ["shareTokens"],
-  shareTokensByIds: (ids: string[]) => ["shareTokensByIds", ids],
+  shareTokens: (rpc: string) => ["shareTokens", rpc],
   totalXYKLiquidity: (address?: string) => [
     QUERY_KEY_PREFIX,
     "totalXYKLiquidity",

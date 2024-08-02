@@ -8,11 +8,9 @@ import { persist } from "zustand/middleware"
 import { STABLECOIN_SYMBOL } from "./constants"
 import { QUERY_KEYS } from "./queryKeys"
 import { useAccountsBalances } from "api/accountBalances"
-import { useRpcProvider } from "providers/rpcProvider"
-import { useShareTokensByIds } from "api/xyk"
 import { isNotNil } from "./helpers"
 import { useShareOfPools } from "api/pools"
-import { TShareToken } from "api/assetDetails"
+import { TShareToken, useAssets } from "providers/assets"
 
 type Props = { id: string; amount: BigNumber }
 
@@ -59,54 +57,50 @@ export const useDisplayPrice = (id: string | u32 | undefined) => {
 
 //TODO: mb create a hook for a single share token
 export const useDisplayShareTokenPrice = (ids: string[]) => {
-  const { assets } = useRpcProvider()
+  const { getShareTokens, getAssetWithFallback } = useAssets()
 
-  const shareTokenIds = ids
-    .filter((id) => assets.isShareToken(assets.getAsset(id.toString())))
-    .map((shareTokenId) => shareTokenId.toString())
+  const pools = getShareTokens(ids) as TShareToken[]
+  const poolsAddress = pools.map((pool) => pool?.poolAddress) ?? []
 
-  const pools = useShareTokensByIds(shareTokenIds)
-
-  const poolsAddress = useMemo(
-    () =>
-      new Map(pools.data?.map((pool) => [pool.shareTokenId, pool.poolAddress])),
-    [pools.data],
-  )
-
-  const poolBalances = useAccountsBalances(Array.from(poolsAddress.values()))
-  const totalIssuances = useShareOfPools(shareTokenIds)
+  const poolBalances = useAccountsBalances(poolsAddress)
+  const totalIssuances = useShareOfPools(ids)
 
   const shareTokensTvl = useMemo(() => {
-    return shareTokenIds
-      .map((shareTokenId) => {
-        const meta = assets.getAsset(shareTokenId) as TShareToken
-        const poolAddress = poolsAddress.get(shareTokenId)
-        const poolBalance = poolBalances.data?.find(
-          (poolBalance) => poolBalance.accountId === poolAddress,
-        )
+    return !pools
+      ? []
+      : pools
+          .map((shareToken) => {
+            const { poolAddress } = shareToken
+            const poolBalance = poolBalances.data?.find(
+              (poolBalance) => poolBalance.accountId === poolAddress,
+            )
 
-        const assetA = poolBalance?.balances.find((balance) =>
-          meta.assets.includes(balance.id),
-        )
+            const assetA = poolBalance?.balances.find((balance) =>
+              shareToken.assets.some((asset) => asset.id === balance.id),
+            )
 
-        if (!assetA) return undefined
+            if (!assetA) return undefined
 
-        const assetABalance = assetA.freeBalance.shiftedBy(
-          -assets.getAsset(assetA.id.toString()).decimals,
-        )
+            const assetABalance = assetA.freeBalance.shiftedBy(
+              -getAssetWithFallback(assetA.id.toString()).decimals,
+            )
 
-        const tvl = assetABalance.multipliedBy(2)
+            const tvl = assetABalance.multipliedBy(2)
 
-        return { spotPriceId: assetA.id.toString(), tvl, shareTokenId }
-      })
-      .filter(isNotNil)
-  }, [assets, poolBalances.data, poolsAddress, shareTokenIds])
+            return {
+              spotPriceId: assetA.id.toString(),
+              tvl,
+              shareTokenId: shareToken.id,
+            }
+          })
+          .filter(isNotNil)
+  }, [pools, poolBalances.data, getAssetWithFallback])
 
   const spotPrices = useDisplayPrices(
     shareTokensTvl.map((shareTokenTvl) => shareTokenTvl.spotPriceId),
   )
 
-  const queries = [totalIssuances, pools, poolBalances, spotPrices]
+  const queries = [totalIssuances, poolBalances, spotPrices]
   const isLoading = queries.some((q) => q.isInitialLoading)
 
   const data = useMemo(() => {
@@ -124,7 +118,7 @@ export const useDisplayShareTokenPrice = (ids: string[]) => {
           (totalIssuance) => totalIssuance.asset === shareTokenTvl.shareTokenId,
         )
 
-        const shareTokenMeta = assets.getAsset(shareTokenTvl.shareTokenId)
+        const shareTokenMeta = getAssetWithFallback(shareTokenTvl.shareTokenId)
 
         if (!totalIssuance?.totalShare || !spotPrice?.tokenOut) return undefined
 
@@ -139,7 +133,12 @@ export const useDisplayShareTokenPrice = (ids: string[]) => {
         }
       })
       .filter(isNotNil)
-  }, [assets, shareTokensTvl, spotPrices.data, totalIssuances.data])
+  }, [
+    getAssetWithFallback,
+    shareTokensTvl,
+    spotPrices.data,
+    totalIssuances.data,
+  ])
 
   return { data, isLoading, isInitialLoading: isLoading }
 }

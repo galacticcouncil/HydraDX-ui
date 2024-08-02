@@ -33,10 +33,12 @@ export const getPendulumInputData = (
   }
 }
 
-const getPendulumAssetIdFromGeneralKey = (generalKey: {
-  length: number
-  data: string
+export const getPendulumAssetIdFromGeneralKey = (generalKey: {
+  length?: number
+  data?: string
 }) => {
+  if (!generalKey || !generalKey.length || !generalKey.data) return undefined
+
   const bytes = Buffer.from(generalKey.data.slice(2), "hex")
 
   return `0x${bytes.slice(0, generalKey.length).toString("hex")}`

@@ -33,6 +33,7 @@ import BN from "bignumber.js"
 import { BN_0 } from "utils/constants"
 import { SLocksContainer } from "sections/wallet/assets/table/details/WalletAssetsTableDetails.styled"
 import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
 
 type Props = {
@@ -47,9 +48,7 @@ export const WalletAssetsTableActionsMob = ({
   onTransferClick,
 }: Props) => {
   const { t } = useTranslation()
-  const {
-    assets: { native },
-  } = useRpcProvider()
+  const { native } = useAssets()
   const { account } = useAccount()
   const setFeeAsPayment = useSetAsFeePayment()
   const { featureFlags } = useRpcProvider()

@@ -1,14 +1,12 @@
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
 import { DollarAssetValue } from "components/DollarAssetValue/DollarAssetValue"
-import { Icon } from "components/Icon/Icon"
 import { Text } from "components/Typography/Text/Text"
 import { useTranslation } from "react-i18next"
 import { SAssetRow, SCircle } from "./AssetsModalRow.styled"
-import { TAsset } from "api/assetDetails"
+import { TAsset } from "providers/assets"
 import BN from "bignumber.js"
 import { AssetsModalRowSkeleton } from "./AssetsModalRowSkeleton"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 
 type AssetsModalRowProps = {
   asset: TAsset
@@ -34,15 +32,7 @@ export const AssetsModalRow = ({
   return (
     <SAssetRow onClick={() => onClick?.(asset)} isSelected={!!isSelected}>
       <div sx={{ display: "flex", align: "center", gap: 10 }}>
-        {typeof asset.iconId === "string" ? (
-          <Icon icon={<AssetLogo id={asset.iconId} />} size={30} />
-        ) : (
-          <MultipleIcons
-            icons={asset.iconId.map((asset) => ({
-              icon: <AssetLogo key={asset} id={asset} />,
-            }))}
-          />
-        )}
+        <MultipleAssetLogo size={30} iconId={asset.iconId} />
 
         <div sx={{ mr: 6 }}>
           <Text fw={700} color="white" fs={16} lh={22}>

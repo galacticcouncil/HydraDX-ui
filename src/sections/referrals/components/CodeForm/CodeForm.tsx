@@ -28,11 +28,13 @@ import { useTokenBalance } from "api/balances"
 import { useAccountCurrency } from "api/payments"
 import { usePaymentInfo } from "api/transaction"
 import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const CodeForm = () => {
   const { t } = useTranslation()
   const { account } = useAccount()
-  const { api, assets } = useRpcProvider()
+  const { native } = useAssets()
+  const { api } = useRpcProvider()
   const referralLength = useReferralCodeLength()
 
   const registerReferralCode = useRegisterReferralCode()
@@ -69,7 +71,7 @@ export const CodeForm = () => {
           .minus(
             paymentInfo.data?.partialFee
               .toBigNumber()
-              .shiftedBy(-assets.native.decimals) ?? 0,
+              .shiftedBy(-native.decimals) ?? 0,
           )
           .isPositive()
       : false

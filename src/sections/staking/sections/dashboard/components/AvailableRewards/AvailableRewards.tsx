@@ -23,13 +23,15 @@ import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useProcessedVotesIds } from "api/staking"
 import { BN_0 } from "utils/constants"
+import { useAssets } from "providers/assets"
 
 export const AvailableRewards = () => {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
   const { t } = useTranslation()
   const { account } = useAccount()
   const reward = useClaimReward()
-  const spotPrice = useDisplayPrice(assets.native.id)
+  const { native } = useAssets()
+  const spotPrice = useDisplayPrice(native.id)
 
   const processedVotes = useProcessedVotesIds()
 
@@ -74,7 +76,7 @@ export const AvailableRewards = () => {
 
     await queryClient.invalidateQueries(QUERY_KEYS.stake(account?.address))
     await queryClient.invalidateQueries(
-      QUERY_KEYS.tokenBalance(assets.native.id, account?.address),
+      QUERY_KEYS.tokenBalance(native.id, account?.address),
     )
   }
 

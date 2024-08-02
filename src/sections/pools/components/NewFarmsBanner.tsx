@@ -1,6 +1,5 @@
 import { useFarmsPoolAssets } from "api/farms"
 import { NewFarmsBannerContainer } from "./NewFarmsBanner.styled"
-import { useRpcProvider } from "providers/rpcProvider"
 import { Text } from "components/Typography/Text/Text"
 import { SSeparator } from "components/Separator/Separator.styled"
 import { Link } from "@tanstack/react-location"
@@ -10,9 +9,10 @@ import Star from "assets/icons/Star.svg?react"
 import { Icon } from "components/Icon/Icon"
 import { useState } from "react"
 import CrossIcon from "assets/icons/CrossIcon.svg?react"
+import { useAssets } from "providers/assets"
 
 export const NewFarmsBanner = () => {
-  const { assets } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
   const { t } = useTranslation()
   const poolAssets = useFarmsPoolAssets()
 
@@ -36,7 +36,8 @@ export const NewFarmsBanner = () => {
             {t("banner.newFarms.label", {
               symbols: poolAssets.data
                 .map(
-                  (poolAsset) => assets.getAsset(poolAsset.toString()).symbol,
+                  (poolAsset) =>
+                    getAssetWithFallback(poolAsset.toString()).symbol,
                 )
                 .join(" & "),
             })}

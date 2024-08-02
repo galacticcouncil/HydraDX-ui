@@ -3,8 +3,8 @@ import { InfoTooltip } from "components/InfoTooltip/InfoTooltip"
 import { Trans } from "react-i18next"
 import BigNumber from "bignumber.js"
 import { u32 } from "@polkadot/types"
-import { useRpcProvider } from "providers/rpcProvider"
 import { SInfoIcon } from "components/InfoTooltip/InfoTooltip.styled"
+import { useAssets } from "providers/assets"
 
 type Props = {
   assetId?: string | u32
@@ -17,9 +17,9 @@ export const LrnaPositionTooltip = ({
   tokenPosition,
   lrnaPosition,
 }: Props) => {
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
-  const meta = assetId ? assets.getAsset(assetId.toString()) : undefined
+  const meta = assetId ? getAsset(assetId.toString()) : undefined
 
   if (!tokenPosition) return null
 

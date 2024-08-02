@@ -3,16 +3,14 @@ import { useXYKPoolTradeVolumes } from "sections/pools/pool/details/PoolDetails.
 import { BN_0 } from "utils/constants"
 import { HeaderTotalData } from "./PoolsHeaderTotal"
 import { usePools } from "sections/pools/PoolsPage.utils"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const AllPoolsVolumeTotal = () => {
-  const { assets } = useRpcProvider()
+  const { getAssets } = useAssets()
   const xykPools = useGetXYKPools()
   const poolsAddress =
     xykPools.data
-      ?.filter((pool) =>
-        assets.getAssets(pool.assets).every((asset) => asset.symbol),
-      )
+      ?.filter((pool) => getAssets(pool.assets).every((asset) => asset?.symbol))
       .map((pool) => pool.poolAddress) ?? []
 
   const xykVolumes = useXYKPoolTradeVolumes(poolsAddress)
@@ -49,13 +47,11 @@ export const AllPoolsVolumeTotal = () => {
 }
 
 export const XYKVolumeTotal = () => {
-  const { assets } = useRpcProvider()
+  const { getAssets } = useAssets()
   const pools = useGetXYKPools()
   const poolsAddress =
     pools.data
-      ?.filter((pool) =>
-        assets.getAssets(pool.assets).every((asset) => asset.symbol),
-      )
+      ?.filter((pool) => getAssets(pool.assets).every((asset) => asset?.symbol))
       .map((pool) => pool.poolAddress) ?? []
   const xykVolumes = useXYKPoolTradeVolumes(poolsAddress)
 

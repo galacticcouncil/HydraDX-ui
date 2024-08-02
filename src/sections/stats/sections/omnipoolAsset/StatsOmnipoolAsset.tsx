@@ -6,7 +6,6 @@ import {
   useSearch,
 } from "@tanstack/react-location"
 import { Text } from "components/Typography/Text/Text"
-import { Icon } from "components/Icon/Icon"
 import { useTranslation } from "react-i18next"
 import { AssetStats } from "./stats/AssetStats"
 import { LiquidityProvidersTableWrapper } from "./LiquidityProvidersTable/LiquidityProvidersTableWrapper"
@@ -20,12 +19,12 @@ import { RecentTradesTableWrapperData } from "sections/stats/components/RecentTr
 import { RecentTradesTableSkeleton } from "sections/stats/components/RecentTradesTable/skeleton/RecentTradesTableSkeleton"
 import { ChartWrapper } from "sections/stats/components/ChartsWrapper/ChartsWrapper"
 import { SStatsCardContainer } from "sections/stats/StatsPage.styled"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { useRpcProvider } from "providers/rpcProvider"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { LiquidityProvidersTableSkeleton } from "sections/stats/sections/omnipoolAsset/LiquidityProvidersTable/skeleton/LiquidityProvidersTableSkeleton"
 import { useOmnipoolAssetDetails } from "sections/stats/StatsPage.utils"
 import { LINKS } from "utils/navigation"
+import { useAssets } from "providers/assets"
 
 type SearchGenerics = MakeGenerics<{
   Search: { id: number }
@@ -41,14 +40,11 @@ const OmnipoolAssetHeader = ({
   tvl?: BN
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
-  const asset = assetId ? assets.getAsset(assetId) : undefined
+  const { getAsset } = useAssets()
+  const asset = assetId ? getAsset(assetId) : undefined
   const isDesktop = useMedia(theme.viewport.gte.sm)
 
   const isLoading = loading
-
-  const iconIds =
-    asset && assets.isStableSwap(asset) ? asset.assets : asset?.id || []
 
   return (
     <div
@@ -67,18 +63,7 @@ const OmnipoolAssetHeader = ({
             circle
           />
         ) : (
-          <>
-            {typeof iconIds === "string" ? (
-              <Icon size={[30, 38]} icon={<AssetLogo id={iconIds} />} />
-            ) : (
-              <MultipleIcons
-                size={[30, 38]}
-                icons={iconIds.map((id) => ({
-                  icon: <AssetLogo key={id} id={id} />,
-                }))}
-              />
-            )}
-          </>
+          <MultipleAssetLogo size={[30, 38]} iconId={asset?.iconId} />
         )}
 
         <div>

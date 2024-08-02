@@ -5,7 +5,6 @@ import { RemoveLiquidityModal as RemoveStablepoolLiquidityModal } from "sections
 import { TPoolFullData, isXYKPoolType } from "sections/pools/PoolsPage.utils"
 import { TXYKPool } from "sections/pools/PoolsPage.utils"
 import { RemoveXYKLiquidityForm } from "./RemoveXYKLiquidityForm"
-import { useRpcProvider } from "providers/rpcProvider"
 import { TLPData } from "utils/omnipool"
 
 type RemoveLiquidityProps = {
@@ -24,10 +23,9 @@ export const RemoveLiquidity = ({
   onSuccess,
 }: RemoveLiquidityProps) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
 
   const isXyk = isXYKPoolType(pool)
-  const isStablepool = assets.getAsset(pool.id).isStableSwap
+  const isStablepool = pool.meta.isStableSwap
 
   if (isStablepool && !isXyk) {
     return (

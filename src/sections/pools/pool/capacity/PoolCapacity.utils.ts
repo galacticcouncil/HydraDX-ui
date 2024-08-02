@@ -5,14 +5,14 @@ import { useMemo } from "react"
 import { BN_NAN } from "utils/constants"
 import BN from "bignumber.js"
 import { getFloatingPointAmount } from "utils/balance"
-import { useRpcProvider } from "providers/rpcProvider"
 import { OmniMath } from "@galacticcouncil/sdk"
+import { useAssets } from "providers/assets"
 
 export const usePoolCapacity = (id: string) => {
-  const { assets } = useRpcProvider()
+  const { hub } = useAssets()
 
   const omnipoolAssets = useOmnipoolAssets()
-  const hubBalance = useTokenBalance(assets.hub.id, OMNIPOOL_ACCOUNT_ADDRESS)
+  const hubBalance = useTokenBalance(hub.id, OMNIPOOL_ACCOUNT_ADDRESS)
 
   const queries = [omnipoolAssets, hubBalance]
   const isLoading = queries.some((q) => q.isInitialLoading)

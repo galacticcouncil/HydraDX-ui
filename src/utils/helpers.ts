@@ -11,7 +11,7 @@ import { availableNetworks } from "@polkadot/networks"
 import type { Network } from "@polkadot/networks/types"
 import BN, { BigNumber } from "bignumber.js"
 import { AnyChain, AnyEvmChain, AnyParachain } from "@galacticcouncil/xcm-core"
-import { TAsset } from "api/assetDetails"
+import { TAsset } from "providers/assets"
 
 export const noop = () => {}
 export const undefinedNoop = () => undefined
@@ -395,4 +395,36 @@ export const sortAssets = <T extends { meta: TAsset; [key: string]: any }>(
 
     return b[balanceKey].minus(a[balanceKey]).toNumber()
   })
+}
+
+const deepEqual = (obj1: any, obj2: any): boolean => {
+  if (obj1 === obj2) return true
+  if (obj1 == null || obj2 == null) return false
+  if (typeof obj1 !== "object" || typeof obj2 !== "object") {
+    return false
+  }
+
+  let keys1 = Object.keys(obj1)
+  let keys2 = Object.keys(obj2)
+  if (keys1.length !== keys2.length) {
+    return false
+  }
+
+  for (let key of keys1) {
+    if (!keys2.includes(key) || !deepEqual(obj1[key], obj2[key])) return false
+  }
+
+  return true
+}
+
+export const arraysEqual = <T>(arr1: T[], arr2: T[]): boolean => {
+  if (arr1.length !== arr2.length) return false
+
+  for (let i = 0; i < arr1.length; i++) {
+    if (!deepEqual(arr1[i], arr2[i])) {
+      return false
+    }
+  }
+
+  return true
 }

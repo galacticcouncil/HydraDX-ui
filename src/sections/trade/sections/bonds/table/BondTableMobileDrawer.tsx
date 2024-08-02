@@ -3,7 +3,6 @@ import { BondCell, BondTableItem, Config } from "./BondsTable.utils"
 import { Text } from "components/Typography/Text/Text"
 import { Separator } from "components/Separator/Separator"
 import { theme } from "theme"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
 import { formatDate } from "utils/formatting"
 import { Button } from "components/Button/Button"
@@ -16,6 +15,7 @@ import { Icon } from "components/Icon/Icon"
 import { AssetLogo } from "components/AssetIcon/AssetIcon"
 import TradeIcon from "assets/icons/TradeTypeIcon.svg?react"
 import SuccessIcon from "assets/icons/SuccessIcon.svg?react"
+import { useAssets } from "providers/assets"
 
 export const BondTableMobileDrawer = ({
   data,
@@ -27,13 +27,13 @@ export const BondTableMobileDrawer = ({
   config: Config
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
   const claim = useClaimBond()
   const navigate = useNavigate()
 
   if (!data) return null
 
-  const meta = assets.getAsset(data.bondId)
+  const meta = getAsset(data.bondId)
   const { maturity, bondId, balance, isSale, assetIn, events } = data
   const isClaimDisabled =
     !bondId ||
@@ -46,7 +46,7 @@ export const BondTableMobileDrawer = ({
     <Modal
       open={!!data}
       onClose={onClose}
-      title={meta.symbol}
+      title={meta?.symbol}
       headerVariant="GeistMono"
     >
       <div sx={{ flex: "column", gap: 24, pt: 24 }}>

@@ -15,8 +15,6 @@ import BigNumber from "bignumber.js"
 import { Text } from "components/Typography/Text/Text"
 import { useTokenBalance } from "api/balances"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
-import { useRpcProvider } from "providers/rpcProvider"
-import { TStableSwap } from "api/assetDetails"
 import { Spinner } from "components/Spinner/Spinner"
 import { TLPData } from "utils/omnipool"
 
@@ -43,9 +41,9 @@ export const RemoveLiquidityModal = ({
   pool,
   position,
 }: RemoveStableSwapAssetProps) => {
-  const { assets } = useRpcProvider()
   const id = pool.id
-  const stableSwapMeta = assets.getAsset(id) as TStableSwap
+  const stableSwapMeta = pool.meta
+  const assets = Object.keys(stableSwapMeta.meta ?? {})
 
   const isRemovingOmnipoolPosition = !!position
 
@@ -60,9 +58,7 @@ export const RemoveLiquidityModal = ({
       : RemoveStablepoolLiquidityPage.REMOVE_FROM_STABLEPOOL,
   )
 
-  const [assetId, setAssetId] = useState<string | undefined>(
-    stableSwapMeta.assets[0],
-  )
+  const [assetId, setAssetId] = useState<string | undefined>(assets[0])
   const [selectedOption, setSelectedOption] = useState<RemoveOption>("SHARES")
   const [sharesAmount, setSharesAmount] = useState<string>()
 
@@ -96,8 +92,7 @@ export const RemoveLiquidityModal = ({
   const canGoBack =
     isRemovingOmnipoolPosition || page === RemoveStablepoolLiquidityPage.ASSETS
 
-  if (!assetId || !pool.stablepoolFee || !stableSwapMeta.assets.length)
-    return null
+  if (!assetId || !pool.stablepoolFee || !assets.length) return null
 
   return (
     <Modal
@@ -231,7 +226,7 @@ export const RemoveLiquidityModal = ({
               <AssetsModalContent
                 allAssets={true}
                 hideInactiveAssets={true}
-                allowedAssets={stableSwapMeta.assets.map((asset) => asset)}
+                allowedAssets={assets.map((asset) => asset)}
                 onSelect={(asset) => {
                   setAssetId(asset.id)
                   handleBack()

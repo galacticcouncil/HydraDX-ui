@@ -1,6 +1,5 @@
 import { useTokenBalance } from "api/balances"
 import { Text } from "components/Typography/Text/Text"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
 import { TPoolFullData, TXYKPoolFullData } from "sections/pools/PoolsPage.utils"
 import { FarmingPositionWrapper } from "sections/pools/farms/FarmingPositionWrapper"
@@ -20,28 +19,24 @@ import {
   SWrapperContainer,
 } from "./MyPositions.styled"
 import { LazyMotion, domAnimation } from "framer-motion"
+import { usePoolData } from "sections/pools/pool/Pool"
 
-export const MyPositions = ({ pool }: { pool: TPoolFullData }) => {
-  const { assets } = useRpcProvider()
+export const MyPositions = () => {
   const { account } = useAccount()
   const { t } = useTranslation()
-  const meta = assets.getAsset(pool.id)
+  const pool = usePoolData().pool as TPoolFullData
 
   const stablepoolBalance = useTokenBalance(
     pool.isStablePool ? pool.id : undefined,
     account?.address,
   )
 
-  const spotPrice = pool.spotPrice
   const stablepoolAmount = stablepoolBalance.data?.freeBalance ?? BN_0
-  const stablepoolAmountPrice = spotPrice
-    ? stablepoolAmount.shiftedBy(-meta.decimals).multipliedBy(spotPrice)
-    : BN_0
 
   if (
-    !pool.miningNftPositions.length &&
-    !pool.omnipoolNftPositions.length &&
-    !stablepoolBalance.data?.freeBalance.gt(0)
+    !pool.miningPositions.length &&
+    !pool.omnipoolPositions.length &&
+    !stablepoolAmount.gt(0)
   )
     return null
 
@@ -56,21 +51,16 @@ export const MyPositions = ({ pool }: { pool: TPoolFullData }) => {
         {t("liquidity.pool.positions.title")}
       </Text>
 
-      {pool.isStablePool && (
-        <StablepoolPosition
-          pool={pool}
-          amount={stablepoolAmount}
-          amountPrice={stablepoolAmountPrice}
-        />
-      )}
-      <LiquidityPositionWrapper pool={pool} />
-      <FarmingPositionWrapper pool={pool} />
+      {pool.isStablePool && <StablepoolPosition amount={stablepoolAmount} />}
+      <LiquidityPositionWrapper />
+      <FarmingPositionWrapper />
     </>
   )
 }
 
-export const MyXYKPositions = ({ pool }: { pool: TXYKPoolFullData }) => {
+export const MyXYKPositions = () => {
   const { t } = useTranslation()
+  const pool = usePoolData().pool as TXYKPoolFullData
 
   if (
     !pool.shareTokenIssuance?.myPoolShare?.gt(0) &&
@@ -90,7 +80,7 @@ export const MyXYKPositions = ({ pool }: { pool: TXYKPoolFullData }) => {
       </Text>
 
       <XYKPosition pool={pool} />
-      <FarmingPositionWrapper pool={pool} />
+      <FarmingPositionWrapper />
     </>
   )
 }

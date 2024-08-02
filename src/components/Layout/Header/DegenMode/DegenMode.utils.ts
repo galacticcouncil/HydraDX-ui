@@ -7,13 +7,15 @@ import {
   updateExternalAssetsCursor,
 } from "sections/wallet/addToken/AddToken.utils"
 import { useSettingsStore } from "state/store"
+import { useAssets } from "providers/assets"
 
 export const useDegenModeSubscription = () => {
+  const { external } = useAssets()
   const { degenMode } = useSettingsStore()
   const externalAssets = useExternalAssetRegistry(degenMode)
   const { getDataEnv } = useProviderRpcUrlStore()
   const refetchProvider = useRefetchProviderData()
-  const { assets, isLoaded } = useRpcProvider()
+  const { isLoaded, poolService } = useRpcProvider()
 
   const hasInitializedDegenMode = useRef(false)
 
@@ -29,7 +31,7 @@ export const useDegenModeSubscription = () => {
       }
     }
 
-    const data = assets.external.reduce((acc, asset) => {
+    const data = external.reduce((acc, asset) => {
       const externalAsset = externalAssets[
         Number(asset.parachainId)
       ]?.data?.get(asset.externalId ?? "")
@@ -48,7 +50,7 @@ export const useDegenModeSubscription = () => {
       data,
       isSuccess,
     }
-  }, [assets, externalAssets, isLoaded])
+  }, [external, externalAssets, isLoaded])
 
   // Initialize ExternalAssetCursor if degenMode is true
   useEffect(() => {
@@ -62,10 +64,11 @@ export const useDegenModeSubscription = () => {
         degenMode,
         dataEnv: getDataEnv(),
       })
+      poolService.syncRegistry(data)
       hasInitializedDegenMode.current = true
       refetchProvider()
     }
-  }, [degenMode, data, getDataEnv, isSuccess, refetchProvider])
+  }, [degenMode, data, getDataEnv, isSuccess, refetchProvider, poolService])
 
   // Subscribe to degenMode change to update ExternalAssetCursor
   useEffect(() => {
@@ -77,9 +80,10 @@ export const useDegenModeSubscription = () => {
             degenMode,
             dataEnv: getDataEnv(),
           })
+          poolService.syncRegistry(data)
           refetchProvider()
         }
       }
     })
-  }, [data, getDataEnv, refetchProvider])
+  }, [data, getDataEnv, refetchProvider, poolService])
 }

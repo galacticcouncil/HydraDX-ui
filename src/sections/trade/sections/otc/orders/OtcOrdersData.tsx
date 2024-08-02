@@ -1,53 +1,26 @@
 import BN from "bignumber.js"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
-import { Icon } from "components/Icon/Icon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Text } from "components/Typography/Text/Text"
 import { useTranslation } from "react-i18next"
 import { OfferingPair } from "./OtcOrdersData.utils"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useMedia } from "react-use"
 import { theme } from "theme"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
+import { useAssets } from "providers/assets"
 
 export const OrderPairColumn = (props: {
   offering: OfferingPair
   accepting: OfferingPair
   pol: boolean
 }) => {
-  const { assets } = useRpcProvider()
-  const offerAssetDetails = assets.getAsset(props.offering.asset)
-  const acceptAssetDetails = assets.getAsset(props.accepting.asset)
-  const offerIsBond = assets.isBond(offerAssetDetails)
-  const acceptIsBond = assets.isBond(acceptAssetDetails)
+  const { getAsset } = useAssets()
+  const offerAssetDetails = getAsset(props.offering.asset)
+  const acceptAssetDetails = getAsset(props.accepting.asset)
 
   return (
     <div sx={{ flex: "row", gap: 6, align: "center" }}>
-      {assets.isStableSwap(offerAssetDetails) ||
-      assets.isShareToken(offerAssetDetails) ? (
-        <MultipleIcons
-          size={22}
-          icons={offerAssetDetails.assets.map((assetId: string) => {
-            const meta = assets.getAsset(assetId)
-            const isBond = assets.isBond(meta)
-            const id = isBond ? meta.assetId : assetId
-            return {
-              icon: <Icon size={22} icon={<AssetLogo key={id} id={id} />} />,
-            }
-          })}
-        />
-      ) : (
-        <Icon
-          size={22}
-          icon={
-            <AssetLogo
-              id={
-                offerIsBond ? offerAssetDetails.assetId : offerAssetDetails.id
-              }
-            />
-          }
-        />
-      )}
+      <MultipleAssetLogo size={22} iconId={offerAssetDetails?.iconId} />
+
       <Text fs={[14, 16]} lh={[16, 16]} fw={500} color="white">
         {props.offering.symbol}
       </Text>
@@ -55,34 +28,8 @@ export const OrderPairColumn = (props: {
       <Text fs={[14, 16]} lh={[16, 16]} fw={500} color="white" sx={{ mx: 4 }}>
         /
       </Text>
+      <MultipleAssetLogo size={22} iconId={acceptAssetDetails?.iconId} />
 
-      {assets.isStableSwap(acceptAssetDetails) ||
-      assets.isShareToken(acceptAssetDetails) ? (
-        <MultipleIcons
-          size={22}
-          icons={acceptAssetDetails.assets.map((assetId: string) => {
-            const meta = assets.getAsset(assetId)
-            const isBond = assets.isBond(meta)
-            const id = isBond ? meta.assetId : assetId
-            return {
-              icon: <Icon size={22} icon={<AssetLogo key={id} id={id} />} />,
-            }
-          })}
-        />
-      ) : (
-        <Icon
-          size={22}
-          icon={
-            <AssetLogo
-              id={
-                acceptIsBond
-                  ? acceptAssetDetails.assetId
-                  : acceptAssetDetails.id
-              }
-            />
-          }
-        />
-      )}
       <Text fs={[14, 16]} lh={[16, 16]} fw={500} color="white">
         {props.accepting.symbol}
       </Text>
@@ -95,34 +42,14 @@ export const OrderAssetColumn = (props: {
   large?: boolean
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { isBond, getAsset } = useAssets()
 
-  const assetDetails = assets.getAsset(props.pair.asset)
-  const isBond = assets.isBond(assetDetails)
+  const assetDetails = getAsset(props.pair.asset)
 
   return (
     <div sx={{ flex: "row", align: "center", gap: 8 }}>
-      {assets.isStableSwap(assetDetails) ||
-      assets.isShareToken(assetDetails) ? (
-        <MultipleIcons
-          size={22}
-          icons={assetDetails.assets.map((assetId: string) => {
-            const meta = assets.getAsset(assetId)
-            const isBond = assets.isBond(meta)
-            const id = isBond ? meta.assetId : assetId
-            return {
-              icon: <Icon size={22} icon={<AssetLogo key={id} id={id} />} />,
-            }
-          })}
-        />
-      ) : (
-        <Icon
-          size={22}
-          icon={
-            <AssetLogo id={isBond ? assetDetails.assetId : assetDetails.id} />
-          }
-        />
-      )}
+      <MultipleAssetLogo size={22} iconId={assetDetails?.iconId} />
+
       <div
         sx={{
           display: "flex",
@@ -132,7 +59,7 @@ export const OrderAssetColumn = (props: {
         <Text fs={[14, 13]} lh={13} fw={500} color="white">
           {t("value.token", { value: props.pair.amount })} {props.pair.symbol}
         </Text>
-        {isBond && (
+        {assetDetails && isBond(assetDetails) && (
           <Text fs={13} lh={13} fw={500} color="white">
             {assetDetails.name.replace("HDX Bond ", "").slice(3)}
           </Text>

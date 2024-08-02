@@ -11,6 +11,7 @@ import { OrderAssetGet, OrderAssetPay } from "./cmp/AssetSelect"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { TokensConversion } from "sections/pools/modals/AddLiquidity/components/TokensConvertion/TokensConversion"
+import { useAssets } from "providers/assets"
 import { useOTCfee } from "api/consts"
 import { Summary } from "components/Summary/Summary"
 import Skeleton from "react-loading-skeleton"
@@ -33,11 +34,12 @@ export const FillOrder = ({
 }: FillOrderProps) => {
   const { t } = useTranslation()
   const { account } = useAccount()
+  const { getAssetWithFallback } = useAssets()
+  const { api } = useRpcProvider()
   const fee = useOTCfee()
-  const { api, assets } = useRpcProvider()
-  const assetInMeta = assets.getAsset(accepting.asset)
+  const assetInMeta = getAssetWithFallback(accepting.asset)
   const assetInBalance = useTokenBalance(accepting.asset, account?.address)
-  const assetOutMeta = assets.getAsset(offering.asset)
+  const assetOutMeta = getAssetWithFallback(offering.asset)
   const [error, setError] = useState<string | undefined>(undefined)
 
   const { createTransaction } = useStore()
@@ -46,7 +48,7 @@ export const FillOrder = ({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (assetInMeta.decimals == null) throw new Error("Missing assetIn meta")
+    if (assetInMeta?.decimals == null) throw new Error("Missing assetIn meta")
 
     if (assetInBalance.data?.balance == null)
       throw new Error("Missing assetIn balance")

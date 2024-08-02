@@ -6,10 +6,10 @@ import BigNumber from "bignumber.js"
 import { BN_0, BN_100 } from "utils/constants"
 import { useDisplayAssetStore } from "utils/displayAsset"
 import { SRow } from "./CurrencyReserves.styled"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
 import { useMemo } from "react"
 import { useDisplayPrices } from "utils/displayAsset"
+import { useAssets } from "providers/assets"
 
 type Props = {
   reserves: { asset_id: number; amount: string }[]
@@ -17,20 +17,18 @@ type Props = {
 
 export const CurrencyReserves = ({ reserves }: Props) => {
   const { t } = useTranslation()
-  const rpcProvider = useRpcProvider()
+  const { getAssetWithFallback, getAsset } = useAssets()
   const displayAsset = useDisplayAssetStore()
   const assetIds = reserves.map((reserve) => reserve.asset_id.toString())
   const spotPrices = useDisplayPrices(assetIds)
 
-  const asset = displayAsset.id
-    ? rpcProvider.assets.getAsset(displayAsset.id)
-    : undefined
+  const asset = displayAsset.id ? getAsset(displayAsset.id) : undefined
 
   const assets = useMemo(
     () =>
       reserves.map((reserve) => {
         const id = reserve.asset_id.toString()
-        const meta = rpcProvider.assets.getAsset(id)
+        const meta = getAssetWithFallback(id)
         const spotPrice = spotPrices.data?.find(
           (spotPrice) => spotPrice?.tokenIn === id,
         )
@@ -44,7 +42,7 @@ export const CurrencyReserves = ({ reserves }: Props) => {
           value: balance.multipliedBy(spotPrice?.spotPrice ?? 1),
         }
       }),
-    [reserves, rpcProvider.assets, spotPrices.data],
+    [reserves, getAssetWithFallback, spotPrices.data],
   )
 
   const totalValue = assets.reduce((t, asset) => t.plus(asset.value), BN_0)

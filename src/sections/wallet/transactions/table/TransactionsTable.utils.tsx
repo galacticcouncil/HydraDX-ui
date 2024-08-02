@@ -11,10 +11,9 @@ import ChevronRight from "assets/icons/ChevronRight.svg?react"
 import LinkIcon from "assets/icons/LinkIcon.svg?react"
 import SellIcon from "assets/icons/SellIcon.svg?react"
 import TradeIcon from "assets/icons/TradeTypeIcon.svg?react"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Badge } from "components/Badge/Badge"
 import { Icon } from "components/Icon/Icon"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { Text } from "components/Typography/Text/Text"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -100,12 +99,8 @@ export const useTransactionsTable = (data: TTransactionsTableData) => {
               justify: ["end", "start"],
             }}
           >
-            <MultipleIcons
-              size={16}
-              icons={row.original.assetIconIds.map((id) => ({
-                icon: <AssetLogo key={id} id={id} />,
-              }))}
-            />
+            <MultipleAssetLogo size={16} iconId={row.original.assetIconIds} />
+
             <Text fs={14} css={{ whiteSpace: "nowrap" }}>
               {t("value.tokenWithSymbol", {
                 value: row.original.amountDisplay,

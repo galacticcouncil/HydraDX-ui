@@ -18,6 +18,7 @@ import { useSpotPrice } from "api/spotPrice"
 import { useAccountCurrency } from "api/payments"
 import { useMemo } from "react"
 import { createSubscanLink } from "utils/formatting"
+import { useAssets } from "providers/assets"
 
 const getPaymentInfo =
   (tx: SubmittableExtrinsic, account: AccountId32 | string) => async () => {
@@ -168,16 +169,16 @@ export const useEvmPermitStore = create<{
 }))
 
 export const useEstimatedFees = (txs: SubmittableExtrinsic[]) => {
-  const { assets } = useRpcProvider()
+  const { getAsset, native } = useAssets()
   const { account } = useAccount()
 
   const accountCurrency = useAccountCurrency(account?.address)
   const accountCurrencyMeta = accountCurrency.data
-    ? assets.getAsset(accountCurrency.data)
+    ? getAsset(accountCurrency.data)
     : undefined
 
-  const nativeId = assets.native.id
-  const nativeDecimals = assets.native.decimals
+  const nativeId = native.id
+  const nativeDecimals = native.decimals
   const accountCurrencyId = accountCurrencyMeta?.id
   const accountCurrencyDecimals = accountCurrencyMeta?.decimals ?? 0
 

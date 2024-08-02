@@ -1,11 +1,17 @@
 import { ApiPromise } from "@polkadot/api"
-import { u128, u32, Option } from "@polkadot/types"
-import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query"
+import { u128, Option, StorageKey, Null } from "@polkadot/types"
+import { AccountId32 } from "@polkadot/types/interfaces"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { QUERY_KEYS } from "utils/queryKeys"
 import { useRpcProvider } from "providers/rpcProvider"
-import { PalletLiquidityMiningDepositData } from "@polkadot/types/lookup"
+import {
+  PalletLiquidityMiningDepositData,
+  PalletOmnipoolPosition,
+} from "@polkadot/types/lookup"
 import { undefinedNoop } from "utils/helpers"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
+import BN from "bignumber.js"
+import { BN_0 } from "utils/constants"
 
 export type TDeposit = {
   id: string
@@ -13,89 +19,130 @@ export type TDeposit = {
   isXyk: boolean
 }
 
-export const useOmnipoolDeposits = (ids: string[]) => {
-  const { api } = useRpcProvider()
-
-  return useQuery(
-    QUERY_KEYS.omnipoolDeposits(ids),
-    getDeposits(api, "omnipool", ids),
-    { enabled: !!ids.length },
-  )
+export type TOmnipoolPosition = {
+  id: string
+  assetId: string
+  amount: BN
+  shares: BN
+  price: string[]
 }
 
-export const useXYKDeposits = (ids: string[]) => {
-  const { api } = useRpcProvider()
-
-  return useQuery(QUERY_KEYS.xykDeposits(ids), getDeposits(api, "xyk", ids), {
-    enabled: !!ids.length,
-  })
-}
-
-const getDeposits =
-  (api: ApiPromise, type: "omnipool" | "xyk", ids: string[]) => async () => {
-    if (!ids.length) return undefined
-
-    const keys = ids.map((id) =>
-      api.query[`${type}WarehouseLM`].deposit.key(id),
-    )
-    const values = (await api.rpc.state.queryStorageAt(
-      keys,
-    )) as Option<PalletLiquidityMiningDepositData>[]
-
-    const data = values
-      .filter((value) => !value.isNone)
-      .map(
-        (value) =>
-          api.registry.createType(
-            type === "omnipool" ? "OmnipoolLMDeposit" : "XykLMDeposit",
-            value.unwrap(),
-          ) as PalletLiquidityMiningDepositData,
-      )
-
-    const data_ = ids.map((id, i) => ({
-      id,
-      data: data[i],
-      isXyk: type === "xyk",
-    }))
-
-    return data_
-  }
-
-export const useOmniPositionIds = (positionIds: Array<u32 | string>) => {
-  const { api } = useRpcProvider()
-
-  return useQueries({
-    queries: positionIds.map((id) => ({
-      queryKey: QUERY_KEYS.omniPositionId(id.toString()),
-      queryFn: getOmniPositionId(api, id.toString()),
-      enabled: !!positionIds.length,
-    })),
-  })
-}
-const getOmniPositionId =
-  (api: ApiPromise, depositionId: u128 | string) => async () => {
-    const res =
-      await api.query.omnipoolLiquidityMining.omniPositionId(depositionId)
-    return { depositionId, value: res.value }
-  }
-
-export const useRefetchAccountNFTPositions = () => {
+export const useRefetchAccountPositions = () => {
   const queryClient = useQueryClient()
   const { account } = useAccount()
 
   return () => {
-    queryClient.refetchQueries(QUERY_KEYS.accountNFTPositions(account?.address))
+    queryClient.refetchQueries(QUERY_KEYS.accountPositions(account?.address))
   }
 }
 
-export const useAccountNFTPositions = (givenAddress?: string) => {
+const parseNfts = (
+  nfts: [StorageKey<[AccountId32, u128, u128]>, Option<Null>][],
+) =>
+  nfts.map(([storageKey]) => {
+    const [owner, classId, instanceId] = storageKey.args
+
+    return {
+      owner: owner.toString(),
+      classId: classId.toString(),
+      instanceId: instanceId.toString(),
+    }
+  })
+
+const parceLiquidityPositions = <T>(
+  positions: Option<PalletOmnipoolPosition>[],
+  ids: string[],
+  metadata?: T[],
+) =>
+  positions.reduce<
+    Array<
+      {
+        id: string
+        assetId: string
+        amount: BN
+        shares: BN
+        price: string[]
+      } & T
+    >
+  >((acc, pos, i) => {
+    if (!pos.isNone) {
+      const data = pos.unwrap()
+
+      acc.push({
+        id: ids[i],
+        amount: data.amount.toBigNumber(),
+        shares: data.shares.toBigNumber(),
+        price: data.price.map((e) => e.toString()),
+        assetId: data.assetId.toString(),
+        ...(metadata ? metadata[i] : ({} as T)),
+      })
+    }
+
+    return acc
+  }, [])
+
+const parseDepositData = (
+  api: ApiPromise,
+  nfts: {
+    owner: string
+    classId: string
+    instanceId: string
+  }[],
+  values: Option<PalletLiquidityMiningDepositData>[],
+  isXyk: boolean,
+) => {
+  return nfts
+    .reduce<
+      {
+        id: string
+        data: PalletLiquidityMiningDepositData
+        isXyk: boolean
+      }[]
+    >((acc, nft, index) => {
+      const data = values[index]
+
+      if (!data.isNone) {
+        acc.push({
+          id: nft.instanceId,
+          data: api.registry.createType(
+            isXyk ? "XykLMDeposit" : "OmnipoolLMDeposit",
+            data.unwrap(),
+          ),
+          isXyk,
+        })
+      }
+
+      return acc
+    }, [])
+    .sort((a, b) => {
+      const firstFarmLastBlock = a.data.yieldFarmEntries.reduce(
+        (acc, curr) =>
+          acc.lt(curr.enteredAt.toBigNumber())
+            ? curr.enteredAt.toBigNumber()
+            : acc,
+        BN_0,
+      )
+
+      const secondFarmLastBlock = b.data.yieldFarmEntries.reduce(
+        (acc, curr) =>
+          acc.lt(curr.enteredAt.toBigNumber())
+            ? curr.enteredAt.toBigNumber()
+            : acc,
+        BN_0,
+      )
+
+      return secondFarmLastBlock.minus(firstFarmLastBlock).toNumber()
+    })
+}
+
+export const useAccountPositions = (givenAddress?: string) => {
   const { account } = useAccount()
-  const { api } = useRpcProvider()
+  const { api, isLoaded } = useRpcProvider()
 
   const address = givenAddress ?? account?.address
 
   return useQuery(
-    QUERY_KEYS.accountNFTPositions(address),
+    QUERY_KEYS.accountPositions(address),
     address != null
       ? async () => {
           const [omnipoolNftId, miningNftId, xykMiningNftId] =
@@ -111,53 +158,78 @@ export const useAccountNFTPositions = (givenAddress?: string) => {
               api.query.uniques.account.entries(address, xykMiningNftId),
             ])
 
-          const omnipoolNfts = omnipoolNftsRaw.map(([storageKey]) => {
-            const [owner, classId, instanceId] = storageKey.args
-            return {
-              owner: owner.toString(),
-              classId: classId.toString(),
-              instanceId: instanceId.toString(),
-            }
-          })
+          const omnipoolNfts = parseNfts(omnipoolNftsRaw)
+          const miningNfts = parseNfts(miningNftsRaw)
+          const xykMiningNfts = parseNfts(xykMiningNftsRaw)
 
-          const miningNfts = miningNftsRaw.map(([storageKey]) => {
-            const [owner, classId, instanceId] = storageKey.args
-            return {
-              owner: owner.toString(),
-              classId: classId.toString(),
-              instanceId: instanceId.toString(),
-            }
-          })
+          const liquidityPositionIds = omnipoolNfts.map((nft) => nft.instanceId)
+          const omnipoolKeys = miningNfts.map((nft) =>
+            api.query.omnipoolWarehouseLM.deposit.key(nft.instanceId),
+          )
+          const xykKeys = xykMiningNfts.map((nft) =>
+            api.query.xykWarehouseLM.deposit.key(nft.instanceId),
+          )
 
-          const xykMiningNfts = xykMiningNftsRaw.map(([storageKey]) => {
-            const [owner, classId, instanceId] = storageKey.args
-            return {
-              owner: owner.toString(),
-              classId: classId.toString(),
-              instanceId: instanceId.toString(),
-            }
-          })
+          const [
+            liquidityPos,
+            omniPositionIdsRaw,
+            omnipoolData = [],
+            xykData = [],
+          ] = await Promise.all([
+            api.query.omnipool.positions.multi(liquidityPositionIds),
+            api.query.omnipoolLiquidityMining.omniPositionId.multi(
+              miningNfts.map((nft) => nft.instanceId),
+            ),
+            omnipoolKeys.length
+              ? (api.rpc.state.queryStorageAt(omnipoolKeys) as Promise<
+                  Option<PalletLiquidityMiningDepositData>[]
+                >)
+              : [],
+            xykKeys.length
+              ? (api.rpc.state.queryStorageAt(xykKeys) as Promise<
+                  Option<PalletLiquidityMiningDepositData>[]
+                >)
+              : undefined,
+          ])
 
-          return { omnipoolNfts, miningNfts, xykMiningNfts }
+          const omniPositionIds = omniPositionIdsRaw.map((id) => id.toString())
+
+          const depositLiquidityPositions = parceLiquidityPositions(
+            await api.query.omnipool.positions.multi(omniPositionIds),
+            omniPositionIds,
+            miningNfts.map((nft) => ({ depositId: nft.instanceId })),
+          )
+
+          const liquidityPositions = parceLiquidityPositions(
+            liquidityPos,
+            liquidityPositionIds,
+          )
+
+          const omnipoolDeposits = parseDepositData(
+            api,
+            miningNfts,
+            omnipoolData,
+            false,
+          )
+
+          const xykDeposits = parseDepositData(
+            api,
+            xykMiningNfts,
+            xykData,
+            true,
+          )
+
+          return {
+            omnipoolNfts,
+            miningNfts,
+            xykMiningNfts,
+            liquidityPositions,
+            depositLiquidityPositions,
+            omnipoolDeposits,
+            xykDeposits,
+          }
         }
       : undefinedNoop,
-    { enabled: !!address },
+    { enabled: !!address && isLoaded },
   )
-}
-
-export const useUserDeposits = (address?: string) => {
-  const nftPositions = useAccountNFTPositions(address)
-
-  const { miningNfts = [], xykMiningNfts = [] } = nftPositions.data ?? {}
-  const omnipoolDeposits =
-    useOmnipoolDeposits(
-      miningNfts.map((miningNft) => miningNft.instanceId),
-    ).data?.filter((deposit) => deposit.data) ?? []
-
-  const xykDeposits =
-    useXYKDeposits(
-      xykMiningNfts.map((xykMiningNft) => xykMiningNft.instanceId),
-    ).data?.filter((deposit) => deposit.data) ?? []
-
-  return { omnipoolDeposits, xykDeposits }
 }

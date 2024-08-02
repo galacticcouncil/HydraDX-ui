@@ -1,90 +1,12 @@
-import { u32 } from "@polkadot/types-codec"
-import { useApiIds } from "api/consts"
-import {
-  getVolumeAssetTotalValue,
-  getXYKVolumeAssetTotalValue,
-  useTradeVolumes,
-  useXYKTradeVolumes,
-} from "api/volume"
+import { getXYKVolumeAssetTotalValue, useXYKTradeVolumes } from "api/volume"
 import { useMemo } from "react"
-import { BN_0, BN_10 } from "utils/constants"
-import { useDisplayPrice, useDisplayPrices } from "utils/displayAsset"
-import { isNotNil, normalizeId } from "utils/helpers"
-import { useRpcProvider } from "providers/rpcProvider"
-
-export function usePoolDetailsTradeVolume(assetId: u32 | string) {
-  const { assets } = useRpcProvider()
-  const volumes = useTradeVolumes([assetId])
-
-  const assetTotalValue = useMemo(() => {
-    const volume = volumes.find(
-      (volume) => volume.data?.assetId === normalizeId(assetId),
-    )
-
-    if (!volume?.data) return
-    const sums = getVolumeAssetTotalValue(volume.data)
-    return sums?.[assetId.toString()]
-  }, [volumes, assetId])
-
-  const apiIds = useApiIds()
-  const assetMeta = assets.getAsset(assetId.toString())
-  const spotPrice = useDisplayPrice(assetId.toString())
-
-  const queries = [...volumes, apiIds, spotPrice]
-  const isLoading = queries.some((q) => q.isLoading)
-
-  const data = useMemo(() => {
-    let result = BN_0
-    if (!spotPrice.data || !assetTotalValue) return result
-
-    const assetScale = assetTotalValue.dividedBy(BN_10.pow(assetMeta.decimals))
-
-    result = assetScale.multipliedBy(spotPrice.data.spotPrice)
-
-    return result
-  }, [assetTotalValue, spotPrice, assetMeta])
-
-  return { data, isLoading }
-}
-
-export function usePoolsDetailsTradeVolumes(assetIds: string[]) {
-  const { assets } = useRpcProvider()
-  const volumes = useTradeVolumes(assetIds)
-  const spotPrices = useDisplayPrices(assetIds)
-
-  const queries = [...volumes, spotPrices]
-  const isLoading = queries.some((q) => q.isLoading)
-
-  const data = useMemo(() => {
-    return assetIds.reduce((acc, assetId) => {
-      const volume = volumes.find(
-        (volume) => volume.data?.assetId === normalizeId(assetId),
-      )
-      const assetMeta = assets.getAsset(assetId.toString())
-
-      const spotPrice = spotPrices.data?.find(
-        (sp) => sp?.tokenIn === normalizeId(assetId),
-      )?.spotPrice
-
-      const assetTotalValue = getVolumeAssetTotalValue(volume?.data)?.[
-        assetId.toString()
-      ]
-
-      if (!assetMeta || !spotPrice || !assetTotalValue) return acc
-
-      const assetScale = assetTotalValue.dividedBy(
-        BN_10.pow(assetMeta.decimals),
-      )
-
-      return acc.plus(assetScale.multipliedBy(spotPrice))
-    }, BN_0)
-  }, [assetIds, volumes, assets, spotPrices.data])
-
-  return { isLoading, data }
-}
+import { BN_0 } from "utils/constants"
+import { useDisplayPrices } from "utils/displayAsset"
+import { isNotNil } from "utils/helpers"
+import { useAssets } from "providers/assets"
 
 export const useXYKPoolTradeVolumes = (poolsAddress: string[]) => {
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
   const volumes = useXYKTradeVolumes(poolsAddress)
 
   const values = useMemo(() => {
@@ -122,14 +44,14 @@ export const useXYKPoolTradeVolumes = (poolsAddress: string[]) => {
       .map((value) => {
         if (!value) return undefined
         const volume = value.assets.reduce((acc, asset) => {
-          const assetMeta = assets.getAsset(asset)
-          const sum = value.sums[assetMeta.id]
+          const assetMeta = getAsset(asset)
+          const sum = value.sums[assetMeta?.id ?? ""]
 
           const spotPrice = spotPrices.data?.find(
             (spotPrice) => spotPrice?.tokenIn === asset,
           )?.spotPrice
 
-          if (!sum || !spotPrice) return acc
+          if (!sum || !spotPrice || !assetMeta) return acc
           const sumScale = sum.shiftedBy(-assetMeta.decimals)
 
           return acc.plus(sumScale.multipliedBy(spotPrice))
@@ -140,7 +62,7 @@ export const useXYKPoolTradeVolumes = (poolsAddress: string[]) => {
       .filter(isNotNil)
 
     return data
-  }, [assets, spotPrices, values, volumes])
+  }, [getAsset, spotPrices, values, volumes])
 
   return { data, isLoading }
 }

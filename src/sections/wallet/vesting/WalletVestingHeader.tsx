@@ -14,6 +14,7 @@ import { isApiLoaded } from "utils/helpers"
 import { BN_0, BN_10, DAY_IN_MILLISECONDS } from "utils/constants"
 import { SSeparator, STable } from "./WalletVestingHeader.styled"
 import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const WalletVestingHeader = () => {
   const { t } = useTranslation()
@@ -47,9 +48,7 @@ export const WalletVestingHeader = () => {
 }
 
 const WalletVestingHeaderContent = () => {
-  const {
-    assets: { native },
-  } = useRpcProvider()
+  const { native } = useAssets()
   const { t } = useTranslation()
 
   const { data: totalVestedAmount } = useVestingTotalVestedAmount()

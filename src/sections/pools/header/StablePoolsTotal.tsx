@@ -1,16 +1,16 @@
 import { useAccountsBalances } from "api/accountBalances"
 import { useStableswapPools } from "api/stableswap"
 import BigNumber from "bignumber.js"
-import { useRpcProvider } from "providers/rpcProvider"
 import { derivePoolAccount } from "sections/pools/PoolsPage.utils"
 import { BN_0, BN_1 } from "utils/constants"
 import { useDisplayPrices } from "utils/displayAsset"
 import { HeaderTotalData } from "./PoolsHeaderTotal"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useTokensBalances } from "api/balances"
+import { useAssets } from "providers/assets"
 
 export const StablePoolsTotal = () => {
-  const { assets } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
   const stablepools = useStableswapPools()
 
   const stablepoolIds =
@@ -51,7 +51,7 @@ export const StablePoolsTotal = () => {
           spotPrices.data?.find((spotPrices) => spotPrices?.tokenIn === assetId)
             ?.spotPrice ?? BN_1
 
-        const meta = assets.getAsset(assetId)
+        const meta = getAssetWithFallback(assetId)
 
         const balanceDisplay = balance
           .shiftedBy(-meta.decimals)
@@ -68,7 +68,7 @@ export const StablePoolsTotal = () => {
 
 export const useMyStablePoolaTotal = () => {
   const { account } = useAccount()
-  const { assets } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
   const stablepools = useStableswapPools()
 
   const stablepoolIds =
@@ -95,7 +95,7 @@ export const useMyStablePoolaTotal = () => {
             (spotPrices) => spotPrices?.tokenIn === assetId.toString(),
           )?.spotPrice ?? BN_1
 
-        const meta = assets.getAsset(assetId.toString())
+        const meta = getAssetWithFallback(assetId.toString())
 
         const balanceDisplay = freeBalance
           .shiftedBy(-meta.decimals)

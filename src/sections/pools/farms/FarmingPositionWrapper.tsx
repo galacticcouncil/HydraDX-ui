@@ -4,7 +4,6 @@ import { FarmingPosition } from "./position/FarmingPosition"
 import { Icon } from "components/Icon/Icon"
 import FPIcon from "assets/icons/PoolsAndFarms.svg?react"
 import { ClaimRewardsCard } from "./components/claimableCard/ClaimRewardsCard"
-import { TPoolFullData, TXYKPoolFullData } from "sections/pools/PoolsPage.utils"
 import { Button } from "components/Button/Button"
 import ExitIcon from "assets/icons/Exit.svg?react"
 import { useFarmExitAllMutation } from "utils/farms/exit"
@@ -14,27 +13,27 @@ import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { SPoolDetailsContainer } from "sections/pools/pool/details/PoolDetails.styled"
 import { ReactElement, useMemo } from "react"
 import { BN_0 } from "utils/constants"
-import { useAllOmnipoolDeposits } from "./position/FarmingPosition.utils"
+import { useAllFarmDeposits } from "./position/FarmingPosition.utils"
 import { Separator } from "components/Separator/Separator"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useFarms } from "api/farms"
 import BN from "bignumber.js"
 import { CollapsedPositionsList } from "sections/pools/pool/myPositions/MyPositions"
 import { LrnaPositionTooltip } from "sections/pools/components/LrnaPositionTooltip"
+import { usePoolData } from "sections/pools/pool/Pool"
 
-export const FarmingPositionWrapper = ({
-  pool,
-}: {
-  pool: TPoolFullData | TXYKPoolFullData
-}) => {
+export const FarmingPositionWrapper = () => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
   const { account } = useAccount()
+  const { pool, isXYK } = usePoolData()
 
   const farms = useFarms([pool.id])
 
-  const omnipoolMiningPositions = useAllOmnipoolDeposits()
-  const isXYK = assets.getAsset(pool.id).isShareToken
+  const { omnipool, xyk } = useAllFarmDeposits()
+
+  const [omnipoolDeposits = [], xykDeposits = []] = useMemo(
+    () => [omnipool[pool.id], xyk[pool.id]],
+    [omnipool, pool.id, xyk],
+  )
 
   const toast = TOAST_MESSAGES.reduce((memo, type) => {
     const msType = type === "onError" ? "onLoading" : type
@@ -46,15 +45,14 @@ export const FarmingPositionWrapper = ({
     return memo
   }, {} as ToastMessage)
 
-  const positions = pool.miningNftPositions
-
+  const positions = pool.miningPositions
   const exit = useFarmExitAllMutation(positions, pool.id, toast)
 
   const positionsNumber = positions.length
 
-  const total = useMemo(() => {
-    if (omnipoolMiningPositions.data[pool.id]) {
-      return omnipoolMiningPositions.data[pool.id].reduce(
+  const total = useMemo(
+    () =>
+      omnipoolDeposits.reduce(
         (acc, position) => {
           const newValues = {
             value: acc.value.plus(position.valueShifted),
@@ -65,34 +63,34 @@ export const FarmingPositionWrapper = ({
           return newValues
         },
         { value: BN_0, totalValue: BN_0, hub: BN_0, display: BN_0 },
-      )
-    }
-    return { value: BN_0, hub: BN_0, display: BN_0, totalValue: BN_0 }
-  }, [omnipoolMiningPositions.data, pool.id])
+      ),
+    [omnipoolDeposits],
+  )
 
-  const totalFarms = useMemo(() => {
-    return isXYK
-      ? (pool as TXYKPoolFullData).miningPositions.reduce(
-          (acc, position) => {
-            const newValues = {
-              valueA: acc.valueA.plus(position.assetA?.amount ?? 0),
-              valueB: acc.valueB.plus(position.assetB?.amount ?? 0),
-              display: acc.display.plus(position.amountUSD ?? 0),
-              symbolA: position.assetA?.symbol ?? "",
-              symbolB: position.assetB?.symbol ?? "",
-            }
-            return newValues
-          },
-          {
-            valueA: BN_0,
-            valueB: BN_0,
-            display: BN_0,
-            symbolA: "",
-            symbolB: "",
-          },
-        )
-      : { valueA: BN_0, valueB: BN_0, display: BN_0, symbolA: "", symbolB: "" }
-  }, [isXYK, pool])
+  const totalFarms = useMemo(
+    () =>
+      xykDeposits.reduce(
+        (acc, position) => {
+          const newValues = {
+            valueA: acc.valueA.plus(position.assetA?.amount ?? 0),
+            valueB: acc.valueB.plus(position.assetB?.amount ?? 0),
+            display: acc.display.plus(position.amountUSD ?? 0),
+            symbolA: position.assetA?.symbol ?? "",
+            symbolB: position.assetB?.symbol ?? "",
+          }
+          return newValues
+        },
+        {
+          valueA: BN_0,
+          valueB: BN_0,
+          display: BN_0,
+          symbolA: "",
+          symbolB: "",
+        },
+      ),
+
+    [xykDeposits],
+  )
 
   if (!positionsNumber) return null
 
@@ -124,23 +122,31 @@ export const FarmingPositionWrapper = ({
           ? 270
           : 312
 
-      acc.positions.push({
-        element: (
-          <FarmingPosition
-            key={i}
-            poolId={pool.id}
-            index={i + 1}
-            depositNft={position}
-            availableYieldFarms={availableYieldFarms}
-          />
-        ),
-        moveTo: !acc.height.isZero()
-          ? acc.height.minus(20 * i).toNumber()
-          : acc.height.toNumber(),
-        height: cardHeight,
-      })
+      const depositData = isXYK
+        ? xykDeposits.find((xykDeposit) => xykDeposit.depositId === position.id)
+        : omnipoolDeposits.find(
+            (omnipoolDeposit) => omnipoolDeposit.depositId === position.id,
+          )
 
-      acc.height = acc.height.plus(cardHeight + (isLastElement ? 0 : 16))
+      if (depositData) {
+        acc.positions.push({
+          element: (
+            <FarmingPosition
+              key={i}
+              index={i + 1}
+              depositNft={position}
+              depositData={depositData}
+              availableYieldFarms={availableYieldFarms}
+            />
+          ),
+          moveTo: !acc.height.isZero()
+            ? acc.height.minus(20 * i).toNumber()
+            : acc.height.toNumber(),
+          height: cardHeight,
+        })
+
+        acc.height = acc.height.plus(cardHeight + (isLastElement ? 0 : 16))
+      }
 
       return acc
     },
@@ -230,7 +236,7 @@ export const FarmingPositionWrapper = ({
         </div>
       </div>
 
-      <ClaimRewardsCard poolId={pool.id} />
+      <ClaimRewardsCard />
 
       <CollapsedPositionsList positions={positionsData.positions} />
     </SPoolDetailsContainer>

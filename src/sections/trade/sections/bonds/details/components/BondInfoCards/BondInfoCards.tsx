@@ -3,7 +3,7 @@ import { DisplayValue } from "components/DisplayValue/DisplayValue"
 import { useDisplayPrice } from "utils/displayAsset"
 import { BN_1 } from "utils/constants"
 import { useTranslation } from "react-i18next"
-import { TBond } from "api/assetDetails"
+import { TBond, useAssets } from "providers/assets"
 import { formatDate } from "utils/formatting"
 import {
   isPoolLiquidityEvent,
@@ -12,7 +12,6 @@ import {
   useLBPPoolEvents,
   useLbpPool,
 } from "api/bonds"
-import { useRpcProvider } from "providers/rpcProvider"
 import BN from "bignumber.js"
 import { useTokenBalance } from "api/balances"
 import { useSpotPrice } from "api/spotPrice"
@@ -33,8 +32,8 @@ export const BondInfoCards = ({
   isPast?: boolean
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
-  const spotPrice = useDisplayPrice(bond.assetId)
+  const { getAsset } = useAssets()
+  const spotPrice = useDisplayPrice(bond.underlyingAssetId)
   const spotPriceBond = useDisplayPrice(bond.id)
 
   const lbpPoolEvents = useLBPPoolEvents(bond?.id)
@@ -55,7 +54,10 @@ export const BondInfoCards = ({
   const accumulatedAssetId = initialAccumulatedAsset?.assetA
   const initialAccumulatedAssetValue = initialAccumulatedAsset?.amountA
 
-  const spotPriceAccumulated = useSpotPrice(bond.assetId, accumulatedAssetId)
+  const spotPriceAccumulated = useSpotPrice(
+    bond.underlyingAssetId,
+    accumulatedAssetId,
+  )
   const spotPriceBondAccumulated = useSpotPrice(bond.id, accumulatedAssetId)
 
   const tokenBalance = useTokenBalance(
@@ -69,7 +71,7 @@ export const BondInfoCards = ({
   const currentBondPrice = spotPriceBond.data?.spotPrice ?? BN_1
 
   const accumulatedAsset = accumulatedAssetId
-    ? assets.getAsset(accumulatedAssetId.toString())
+    ? getAsset(accumulatedAssetId.toString())
     : undefined
   const accumulatedAssetBalance = isPast
     ? hisroticalBalance.data?.pools[0]?.historicalBalances[0].assetABalance
@@ -123,7 +125,7 @@ export const BondInfoCards = ({
       ? [
           {
             label: t("bonds.details.card.spotPrice", {
-              symbol: assets.getAsset(bond.assetId).symbol,
+              symbol: getAsset(bond.underlyingAssetId)?.symbol,
             }),
             value: (
               <div sx={{ flex: "column", gap: 4 }}>

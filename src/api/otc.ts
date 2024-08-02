@@ -4,6 +4,7 @@ import { QUERY_KEYS } from "utils/queryKeys"
 import { gql, request } from "graphql-request"
 import { Maybe, undefinedNoop } from "utils/helpers"
 import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const getOrders = (api: ApiPromise) => async () => {
   const res = await api.query.otc.orders.entries()
@@ -33,22 +34,25 @@ export const useOrders = () => {
 }
 
 export const useOrdersData = () => {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAsset } = useAssets()
 
   return useQuery(QUERY_KEYS.otcOrdersTable, async () => {
     const orders = await getOrders(api)()
 
     return orders
-      .filter((order) => order.amountIn && order.amountOut)
+
       .map((order) => {
         return {
           ...order,
-          assetIn: order.assetIn ? assets.getAsset(order.assetIn) : undefined,
-          assetOut: order.assetOut
-            ? assets.getAsset(order.assetOut)
-            : undefined,
+          assetIn: order.assetIn ? getAsset(order.assetIn) : undefined,
+          assetOut: order.assetOut ? getAsset(order.assetOut) : undefined,
         }
       })
+      .filter(
+        (order) =>
+          order.amountIn && order.amountOut && order.assetIn && order.assetOut,
+      )
   })
 }
 

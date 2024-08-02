@@ -1,11 +1,9 @@
+import { useAssets } from "providers/assets"
 import BigNumber from "bignumber.js"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
-import { Icon } from "components/Icon/Icon"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { Text } from "components/Typography/Text/Text"
 import { m as motion } from "framer-motion"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
 
 type SliceLabelProps = {
@@ -23,10 +21,9 @@ export const SliceLabel = ({
 }: SliceLabelProps) => {
   const { t } = useTranslation()
 
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
-  const meta = assets.getAsset(id)
-  const iconIds = assets.isStableSwap(meta) ? meta.assets : meta.id
+  const meta = getAsset(id)
 
   return (
     <motion.div
@@ -35,16 +32,7 @@ export const SliceLabel = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {typeof iconIds === "string" ? (
-        <Icon size={[20, 36]} icon={<AssetLogo id={iconIds} />} />
-      ) : (
-        <MultipleIcons
-          size={[20, 36]}
-          icons={iconIds.map((id) => ({
-            icon: <AssetLogo key={id} id={id} />,
-          }))}
-        />
-      )}
+      <MultipleAssetLogo size={[20, 36]} iconId={meta?.iconId} />
       <Text color="basic100" fs={[20, 34]}>
         {t("value.percentage", { value: percentage })}
       </Text>

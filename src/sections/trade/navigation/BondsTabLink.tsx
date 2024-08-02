@@ -1,3 +1,4 @@
+import { useAssets } from "providers/assets"
 import { useLbpPool } from "api/bonds"
 import { useBestNumber } from "api/chain"
 import IconBonds from "assets/icons/Bonds.svg?react"
@@ -9,10 +10,8 @@ import { LINKS } from "utils/navigation"
 
 export const BondsTabLink = () => {
   const { t } = useTranslation()
-  const {
-    isLoaded,
-    assets: { bonds },
-  } = useRpcProvider()
+  const { isLoaded } = useRpcProvider()
+  const { bonds } = useAssets()
 
   const lbpPool = useLbpPool()
   const bestNumber = useBestNumber()

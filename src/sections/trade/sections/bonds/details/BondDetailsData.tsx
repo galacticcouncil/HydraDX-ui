@@ -17,7 +17,7 @@ import { BondsTrade } from "./components/BondTrade/BondsTradeApp"
 import { addSeconds } from "date-fns"
 import { theme } from "theme"
 import { AssetLogo } from "components/AssetIcon/AssetIcon"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 type SearchGenerics = MakeGenerics<{
   Search: { assetOut: number; assetIn: number }
@@ -54,14 +54,15 @@ export const BondDetailsHeader = ({
   accumulatedAssetId?: number
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
   const bestNumber = useBestNumber()
-  const accumulatedAssetMeta = assets.getAsset(String(accumulatedAssetId))
+  const accumulatedAssetMeta = getAsset(String(accumulatedAssetId))
 
   const isLoading = bestNumber.isLoading
 
-  if (isLoading || !bestNumber.data) return <BondsDetailsHeaderSkeleton />
+  if (isLoading || !bestNumber.data || !accumulatedAssetMeta)
+    return <BondsDetailsHeaderSkeleton />
 
   let endingDuration
   let date
@@ -137,14 +138,14 @@ export const BondDetailsHeader = ({
 }
 
 export const BondDetailsData = () => {
-  const { assets } = useRpcProvider()
+  const { getBond, getAsset } = useAssets()
   const search = useSearch<SearchGenerics>()
   const bestNumber = useBestNumber()
 
   const [bondId, setBondId] = useState(() => {
     const assetOutId = search.assetOut?.toString()
     const assetInId = search.assetIn?.toString()
-    const isBond = assetOutId ? assets.getAsset(assetOutId).isBond : undefined
+    const isBond = assetOutId ? getAsset(assetOutId)?.isBond : undefined
 
     if (isBond) {
       return assetOutId
@@ -153,7 +154,7 @@ export const BondDetailsData = () => {
     }
   })
 
-  const bond = bondId ? assets.getBond(bondId) : undefined
+  const bond = bondId ? getBond(bondId) : undefined
 
   const lbpPool = useLbpPool({ id: bond?.id })
   const poolData = lbpPool.data?.[0]

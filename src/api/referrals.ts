@@ -6,6 +6,7 @@ import { u32 } from "@polkadot/types"
 import { undefinedNoop } from "utils/helpers"
 import BN from "bignumber.js"
 import { BN_NAN } from "utils/constants"
+import { useAssets } from "providers/assets"
 
 export const useReferralCodes = (accountAddress?: string | "all") => {
   const { api } = useRpcProvider()
@@ -186,7 +187,8 @@ const getReferees = (api: ApiPromise) => async () => {
 }
 
 export const useRegistrationLinkFee = (disabled?: boolean) => {
-  const { api, assets } = useRpcProvider()
+  const { api, isLoaded } = useRpcProvider()
+  const { getAsset } = useAssets()
 
   return useQuery(
     QUERY_KEYS.referralLinkFee,
@@ -194,14 +196,13 @@ export const useRegistrationLinkFee = (disabled?: boolean) => {
       ? async () => {
           const rawData = await api.consts.referrals.registrationFee
 
-          //@ts-ignore
           const [id, amount] = rawData ?? []
 
           const feeAssetId = id?.toString()
-          const feeAmount = amount?.toBigNumber() as BN
+          const feeAmount = amount?.toBigNumber()
+          const meta = getAsset(feeAssetId)
 
-          if (feeAssetId && feeAmount) {
-            const meta = assets.getAsset(feeAssetId)
+          if (feeAssetId && feeAmount && meta) {
             const amount = feeAmount.shiftedBy(-meta.decimals)
 
             return {
@@ -213,6 +214,6 @@ export const useRegistrationLinkFee = (disabled?: boolean) => {
           }
         }
       : undefinedNoop,
-    { enabled: !disabled },
+    { enabled: !disabled && isLoaded },
   )
 }

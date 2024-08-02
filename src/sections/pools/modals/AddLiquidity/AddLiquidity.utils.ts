@@ -14,15 +14,15 @@ import { OMNIPOOL_ACCOUNT_ADDRESS } from "utils/api"
 import { getFixedPointAmount } from "utils/balance"
 import { BN_10 } from "utils/constants"
 import { useDisplayPrice } from "utils/displayAsset"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
+import { usePoolData } from "sections/pools/pool/Pool"
 
 export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
-  const { assets } = useRpcProvider()
   const omnipoolAssets = useOmnipoolAssets()
+  const { pool } = usePoolData()
   const ommipoolAsset = omnipoolAssets.data?.find(
     (omnipoolAsset) => omnipoolAsset.id.toString() === assetId,
   )
-  const assetMeta = assets.getAsset(assetId.toString())
 
   const { data: spotPrice } = useDisplayPrice(assetId)
 
@@ -32,7 +32,7 @@ export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
   const { data: assetBalance } = useTokenBalance(assetId, account?.address)
 
   const poolShare = useMemo(() => {
-    if (ommipoolAsset && assetValue && assetMeta) {
+    if (ommipoolAsset && assetValue) {
       const {
         data: { hubReserve, shares },
         balance,
@@ -40,7 +40,7 @@ export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
 
       const assetReserve = balance.toString()
       const amount = BigNumber(assetValue)
-        .multipliedBy(BN_10.pow(assetMeta.decimals))
+        .multipliedBy(BN_10.pow(pool.meta.decimals))
         .toString()
 
       if (assetReserve && hubReserve && shares && amount) {
@@ -58,9 +58,15 @@ export const useAddLiquidity = (assetId: u32 | string, assetValue?: string) => {
       }
     }
     return null
-  }, [assetValue, ommipoolAsset, assetMeta])
+  }, [assetValue, ommipoolAsset, pool.meta.decimals])
 
-  return { poolShare, spotPrice, omnipoolFee, assetMeta, assetBalance }
+  return {
+    poolShare,
+    spotPrice,
+    omnipoolFee,
+    assetMeta: pool.meta,
+    assetBalance,
+  }
 }
 
 export const useVerifyLimits = ({
@@ -72,13 +78,12 @@ export const useVerifyLimits = ({
   amount: string
   decimals: number
 }) => {
-  const { assets } = useRpcProvider()
+  const { hub } = useAssets()
   const omnipoolAssets = useOmnipoolAssets()
   const asset = omnipoolAssets.data?.find(
     (omnipoolAsset) => omnipoolAsset.id.toString() === assetId,
   )
-  const assetMeta = assets.getAsset(assetId)
-  const hubBalance = useTokenBalance(assets.hub.id, OMNIPOOL_ACCOUNT_ADDRESS)
+  const hubBalance = useTokenBalance(hub.id, OMNIPOOL_ACCOUNT_ADDRESS)
 
   const maxAddLiquidityLimit = useMaxAddLiquidityLimit()
 
@@ -88,7 +93,7 @@ export const useVerifyLimits = ({
   const data = useMemo(() => {
     if (!asset || !hubBalance.data || !amount || !maxAddLiquidityLimit.data)
       return undefined
-
+    const assetMeta = asset.meta
     const assetReserve = asset.balance.toString()
     const assetHubReserve = asset.data.hubReserve.toString()
     const assetShares = asset.data.shares.toString()
@@ -123,14 +128,7 @@ export const useVerifyLimits = ({
         maxValue: circuitBreakerLimit,
       },
     }
-  }, [
-    asset,
-    hubBalance.data,
-    amount,
-    decimals,
-    maxAddLiquidityLimit.data,
-    assetMeta,
-  ])
+  }, [asset, hubBalance.data, amount, decimals, maxAddLiquidityLimit.data])
 
   return { data, isLoading }
 }

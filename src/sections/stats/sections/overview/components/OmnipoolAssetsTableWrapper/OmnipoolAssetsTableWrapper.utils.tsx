@@ -1,5 +1,4 @@
-import { Icon } from "components/Icon/Icon"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Text } from "components/Typography/Text/Text"
 import { theme } from "theme"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
@@ -10,7 +9,6 @@ import ChevronRightIcon from "assets/icons/ChevronRight.svg?react"
 import { TUseOmnipoolAssetDetailsData } from "sections/stats/StatsPage.utils"
 import { OmnipoolAssetsTableColumn } from "sections/stats/components/OmnipoolAssetsTable/OmnipoolAssetsTable.utils"
 import { useMedia } from "react-use"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { CellSkeleton } from "components/Skeleton/CellSkeleton"
 import { Farm, getMinAndMaxAPR, useFarmAprs, useFarms } from "api/farms"
 import { useMemo } from "react"
@@ -18,7 +16,7 @@ import { BN_0 } from "utils/constants"
 import BigNumber from "bignumber.js"
 import { InfoTooltip } from "components/InfoTooltip/InfoTooltip"
 import { SInfoIcon } from "components/InfoTooltip/InfoTooltip.styled"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 const APYFarming = ({ farms, apy }: { farms: Farm[]; apy: number }) => {
   const { t } = useTranslation()
@@ -64,9 +62,7 @@ const APY = ({
   isLoading: boolean
 }) => {
   const { t } = useTranslation()
-  const {
-    assets: { native },
-  } = useRpcProvider()
+  const { native } = useAssets()
   const farms = useFarms([assetId])
 
   if (isLoading || farms.isLoading) return <CellSkeleton />
@@ -101,19 +97,8 @@ export const useOmnipoolAssetsColumns = (): OmnipoolAssetsTableColumn[] => {
             justify: "start",
           }}
         >
-          {typeof row.original.iconIds === "string" ? (
-            <Icon
-              size={[26, 30]}
-              icon={<AssetLogo id={row.original.iconIds} />}
-            />
-          ) : (
-            <MultipleIcons
-              size={[26, 30]}
-              icons={row.original.iconIds.map((id) => ({
-                icon: <AssetLogo key={id} id={id} />,
-              }))}
-            />
-          )}
+          <MultipleAssetLogo size={[26, 30]} iconId={row.original.iconIds} />
+
           <div sx={{ flex: "column" }}>
             <Text fs={14} color="white" fw={600}>
               {row.original.symbol}

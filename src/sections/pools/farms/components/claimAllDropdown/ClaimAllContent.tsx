@@ -1,7 +1,6 @@
 import { forwardRef } from "react"
 import { ToastMessage } from "state/store"
 import { Trans, useTranslation } from "react-i18next"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useClaimableAmount, useClaimFarmMutation } from "utils/farms/claiming"
 import { TOAST_MESSAGES } from "state/toasts"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
@@ -13,6 +12,7 @@ import { theme } from "theme"
 import Skeleton from "react-loading-skeleton"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { LazyMotion, domAnimation } from "framer-motion"
+import { useAssets } from "providers/assets"
 
 type Props = { onClose: () => void }
 
@@ -20,12 +20,12 @@ export const ClaimAllContent = forwardRef<HTMLDivElement, Props>(
   ({ onClose }, ref) => {
     const { account } = useAccount()
     const { t } = useTranslation()
-    const { assets } = useRpcProvider()
+    const { getAssetWithFallback } = useAssets()
     const claimable = useClaimableAmount()
 
     const claimableAssets = Object.keys(claimable.data?.assets ?? {}).map(
       (key) => {
-        const asset = assets.getAsset(key)
+        const asset = getAssetWithFallback(key)
         return {
           value: claimable.data?.assets[key],
           symbol: asset.symbol,

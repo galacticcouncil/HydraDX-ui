@@ -2,15 +2,15 @@ import { ApiPromise } from "@polkadot/api"
 import { useQuery } from "@tanstack/react-query"
 import { useRpcProvider } from "providers/rpcProvider"
 import { QUERY_KEYS } from "utils/queryKeys"
-import BigNumber from "bignumber.js"
-import { undefinedNoop } from "utils/helpers"
+import { isNotNil, undefinedNoop } from "utils/helpers"
+import { useAssetRegistry } from "state/store"
+import { useActiveRpcUrlList, useProviderData } from "./provider"
 
 const getXYKPools = (api: ApiPromise) => async () => {
   const res = await api.query.xyk.poolAssets.entries()
 
   const data = res.map(([key, data]) => {
     const poolAddress = key.args[0].toString()
-    //@ts-ignore
     const assets = data.unwrap()?.map((el) => el.toString())
     return { poolAddress, assets }
   })
@@ -24,39 +24,52 @@ export const useGetXYKPools = () => {
   return useQuery(QUERY_KEYS.xykPools, getXYKPools(api))
 }
 
-const getShareTokens = (api: ApiPromise) => async () => {
-  const res = await api.query.xyk.shareToken.entries()
-
-  const data = res.map(([key, shareTokenIdRaw]) => {
-    const poolAddress = key.args[0].toString()
-    const shareTokenId = shareTokenIdRaw.toString()
-    return { poolAddress, shareTokenId }
-  })
-
-  return data
-}
-
 export const useShareTokens = () => {
-  const { api, assets } = useRpcProvider()
+  const { data: provider } = useProviderData()
+  const { syncShareTokens } = useAssetRegistry.getState()
+  const rpcUrlList = useActiveRpcUrlList()
 
-  return useQuery(QUERY_KEYS.shareTokens, getShareTokens(api), {
-    select: (data) => {
-      return data.filter((shareToken) => {
-        const meta = assets.getAsset(shareToken.shareTokenId)
-        return meta.isShareToken
-      })
+  return useQuery(
+    QUERY_KEYS.shareTokens(rpcUrlList.join()),
+    provider
+      ? async () => {
+          const [shareToken, poolAssets] = await Promise.all([
+            provider.api.query.xyk.shareToken.entries(),
+            provider.api.query.xyk.poolAssets.entries(),
+          ])
+          const data = shareToken
+            .map(([key, shareTokenIdRaw]) => {
+              const poolAddress = key.args[0].toString()
+              const shareTokenId = shareTokenIdRaw.toString()
+
+              const xykAssets = poolAssets.find(
+                (xykPool) => xykPool[0].args[0].toString() === poolAddress,
+              )?.[1]
+
+              if (xykAssets)
+                return {
+                  poolAddress,
+                  shareTokenId,
+                  assets: xykAssets.unwrap().map((asset) => asset.toString()),
+                }
+
+              return undefined
+            })
+            .filter(isNotNil)
+
+          if (data.length) {
+            syncShareTokens(data)
+          }
+
+          return data
+        }
+      : undefinedNoop,
+    {
+      enabled: !!provider,
+      cacheTime: 1000 * 60 * 60 * 24,
+      staleTime: 1000 * 60 * 60 * 1,
     },
-  })
-}
-
-export const useShareTokensByIds = (ids: string[]) => {
-  const { api } = useRpcProvider()
-
-  return useQuery(QUERY_KEYS.shareTokensByIds(ids), getShareTokens(api), {
-    select: (data) => {
-      return data.filter((shareToken) => ids.includes(shareToken.shareTokenId))
-    },
-  })
+  )
 }
 
 export const useXYKConsts = () => {
@@ -93,6 +106,6 @@ export const useXYKTotalLiquidity = (address?: string) => {
 
 const getXYKTotalLiquidity = (api: ApiPromise, address: string) => async () => {
   const res = await api.query.xyk.totalLiquidity(address)
-  //@ts-ignore
-  return res?.toBigNumber() as BigNumber
+
+  return res.toBigNumber()
 }

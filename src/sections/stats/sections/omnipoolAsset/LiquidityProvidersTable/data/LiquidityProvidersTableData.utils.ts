@@ -1,30 +1,20 @@
-import { useApiIds } from "api/consts"
-import { useOmnipoolAssets, useOmnipoolPositionsMulti } from "api/omnipool"
+import { useAssets } from "providers/assets"
+import { useAllLiquidityPositions, useOmnipoolAssets } from "api/omnipool"
 import { useTVL } from "api/stats"
-import { useUniquesAssets } from "api/uniques"
 import BN from "bignumber.js"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useMemo } from "react"
 import { BN_NAN } from "utils/constants"
 import { isNotNil } from "utils/helpers"
 import { useLiquidityPositionData } from "utils/omnipool"
 import { groupBy } from "utils/rx"
 
-const withoutRefresh = true
-
 const rowLimit = 10
 
 export const useLiquidityProvidersTableData = (assetId: string) => {
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
-  const apiIds = useApiIds()
-  const uniques = useUniquesAssets(
-    apiIds.data?.omnipoolCollectionId,
-    withoutRefresh,
-  )
+  const positions = useAllLiquidityPositions()
 
-  const itemIds = uniques.data?.map((u) => u.itemId) ?? []
-  const positions = useOmnipoolPositionsMulti(itemIds, withoutRefresh)
   const omnipoolAssets = useOmnipoolAssets()
   const omnipoolAsset = omnipoolAssets.data?.find(
     (omnipoolAsset) => omnipoolAsset.id === assetId,
@@ -34,32 +24,24 @@ export const useLiquidityProvidersTableData = (assetId: string) => {
 
   const tvl = useTVL(assetId)
 
-  const queries = [uniques, positions, omnipoolAssets, tvl]
+  const queries = [positions, omnipoolAssets, tvl]
 
   const isLoading = queries.some((q) => q.isLoading)
 
   const data = useMemo(() => {
-    if (!positions.data || !omnipoolAsset) {
+    const meta = getAsset(assetId)
+
+    if (!positions.data || !omnipoolAsset || !meta) {
       return []
     }
-
-    const meta = assets.getAsset(assetId)
 
     const omnipoolTvlPrice = BN(tvl.data?.[0]?.tvl_usd ?? BN_NAN)
 
     const data = positions.data
-      // zip positions with uniques by index
-      .map((position, index) => {
-        const unique = uniques.data?.[index]
 
-        return {
-          position,
-          unique,
-        }
-      })
       // filter positions by assetId
-      .filter(({ position }) => position.assetId.toString() === assetId)
-      .map(({ position, unique }) => {
+      .filter((position) => position.assetId === assetId)
+      .map((position) => {
         const data = getData({ ...position, id: "" })
 
         if (data) {
@@ -74,7 +56,7 @@ export const useLiquidityProvidersTableData = (assetId: string) => {
           return {
             assetId: meta.id,
             symbol: meta.symbol,
-            account: (unique?.data.owner.toString() ?? "") as string,
+            account: position.owner,
             sharePercent: omnipoolTvlPrice.isNaN()
               ? BN_NAN
               : valueDisplayWithoutLrna.div(omnipoolTvlPrice).times(100),
@@ -133,15 +115,7 @@ export const useLiquidityProvidersTableData = (assetId: string) => {
     })
 
     return sortedData.slice(0, rowLimit)
-  }, [
-    assetId,
-    assets,
-    getData,
-    omnipoolAsset,
-    positions.data,
-    tvl.data,
-    uniques.data,
-  ])
+  }, [assetId, getAsset, getData, omnipoolAsset, positions.data, tvl.data])
 
   return { isLoading, data }
 }

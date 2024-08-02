@@ -4,12 +4,12 @@ import { useCallback, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Maybe } from "utils/helpers"
 import { AssetsModalContent } from "./AssetsModal"
-import { TAsset, TBond, useAcountAssets } from "api/assetDetails"
+import { TAsset, TBond, useAssets } from "providers/assets"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useDisplayPrices } from "utils/displayAsset"
-import { useRpcProvider } from "providers/rpcProvider"
 import { BN_0 } from "utils/constants"
 import BN from "bignumber.js"
+import { useAcountAssets } from "api/assetDetails"
 
 interface useAssetsModalProps {
   onSelect?: (asset: NonNullable<TAsset>) => void
@@ -143,7 +143,13 @@ export const useAssetsData = ({
   allAssets?: boolean
   allowedAssets?: Maybe<u32 | string>[]
 }) => {
-  const { assets } = useRpcProvider()
+  const {
+    external,
+    stableswap,
+    bonds: bondAssets,
+    isBond,
+    tokens: tokenAssets,
+  } = useAssets()
   const { account } = useAccount()
   const accountAssets = useAcountAssets(account?.address)
 
@@ -167,10 +173,12 @@ export const useAssetsData = ({
         ) {
           acc.tokensWithBalance.push(item)
           acc.tokensWithBalanceId.push(item.asset.id)
-        } else if (item.asset.isBond) {
-          const meta = item.asset as TBond
+        } else if (isBond(item.asset)) {
+          const meta = item.asset
           acc.bondsWithBalance.push(item)
-          acc.bondsWithBalanceId.push(!meta.isTradable ? meta.assetId : meta.id)
+          acc.bondsWithBalanceId.push(
+            !meta.isTradable ? meta.underlyingAssetId : meta.id,
+          )
         }
 
         return acc
@@ -182,7 +190,7 @@ export const useAssetsData = ({
         bondsWithBalanceId: [],
       },
     )
-  }, [accountAssets, withExternal])
+  }, [accountAssets, isBond, withExternal])
 
   const spotPrices = useDisplayPrices([
     ...tokensWithBalanceId,
@@ -208,13 +216,7 @@ export const useAssetsData = ({
 
     const tokens = allAssets
       ? getAssetBalances(
-          [
-            ...assets.tokens,
-            ...assets.stableswap,
-            ...(withExternal
-              ? assets.external.filter((token) => token.name)
-              : []),
-          ],
+          [...tokenAssets, ...stableswap, ...(withExternal ? external : [])],
           tokensData,
         )
       : tokensData
@@ -225,9 +227,12 @@ export const useAssetsData = ({
   }, [
     allAssets,
     allowedAssets,
-    assets,
+    tokenAssets,
+    external,
     search,
-    spotPrices,
+    spotPrices.data,
+    spotPrices.isInitialLoading,
+    stableswap,
     tokensWithBalance,
     withExternal,
   ])
@@ -237,7 +242,7 @@ export const useAssetsData = ({
     const bondsData = bondsWithBalance.map(
       ({ asset, balance: { balance } }) => {
         const meta = asset as TBond
-        const id = !meta.isTradable ? meta.assetId : meta.id
+        const id = !meta.isTradable ? meta.underlyingAssetId : meta.id
         const spotPrice = spotPrices.data?.find(
           (sp) => sp?.tokenIn === id,
         )?.spotPrice
@@ -249,7 +254,7 @@ export const useAssetsData = ({
       },
     )
     const bonds = allAssets
-      ? getAssetBalances(assets.bonds, bondsData)
+      ? getAssetBalances(bondAssets, bondsData)
       : bondsData
 
     return search || allowedAssets
@@ -258,7 +263,7 @@ export const useAssetsData = ({
   }, [
     allAssets,
     allowedAssets,
-    assets.bonds,
+    bondAssets,
     bondsWithBalance,
     search,
     spotPrices,

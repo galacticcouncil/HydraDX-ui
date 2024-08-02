@@ -5,7 +5,7 @@ import { HYDRA_ADDRESS_PREFIX } from "utils/api"
 import { safeConvertAddressSS58 } from "utils/formatting"
 import { Maybe } from "utils/helpers"
 import { SInput, SInputWrapper } from "./AddressInput.styled"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 type InputProps = {
   onBlur?: () => void
@@ -24,10 +24,7 @@ type InputProps = {
 
 export const AddressInput = forwardRef<HTMLInputElement, InputProps>(
   (props, ref) => {
-    const {
-      assets: { native },
-    } = useRpcProvider()
-
+    const { native } = useAssets()
     const { t } = useTranslation()
 
     const nativeAddress = safeConvertAddressSS58(

@@ -22,6 +22,7 @@ import { uniqBy } from "utils/rx"
 import { HYDRADX_SS58_PREFIX } from "@galacticcouncil/sdk"
 import { HYDRADX_CHAIN_KEY } from "sections/xcm/XcmPage.utils"
 import { Parachain } from "@galacticcouncil/xcm-core"
+import { TAsset, useAssets } from "providers/assets"
 
 export type TransactionType = "deposit" | "withdraw"
 
@@ -411,28 +412,20 @@ function getTransferDisplayProps({
   }
 }
 
-function getTransferAssetProps(
-  assets: ReturnType<typeof useRpcProvider>["assets"],
-  assetId: string,
-) {
-  const asset = assets.getAsset(assetId)
-  const assetIconIds =
-    asset && assets.isStableSwap(asset)
-      ? asset.assets
-      : [asset?.id].filter(Boolean)
-
+function getTransferAssetProps(asset: TAsset) {
   return {
     assetName: asset.name,
     assetSymbol: asset.symbol,
     assetDecimals: asset.decimals,
-    assetIconIds,
+    assetIconIds: asset.iconId,
   }
 }
 
 export function useAccountTransfers(address: string, noRefresh?: boolean) {
   const indexerUrl = useIndexerUrl()
 
-  const { assets, isLoaded, api } = useRpcProvider()
+  const { isLoaded, api } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
 
   const hydraAddress = address ? getAddressVariants(address).hydraAddress : ""
   const accountHash = address ? u8aToHex(decodeAddress(address)) : ""
@@ -502,7 +495,9 @@ export function useAccountTransfers(address: string, noRefresh?: boolean) {
 
             const date = new Date(block.timestamp)
 
-            const assetProps = getTransferAssetProps(assets, currencyId)
+            const assetProps = getTransferAssetProps(
+              getAssetWithFallback(currencyId),
+            )
             const displayProps = getTransferDisplayProps({
               amount,
               decimals: assetProps.assetDecimals,
@@ -554,7 +549,9 @@ export function useAccountTransfers(address: string, noRefresh?: boolean) {
           const date = new Date(block.timestamp)
 
           const assetId = args?.currencyId?.toString() || NATIVE_ASSET_ID
-          const assetProps = getTransferAssetProps(assets, assetId)
+          const assetProps = getTransferAssetProps(
+            getAssetWithFallback(assetId),
+          )
           const displayProps = getTransferDisplayProps({
             amount,
             decimals: assetProps.assetDecimals,

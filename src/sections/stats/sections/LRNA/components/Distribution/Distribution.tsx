@@ -12,17 +12,17 @@ import { makePercent } from "./Distribution.utils"
 import { DistributionSliceLabel } from "./DistributionSliceLabel"
 import { DEPOSIT_CLASS_ID, OMNIPOOL_ACCOUNT_ADDRESS } from "utils/api"
 import { SContainerVertical } from "sections/stats/StatsPage.styled"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useTotalIssuance } from "api/totalIssuance"
 import { useTokenBalance } from "api/balances"
 import { BN_0 } from "utils/constants"
+import { useAssets } from "providers/assets"
 
 export const Distribution = () => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { hub } = useAssets()
   const isDesktop = useMedia(theme.viewport.gte.sm)
 
-  const meta = assets.hub
+  const meta = hub
 
   const totalIssuanceQuery = useTotalIssuance(meta.id)
   const omnipoolBalanceQuery = useTokenBalance(

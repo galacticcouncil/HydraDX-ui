@@ -1,10 +1,8 @@
-import { useApiIds } from "api/consts"
 import { useSpotPrices } from "api/spotPrice"
 import BN from "bignumber.js"
 import { useMemo } from "react"
 import { getFloatingPointAmount } from "utils/balance"
 import { useDisplayAssetStore } from "utils/displayAsset"
-import { useRpcProvider } from "providers/rpcProvider"
 import { isHydraAddress } from "utils/formatting"
 import { decodeAddress, encodeAddress } from "@polkadot/util-crypto"
 import { HYDRA_ADDRESS_PREFIX } from "utils/api"
@@ -18,14 +16,14 @@ import {
 import { groupBy } from "utils/rx"
 import { isNotNil } from "utils/helpers"
 import { BN_NAN } from "utils/constants"
+import { useAssets } from "providers/assets"
 
 const withoutRefresh = true
 
 const EVENTS_LIMIT = 10
 
 export const useRecentTradesTableData = (assetId?: string) => {
-  const { assets } = useRpcProvider()
-  const apiIds = useApiIds()
+  const { getAsset } = useAssets()
   const allTrades = useAllTrades(assetId ? Number(assetId) : undefined)
   const displayAsset = useDisplayAssetStore()
 
@@ -107,15 +105,15 @@ export const useRecentTradesTableData = (assetId?: string) => {
           }
         }
 
-        const assetInMeta = assets.getAsset(event.args.assetIn.toString())
-        const assetOutMeta = assets.getAsset(event.args.assetOut.toString())
+        const assetInMeta = getAsset(event.args.assetIn.toString())
+        const assetOutMeta = getAsset(event.args.assetOut.toString())
 
         if (!assetInMeta?.name || !assetOutMeta?.name) return null
 
         return event
       })
       .filter(isNotNil)
-  }, [allTrades.data, assets])
+  }, [allTrades.data, getAsset])
 
   const assetIds = events
     ? events?.map(({ args }) => args.assetIn.toString())
@@ -127,12 +125,12 @@ export const useRecentTradesTableData = (assetId?: string) => {
     withoutRefresh,
   )
 
-  const queries = [apiIds, allTrades, ...spotPrices, ...identities]
+  const queries = [allTrades, ...spotPrices, ...identities]
 
   const isInitialLoading = queries.some((q) => q.isInitialLoading)
 
   const data = useMemo(() => {
-    if (!events || !apiIds.data || spotPrices.some((q) => !q.data)) return []
+    if (!events || spotPrices.some((q) => !q.data)) return []
 
     const trades = events.reduce(
       (memo, trade) => {
@@ -154,8 +152,8 @@ export const useRecentTradesTableData = (assetId?: string) => {
           const assetOut = trade.args.assetOut.toString()
           const amountOutRaw = new BN(trade.args.amountOut)
 
-          const assetMetaIn = assets.getAsset(assetIn)
-          const assetMetaOut = assets.getAsset(assetOut)
+          const assetMetaIn = getAsset(assetIn)
+          const assetMetaOut = getAsset(assetOut)
 
           const spotPriceIn = spotPrices.find(
             (spotPrice) => spotPrice?.data?.tokenIn === assetIn,
@@ -163,11 +161,11 @@ export const useRecentTradesTableData = (assetId?: string) => {
 
           const amountIn = getFloatingPointAmount(
             amountInRaw,
-            assetMetaIn.decimals,
+            assetMetaIn?.decimals ?? 12,
           )
           const amountOut = getFloatingPointAmount(
             amountOutRaw,
-            assetMetaOut.decimals,
+            assetMetaOut?.decimals ?? 12,
           )
 
           const tradeValue = amountIn.multipliedBy(
@@ -223,7 +221,7 @@ export const useRecentTradesTableData = (assetId?: string) => {
     )
 
     return trades.slice(0, EVENTS_LIMIT)
-  }, [events, apiIds.data, spotPrices, assetId, assets, identities])
+  }, [events, spotPrices, assetId, getAsset, identities])
 
   return { data, isLoading: isInitialLoading }
 }

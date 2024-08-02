@@ -5,6 +5,7 @@ import { stringToU8a } from "@polkadot/util"
 
 export const HYDRA_ADDRESS_PREFIX = 63
 export const NATIVE_ASSET_ID = "0"
+export const HUB_ID = "1"
 export const OMNIPOOL_ACCOUNT_ADDRESS = encodeAddress(
   stringToU8a("modlomnipool".padEnd(32, "\0")),
   HYDRA_ADDRESS_PREFIX,

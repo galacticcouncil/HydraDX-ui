@@ -20,6 +20,7 @@ import SkullIcon from "assets/icons/SkullIcon.svg?react"
 import WarningIcon from "assets/icons/WarningIcon.svg?react"
 import WarningIconRed from "assets/icons/WarningIconRed.svg?react"
 import { MetadataStore } from "@galacticcouncil/ui"
+import { useAssets } from "providers/assets"
 
 type TRegistryChain = {
   assetCnt: string
@@ -353,7 +354,8 @@ export type TRugCheckData = ReturnType<
 >["tokens"][number]
 
 export const useExternalTokensRugCheck = (ids?: string[]) => {
-  const { assets, isLoaded } = useRpcProvider()
+  const { external, getAssetWithFallback } = useAssets()
+  const { isLoaded } = useRpcProvider()
   const { getTokenByInternalId, isRiskConsentAdded } =
     useUserExternalTokenStore()
 
@@ -363,14 +365,20 @@ export const useExternalTokensRugCheck = (ids?: string[]) => {
   const { internalIds } = useMemo(() => {
     const externalAssets = isLoaded
       ? ids?.length
-        ? assets.external.filter((a) => ids?.some((id) => a.id === id))
-        : assets.external.filter(({ name, symbol }) => !!name && !!symbol)
+        ? external.filter((a) => ids?.some((id) => a.id === id))
+        : external.filter(({ name, symbol }) => !!name && !!symbol)
       : []
 
     const internalIds = externalAssets.map(({ id }) => id)
 
-    return { externalAssets, internalIds }
-  }, [assets.external, ids, isLoaded])
+    const assetHubExternalIds = externalAssets
+      .map(({ parachainId, externalId }) =>
+        Number(parachainId) === ASSET_HUB_ID ? externalId : "",
+      )
+      .filter(isNotNil)
+
+    return { externalAssets, internalIds, assetHubExternalIds }
+  }, [external, ids, isLoaded])
 
   const issuanceQueries = useTotalIssuances(internalIds)
 
@@ -385,7 +393,7 @@ export const useExternalTokensRugCheck = (ids?: string[]) => {
       .map((issuance) => {
         if (!issuance?.token) return null
 
-        const internalToken = assets.getAsset(issuance.token.toString())
+        const internalToken = getAssetWithFallback(issuance.token.toString())
         const storedToken = getTokenByInternalId(issuance.token.toString())
         const shouldIgnoreRugCheck = isRiskConsentAdded(internalToken.id)
 
@@ -437,7 +445,7 @@ export const useExternalTokensRugCheck = (ids?: string[]) => {
       .filter(isNotNil)
   }, [
     assetRegistry,
-    assets,
+    getAssetWithFallback,
     getIsWhiteListed,
     getTokenByInternalId,
     isRiskConsentAdded,
@@ -511,7 +519,8 @@ const createRugWarningList = ({
 export type ExternalAssetBadgeVariant = "warning" | "danger"
 
 export const useExternalAssetsWhiteList = () => {
-  const { assets, isLoaded } = useRpcProvider()
+  const { isExternal, getAsset } = useAssets()
+  const { isLoaded } = useRpcProvider()
   const assetRegistry = useExternalAssetRegistry()
 
   const whitelist = useMemo(
@@ -521,9 +530,9 @@ export const useExternalAssetsWhiteList = () => {
 
   const getIsWhiteListed = useCallback(
     (assetId: string) => {
-      const asset = assetId ? assets.getAsset(assetId) : undefined
+      const asset = assetId ? getAsset(assetId) : undefined
 
-      if (isLoaded && asset && assets.isExternal(asset)) {
+      if (isLoaded && asset && isExternal(asset)) {
         const externalAsset = asset.parachainId
           ? assetRegistry[+asset.parachainId]?.data?.get(asset.externalId ?? "")
           : null
@@ -552,7 +561,7 @@ export const useExternalAssetsWhiteList = () => {
         badge: "" as ExternalAssetBadgeVariant,
       }
     },
-    [assets, isLoaded, assetRegistry, whitelist],
+    [getAsset, isLoaded, isExternal, assetRegistry, whitelist],
   )
 
   return {

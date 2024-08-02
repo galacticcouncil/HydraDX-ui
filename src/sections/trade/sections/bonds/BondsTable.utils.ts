@@ -1,7 +1,6 @@
 import { useTokensBalances } from "api/balances"
 import { useBondsEvents, useLbpPool } from "api/bonds"
 import { useBestNumber } from "api/chain"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useState } from "react"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { arraySearch, isNotNil } from "utils/helpers"
@@ -11,6 +10,7 @@ import { BN_0 } from "utils/constants"
 import { format } from "date-fns"
 import BN from "bignumber.js"
 import { Transaction } from "./table/transactions/Transactions.utils"
+import { useAssets } from "providers/assets"
 
 export const useBondsTableData = ({
   id,
@@ -19,14 +19,13 @@ export const useBondsTableData = ({
   id?: string
   search?: string
 }) => {
-  const { assets } = useRpcProvider()
+  const { bonds, isBond, getBond, getAssetWithFallback } = useAssets()
   const { account } = useAccount()
 
   const [isAllAssets, setAllAssets] = useState(false)
 
   const bestNumber = useBestNumber()
   const lbpPools = useLbpPool()
-  const bonds = assets.bonds
   const bondsData = (id ? bonds.filter((bond) => bond.id === id) : bonds) ?? []
 
   const balances = useTokensBalances(pluck("id", bondsData), account?.address)
@@ -81,8 +80,8 @@ export const useBondsTableData = ({
           const assetInId = event.args.assetIn
           const assetOutId = event.args.assetOut
 
-          const metaIn = assets.getAsset(assetInId.toString())
-          const metaOut = assets.getAsset(assetOutId.toString())
+          const metaIn = getAssetWithFallback(assetInId.toString())
+          const metaOut = getAssetWithFallback(assetOutId.toString())
 
           const isBuy = event.name === "LBP.BuyExecuted"
           const amountIn = BN(event.args.amount).shiftedBy(-metaIn.decimals)
@@ -97,20 +96,20 @@ export const useBondsTableData = ({
               : amountIn.div(amountOut)
 
           const assetIn = {
-            assetId: assets.isBond(metaIn) ? metaIn.assetId : metaIn.id,
+            assetId: metaIn.iconId as string,
             symbol: metaIn.symbol,
             amount: amountIn.toString(),
           }
 
           const assetOut = {
-            assetId: assets.isBond(metaOut) ? metaOut.assetId : metaOut.id,
+            assetId: metaOut.iconId as string,
             symbol: metaOut.symbol,
             amount: amountOut.toString(),
           }
 
           const link = `https://hydration.subscan.io/extrinsic/${event.extrinsic.hash}`
 
-          accumulatedAssetId = assets.isBond(metaIn) ? metaOut.id : metaIn.id
+          accumulatedAssetId = isBond(metaIn) ? metaOut.id : metaIn.id
 
           acc.push({
             date,
@@ -128,7 +127,7 @@ export const useBondsTableData = ({
         ?.reduce((acc, event) => acc.plus(event.price), BN_0)
         .div(events.length)
 
-      const bondAssetId = bond.assetId
+      const bondAssetId = bond.underlyingAssetId
       const lbpPool = lbpPools.data?.find((lbpPool) =>
         lbpPool.assets.some((asset: number) => asset === Number(bond?.id)),
       )
@@ -151,8 +150,8 @@ export const useBondsTableData = ({
         isSale,
         averagePrice,
         events,
-        name: assets.getBond(bond.id)?.name ?? "",
-        symbol: assets.getBond(bond.id)?.symbol ?? "",
+        name: getBond(bond.id)?.name ?? "",
+        symbol: getBond(bond.id)?.symbol ?? "",
       }
     })
     .filter(isNotNil)
@@ -181,7 +180,7 @@ export const useBondsTableData = ({
           ?.toString()
 
         acc.push({
-          assetId: bond.assetId,
+          assetId: bond.underlyingAssetId,
           assetIn,
           maturity: bondMap.get(id)?.maturity,
           balance: BN_0,
@@ -191,8 +190,8 @@ export const useBondsTableData = ({
           isSale,
           averagePrice: BN_0,
           events: [],
-          name: assets.getBond(bond.id)?.name ?? "",
-          symbol: assets.getBond(bond.id)?.symbol ?? "",
+          name: getBond(bond.id)?.name ?? "",
+          symbol: getBond(bond.id)?.symbol ?? "",
         })
       }
 

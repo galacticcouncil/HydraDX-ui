@@ -3,20 +3,20 @@ import { DollarAssetValue } from "components/DollarAssetValue/DollarAssetValue"
 import { Text } from "components/Typography/Text/Text"
 import { useState } from "react"
 import { Trans, useTranslation } from "react-i18next"
-import {
-  TMiningNftPosition,
-  useXYKDepositValues,
-} from "sections/pools/PoolsPage.utils"
 import { useEnteredDate } from "utils/block"
 import { BN_0 } from "utils/constants"
 import { JoinedFarmsDetails } from "sections/pools/farms/modals/joinedFarmDetails/JoinedFarmsDetails"
 import { SSeparator, SValueContainer } from "./FarmingPosition.styled"
-import { useDepositShare } from "./FarmingPosition.utils"
+import {
+  isXYKDeposit,
+  TDepositData,
+  TOmniDepositData,
+  TXYKDepositData,
+} from "./FarmingPosition.utils"
 import { JoinedFarms } from "./joined/JoinedFarms"
 import { RedepositFarms } from "./redeposit/RedepositFarms"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
 import { LrnaPositionTooltip } from "sections/pools/components/LrnaPositionTooltip"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useFarmExitAllMutation } from "utils/farms/exit"
 import { TOAST_MESSAGES } from "state/toasts"
 import { ToastMessage } from "state/store"
@@ -24,10 +24,12 @@ import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import ExitIcon from "assets/icons/Exit.svg?react"
 import { Icon } from "components/Icon/Icon"
 import { Farm } from "api/farms"
+import { usePoolData } from "sections/pools/pool/Pool"
+import { TDeposit } from "api/deposits"
 
 function FarmingPositionDetailsButton(props: {
-  poolId: string
-  depositNft: TMiningNftPosition
+  depositNft: TDeposit
+  depositData: TDepositData
 }) {
   const { t } = useTranslation()
   const [farmDetails, setFarmDetails] = useState(false)
@@ -44,8 +46,8 @@ function FarmingPositionDetailsButton(props: {
 
       {farmDetails && (
         <JoinedFarmsDetails
-          poolId={props.poolId}
           depositNft={props.depositNft}
+          depositData={props.depositData}
           isOpen={farmDetails}
           onClose={() => setFarmDetails(false)}
         />
@@ -54,15 +56,12 @@ function FarmingPositionDetailsButton(props: {
   )
 }
 
-const ExitFarmsButton = (props: {
-  poolId: string
-  depositNft: TMiningNftPosition
-}) => {
+const ExitFarmsButton = (props: { depositNft: TDeposit }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { pool } = usePoolData()
   const { account } = useAccount()
 
-  const meta = assets.getAsset(props.poolId.toString())
+  const { meta, id: poolId } = pool
 
   const toast = TOAST_MESSAGES.reduce((memo, type) => {
     const msType = type === "onError" ? "onLoading" : type
@@ -82,7 +81,7 @@ const ExitFarmsButton = (props: {
     return memo
   }, {} as ToastMessage)
 
-  const exit = useFarmExitAllMutation([props.depositNft], props.poolId, toast)
+  const exit = useFarmExitAllMutation([props.depositNft], poolId, toast)
 
   return (
     <Button
@@ -101,20 +100,16 @@ const ExitFarmsButton = (props: {
 
 export const FarmingPosition = ({
   index,
-  poolId,
   depositNft,
   availableYieldFarms,
+  depositData,
 }: {
   index: number
-  poolId: string
-  depositNft: TMiningNftPosition
+  depositNft: TDeposit
+  depositData: TDepositData
   availableYieldFarms: Farm[]
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
-
-  const meta = assets.getAsset(poolId)
-  const isXYK = assets.isShareToken(meta)
 
   // use latest entry date
   const enteredDate = useEnteredDate(
@@ -136,10 +131,10 @@ export const FarmingPosition = ({
           {t("farms.positions.position.title", { index })}
         </Text>
         <div sx={{ flex: "row", gap: 8 }}>
-          <ExitFarmsButton poolId={poolId} depositNft={depositNft} />
+          <ExitFarmsButton depositNft={depositNft} />
           <FarmingPositionDetailsButton
-            poolId={poolId}
             depositNft={depositNft}
+            depositData={depositData}
           />
         </div>
       </div>
@@ -152,7 +147,7 @@ export const FarmingPosition = ({
           py: [0, 10],
         }}
       >
-        <JoinedFarms poolId={poolId} depositNft={depositNft} />
+        <JoinedFarms depositNft={depositNft} />
       </div>
       <SSeparator sx={{ width: "70%", mx: "auto" }} />
 
@@ -174,36 +169,29 @@ export const FarmingPosition = ({
           </Text>
         </SValueContainer>
         <SSeparator />
-        {isXYK ? (
-          <XYKFields depositNft={depositNft} />
+        {isXYKDeposit(depositData) ? (
+          <XYKFields depositData={depositData} />
         ) : (
-          <OmnipoolFields poolId={poolId} depositNft={depositNft} />
+          <OmnipoolFields depositData={depositData} />
         )}
       </div>
 
       {availableYieldFarms.length ? (
         <RedepositFarms
-          poolId={poolId}
           depositNft={depositNft}
           availableYieldFarms={availableYieldFarms}
+          depositData={depositData}
         />
       ) : null}
     </>
   )
 }
 
-const OmnipoolFields = ({
-  poolId,
-  depositNft,
-}: {
-  poolId: string
-  depositNft: TMiningNftPosition
-}) => {
+const OmnipoolFields = ({ depositData }: { depositData: TOmniDepositData }) => {
   const { t } = useTranslation()
-  const position = useDepositShare(poolId, depositNft.id.toString())
 
   const { meta, amountShifted, amountDisplay, valueShifted, lrnaShifted } =
-    position.data ?? {}
+    depositData ?? {}
 
   return (
     <>
@@ -236,35 +224,32 @@ const OmnipoolFields = ({
           />
         </div>
 
-        {position.data && (
-          <div sx={{ flex: "column", align: "flex-end" }}>
-            <Text fs={14}>
-              {t("value.tokenWithSymbol", {
-                value: position.data.totalValueShifted,
-                symbol: meta?.symbol,
-              })}
-            </Text>
-            <DollarAssetValue
-              value={position.data.valueDisplay}
-              wrapper={(children) => (
-                <Text fs={11} lh={12} color="whiteish500">
-                  {children}
-                </Text>
-              )}
-            >
-              <DisplayValue value={position.data.valueDisplay} />
-            </DollarAssetValue>
-          </div>
-        )}
+        <div sx={{ flex: "column", align: "flex-end" }}>
+          <Text fs={14}>
+            {t("value.tokenWithSymbol", {
+              value: depositData.totalValueShifted,
+              symbol: meta?.symbol,
+            })}
+          </Text>
+          <DollarAssetValue
+            value={depositData.valueDisplay}
+            wrapper={(children) => (
+              <Text fs={11} lh={12} color="whiteish500">
+                {children}
+              </Text>
+            )}
+          >
+            <DisplayValue value={depositData.valueDisplay} />
+          </DollarAssetValue>
+        </div>
       </SValueContainer>
     </>
   )
 }
 
-const XYKFields = ({ depositNft }: { depositNft: TMiningNftPosition }) => {
+const XYKFields = ({ depositData }: { depositData: TXYKDepositData }) => {
   const { t } = useTranslation()
-  const { amountUSD, assetA, assetB } =
-    useXYKDepositValues([depositNft]).data?.[0] ?? {}
+  const { amountUSD, assetA, assetB } = depositData
 
   return (
     <SValueContainer>
@@ -274,13 +259,13 @@ const XYKFields = ({ depositNft }: { depositNft: TMiningNftPosition }) => {
       <div sx={{ flex: "column", align: "flex-end" }}>
         <Text fs={14}>
           {t("value.tokenWithSymbol", {
-            value: assetA?.amount,
-            symbol: assetA?.symbol,
+            value: assetA.amount,
+            symbol: assetA.symbol,
           })}{" "}
           |{" "}
           {t("value.tokenWithSymbol", {
-            value: assetB?.amount,
-            symbol: assetB?.symbol,
+            value: assetB.amount,
+            symbol: assetB.symbol,
           })}
         </Text>
         <Text fs={11} css={{ color: "rgba(221, 229, 255, 0.61)" }}>

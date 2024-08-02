@@ -8,13 +8,13 @@ import { useTransactionValues } from "./ReviewTransactionForm.utils"
 import BN from "bignumber.js"
 import { ReviewReferralCodeWrapper } from "sections/referrals/components/ReviewReferralCode/ReviewReferralCodeWrapper"
 import { useRegistrationLinkFee } from "api/referrals"
-import { useRpcProvider } from "providers/rpcProvider"
 import { ReviewTransactionAuthorTip } from "sections/transaction/ReviewTransactionAuthorTip"
 import { ReviewTransactionNonce } from "sections/transaction/ReviewTransactionNonce"
 import { NATIVE_EVM_ASSET_SYMBOL } from "utils/evm"
 import { Transaction } from "state/store"
 import { InfoTooltip } from "components/InfoTooltip/InfoTooltip"
 import { SInfoIcon } from "components/InfoTooltip/InfoTooltip.styled"
+import { useAssets } from "providers/assets"
 
 type ReviewTransactionSummaryProps = {
   tx: SubmittableExtrinsic<"promise">
@@ -222,7 +222,7 @@ export const ReviewTransactionXCallSummary: FC<
 
 const ReferralsLinkFee = () => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
   const registrationFee = useRegistrationLinkFee()
 
   return !registrationFee.isLoading ? (
@@ -231,7 +231,7 @@ const ReferralsLinkFee = () => {
         {t("value.tokenWithSymbol", {
           value: registrationFee.data?.amount,
           symbol: registrationFee.data
-            ? assets.getAsset(registrationFee.data.id).symbol
+            ? getAsset(registrationFee.data.id)?.symbol
             : "",
         })}
       </Text>

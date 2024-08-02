@@ -27,6 +27,7 @@ import { useReferralCodesStore } from "sections/referrals/store/useReferralCodes
 import { useEvmPaymentFee } from "api/evm"
 import { useProviderRpcUrlStore } from "api/provider"
 import { useMemo } from "react"
+import { useAssets } from "providers/assets"
 
 export const useTransactionValues = ({
   xcallMeta,
@@ -41,7 +42,8 @@ export const useTransactionValues = ({
   }
   tx: SubmittableExtrinsic<"promise">
 }) => {
-  const { assets, api, featureFlags } = useRpcProvider()
+  const { api, featureFlags } = useRpcProvider()
+  const { native, getAsset } = useAssets()
   const { account } = useAccount()
   const bestNumber = useBestNumber()
 
@@ -96,10 +98,10 @@ export const useTransactionValues = ({
   const accountFeePaymentId = feePaymentId ?? feePaymentAssetId
 
   const feePaymentMeta = accountFeePaymentId
-    ? assets.getAsset(accountFeePaymentId)
+    ? getAsset(accountFeePaymentId)
     : undefined
 
-  const spotPrice = useSpotPrice(assets.native.id, accountFeePaymentId)
+  const spotPrice = useSpotPrice(native.id, accountFeePaymentId)
   const feeAssetBalance = useTokenBalance(accountFeePaymentId, account?.address)
 
   const isSpotPriceNan = spotPrice.data?.spotPrice.isNaN()
@@ -117,7 +119,7 @@ export const useTransactionValues = ({
   const feePaymentValue = paymentInfo?.partialFee.toBigNumber() ?? BN_NAN
   const paymentFeeHDX = paymentInfo
     ? BigNumber(fee ?? paymentInfo.partialFee.toHex()).shiftedBy(
-        -assets.native.decimals,
+        -native.decimals,
       )
     : null
 
@@ -164,7 +166,7 @@ export const useTransactionValues = ({
     )
     displayFeeExtra = feeExtra
       ? feeExtra
-          .shiftedBy(-assets.native.decimals)
+          .shiftedBy(-native.decimals)
           .multipliedBy(spotPrice.data?.spotPrice ?? 1)
       : undefined
   } else {
@@ -183,7 +185,7 @@ export const useTransactionValues = ({
       )
       displayFeeExtra = feeExtra
         ? BN_1.div(transactionPaymentValue).multipliedBy(
-            feeExtra.shiftedBy(-assets.native.decimals),
+            feeExtra.shiftedBy(-native.decimals),
           )
         : undefined
     }

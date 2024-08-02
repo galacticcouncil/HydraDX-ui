@@ -1,13 +1,13 @@
-import { useAcountAssets } from "api/assetDetails"
+import { useAssets } from "providers/assets"
 import BigNumber from "bignumber.js"
 import { useShallow } from "hooks/useShallow"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useMemo } from "react"
 import { useUserExternalTokenStore } from "sections/wallet/addToken/AddToken.utils"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useSettingsStore } from "state/store"
 import { maxBalance, required } from "utils/validators"
 import { ZodType, z } from "zod"
+import { useAcountAssets } from "api/assetDetails"
 
 export type CreateXYKPoolFormData = {
   assetA: string
@@ -51,31 +51,29 @@ export const filterIdsByExclusivity = (
 
 export const useAllowedXYKPoolAssets = () => {
   const { account } = useAccount()
-  const { assets } = useRpcProvider()
+  const { all, isExternal } = useAssets()
   const degenMode = useSettingsStore(useShallow((s) => s.degenMode))
-
   const { isAdded } = useUserExternalTokenStore()
 
   const accountAssets = useAcountAssets(account?.address)
 
   return useMemo(() => {
-    const tradableAssetIds = assets.tradeAssets.map((asset) => asset.id)
     const accountAssetIds = accountAssets
       .filter(({ balance }) => balance.freeBalance.gt(0))
       .map(({ asset }) => asset.id)
 
-    return assets.all.filter((asset) => {
-      const isTradable = tradableAssetIds.includes(asset.id)
+    return [...all.values()].filter((asset) => {
+      const isTradable = asset.isTradable
       const hasBalance = accountAssetIds.includes(asset.id)
       const isNotTradableWithBalance = !isTradable && hasBalance
 
       const shouldBeVisible = isTradable || isNotTradableWithBalance
 
-      if (asset.isExternal) {
+      if (isExternal(asset)) {
         return shouldBeVisible && (degenMode || isAdded(asset.externalId))
       }
 
       return shouldBeVisible
     })
-  }, [degenMode, accountAssets, assets.all, assets.tradeAssets, isAdded])
+  }, [accountAssets, all, degenMode, isAdded, isExternal])
 }

@@ -2,7 +2,6 @@ import { ApiPromise } from "@polkadot/api"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { QUERY_KEYS } from "utils/queryKeys"
 import BN from "bignumber.js"
-import { getUniques } from "./uniques"
 import { getReferendumInfoOf } from "./democracy"
 import request, { gql } from "graphql-request"
 import { useActiveProvider } from "./provider"
@@ -67,19 +66,33 @@ const getCirculatingSupply = () => async () => {
   return data
 }
 
+const getUniques = async (
+  api: ApiPromise,
+  address?: string,
+  collectionId?: string,
+) => {
+  const res = await api.query.uniques.account.entries(address, collectionId)
+  const data = res.map(([key]) => {
+    const [address, collectionId, itemId] = key.args
+    return { address, collectionId, itemId }
+  })
+
+  return data
+}
+
 export const useStake = (address: string | undefined) => {
   const { api } = useRpcProvider()
   return useQuery(QUERY_KEYS.stake(address), getStake(api, address))
 }
 
 const getStake = (api: ApiPromise, address: string | undefined) => async () => {
-  const staking = await api.query.staking.staking()
-
-  const minStake = await api.consts.staking.minStake
-
   const collectionId = await api.consts.staking.nftCollectionId
 
-  const uniques = await getUniques(api, address, collectionId.toString())()
+  const [staking, minStake, uniques] = await Promise.all([
+    api.query.staking.staking(),
+    api.consts.staking.minStake,
+    getUniques(api, address, collectionId.toString()),
+  ])
 
   const stakePositionId = uniques.find((nfts) => nfts)?.itemId.toNumber()
 

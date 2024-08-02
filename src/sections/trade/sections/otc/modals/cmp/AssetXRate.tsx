@@ -3,7 +3,7 @@ import * as UI from "@galacticcouncil/ui"
 import { createComponent, EventName } from "@lit-labs/react"
 import { useTranslation } from "react-i18next"
 import { useSpotPrice } from "api/spotPrice"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const UigcAssetXRate = createComponent({
   tagName: "uigc-asset-x-rate",
@@ -27,14 +27,10 @@ export function OrderAssetRate(props: {
   onChange: (value: string) => void
 }) {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
-  const inputMeta = props.inputAsset
-    ? assets.getAsset(props.inputAsset)
-    : undefined
-  const outputMeta = props.outputAsset
-    ? assets.getAsset(props.outputAsset)
-    : undefined
+  const inputMeta = props.inputAsset ? getAsset(props.inputAsset) : undefined
+  const outputMeta = props.outputAsset ? getAsset(props.outputAsset) : undefined
 
   const sp = useSpotPrice(props.inputAsset, props.outputAsset)
   const spotPrice = sp.data?.spotPrice

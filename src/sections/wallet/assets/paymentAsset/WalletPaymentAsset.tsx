@@ -1,8 +1,8 @@
+import { useAssets } from "providers/assets"
 import { useAccountCurrency, useAccountFeePaymentAssets } from "api/payments"
 import SettingsIcon from "assets/icons/SettingsIcon.svg?react"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Button } from "components/Button/Button"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { Text } from "components/Typography/Text/Text"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
@@ -12,11 +12,12 @@ import { isEvmAccount } from "utils/evm"
 
 export const WalletPaymentAsset = () => {
   const { t } = useTranslation()
-  const { assets, featureFlags } = useRpcProvider()
+  const { featureFlags } = useRpcProvider()
+  const { getAsset } = useAssets()
   const { account } = useAccount()
   const { data: accountCurrencyId } = useAccountCurrency(account?.address)
   const accountCurrencyMeta = accountCurrencyId
-    ? assets.getAsset(accountCurrencyId)
+    ? getAsset(accountCurrencyId)
     : null
 
   const { acceptedFeePaymentAssetsIds } = useAccountFeePaymentAssets()
@@ -27,10 +28,9 @@ export const WalletPaymentAsset = () => {
     openEditFeePaymentAssetModal,
   } = useEditFeePaymentAsset(acceptedFeePaymentAssetsIds, accountCurrencyId)
 
-  const iconIds =
-    accountCurrencyMeta && assets.isStableSwap(accountCurrencyMeta)
-      ? accountCurrencyMeta.assets
-      : [accountCurrencyId]
+  const iconIds = accountCurrencyMeta
+    ? accountCurrencyMeta.iconId
+    : accountCurrencyId
 
   const isFeePaymentAssetEditable = acceptedFeePaymentAssetsIds.length > 1
 
@@ -44,12 +44,7 @@ export const WalletPaymentAsset = () => {
         {t("wallet.header.feePaymentAsset")}:
       </Text>
       <div sx={{ flex: "row", align: "center", gap: 4, ml: "auto" }}>
-        <MultipleIcons
-          size={18}
-          icons={iconIds.map((asset) => ({
-            icon: <AssetLogo key={asset} id={asset} />,
-          }))}
-        />
+        {iconIds && <MultipleAssetLogo size={18} iconId={iconIds} />}
         <Text fs={14} lh={14} font="GeistSemiBold">
           {accountCurrencyMeta?.symbol}
         </Text>

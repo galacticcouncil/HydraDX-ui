@@ -1,4 +1,4 @@
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Icon } from "components/Icon/Icon"
 import { Separator } from "components/Separator/Separator"
 import { Text } from "components/Typography/Text/Text"
@@ -9,8 +9,6 @@ import { Button } from "components/Button/Button"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
 import { LrnaPositionTooltip } from "sections/pools/components/LrnaPositionTooltip"
-import { useRpcProvider } from "providers/rpcProvider"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import { TPoolFullData, TXYKPool } from "sections/pools/PoolsPage.utils"
 import { useMedia } from "react-use"
 import { theme } from "theme"
@@ -58,8 +56,7 @@ export const LiquidityPosition = ({
   onRemovePosition,
 }: Props) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
-  const meta = assets.getAsset(position.assetId)
+  const meta = pool.meta
   const isDesktop = useMedia(theme.viewport.gte.sm)
 
   return (
@@ -73,16 +70,8 @@ export const LiquidityPosition = ({
           }}
         >
           <div sx={{ flex: "row", gap: 7, align: "center" }}>
-            {assets.isStableSwap(meta) ? (
-              <MultipleIcons
-                size={24}
-                icons={meta.assets.map((asset: string) => ({
-                  icon: <AssetLogo key={asset} id={asset} />,
-                }))}
-              />
-            ) : (
-              <Icon size={24} icon={<AssetLogo id={position.assetId} />} />
-            )}
+            <MultipleAssetLogo size={24} iconId={pool.meta.iconId} />
+
             <Text fs={14} color={["white", "basic100"]}>
               {t("liquidity.asset.positions.position.title", { index })}
             </Text>

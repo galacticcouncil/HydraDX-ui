@@ -99,27 +99,6 @@ export function useExistentialDeposit() {
   })
 }
 
-export const useTokensLocks = (ids: Maybe<u32 | string>[]) => {
-  const { api } = useRpcProvider()
-  const { account } = useAccount()
-
-  const normalizedIds = ids?.reduce<string[]>((memo, item) => {
-    if (item != null) memo.push(item.toString())
-    return memo
-  }, [])
-
-  return useQueries({
-    queries: normalizedIds?.map((id) => ({
-      queryKey: QUERY_KEYS.lock(account?.address, id),
-      queryFn:
-        account?.address != null
-          ? getTokenLock(api, account.address, id)
-          : undefinedNoop,
-      enabled: !!account?.address,
-    })),
-  })
-}
-
 export const useTokenLocks = (id: Maybe<u32 | string>) => {
   const { api } = useRpcProvider()
   const { account } = useAccount()
@@ -135,44 +114,14 @@ export const useTokenLocks = (id: Maybe<u32 | string>) => {
 
 export const getTokenLock =
   (api: ApiPromise, address: AccountId32 | string, id: string) => async () => {
-    if (id === NATIVE_ASSET_ID) {
-      const res = await api.query.balances.locks(address)
-      return res.map((lock) => ({
-        id: id,
-        amount: lock.amount.toBigNumber(),
-        type: lock.id.toHuman(),
-      }))
-    }
+    const res =
+      id === NATIVE_ASSET_ID
+        ? await api.query.balances.locks(address)
+        : await api.query.tokens.locks(address, id)
 
-    const res = await api.query.tokens.locks(address, id)
     return res.map((lock) => ({
       id: id,
       amount: lock.amount.toBigNumber(),
-      type: lock.id.toString(),
+      type: lock.id.toHuman(),
     }))
   }
-
-export const useShareTokenBalances = (shareTokenIds: string[]) => {
-  const { api, assets } = useRpcProvider()
-
-  const shareTokens = assets
-    .getAssets(shareTokenIds)
-    .reduce<{ id: string; address: string }[]>((acc, asset) => {
-      if (assets.isShareToken(asset)) {
-        asset.assets.forEach((id) =>
-          acc.push({ id, address: asset.poolAddress }),
-        )
-      }
-
-      return acc
-    }, [])
-
-  return useQueries({
-    queries: shareTokens.map(({ id, address }) => ({
-      queryKey: QUERY_KEYS.tokenBalanceLive(id, address),
-      queryFn:
-        address != null ? getTokenBalance(api, address, id) : undefinedNoop,
-      enabled: !!id && !!address,
-    })),
-  })
-}

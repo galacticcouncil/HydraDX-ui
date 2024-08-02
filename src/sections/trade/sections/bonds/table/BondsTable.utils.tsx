@@ -22,11 +22,11 @@ import { Icon } from "components/Icon/Icon"
 import { AssetLogo } from "components/AssetIcon/AssetIcon"
 import { useNavigate } from "@tanstack/react-location"
 import { LINKS } from "utils/navigation"
-import { useRpcProvider } from "providers/rpcProvider"
 import { Transaction } from "./transactions/Transactions.utils"
 import { useDisplayPrice } from "utils/displayAsset"
 import { DollarAssetValue } from "components/DollarAssetValue/DollarAssetValue"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
+import { useAssets } from "providers/assets"
 
 export type BondTableItem = {
   assetId: string
@@ -51,8 +51,8 @@ export type Config = {
 }
 
 export const BondCell = ({ bondId }: { bondId: string }) => {
-  const { assets } = useRpcProvider()
-  const bond = assets.getBond(bondId)
+  const { getBond } = useAssets()
+  const bond = getBond(bondId)
 
   if (!bond) return null
 
@@ -65,7 +65,7 @@ export const BondCell = ({ bondId }: { bondId: string }) => {
       }}
     >
       <Icon
-        icon={<AssetLogo id={bond.assetId} />}
+        icon={<AssetLogo id={bond.underlyingAssetId} />}
         size={[24, 27]}
         sx={{ flexShrink: 0 }}
         css={{ width: "min-content" }}
@@ -85,7 +85,7 @@ export const BondCell = ({ bondId }: { bondId: string }) => {
 export const useActiveBondsTable = (data: BondTableItem[], config: Config) => {
   const { t } = useTranslation()
   const { accessor, display } = createColumnHelper<BondTableItem>()
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
   const claim = useClaimBond()
   const navigate = useNavigate()
@@ -138,7 +138,7 @@ export const useActiveBondsTable = (data: BondTableItem[], config: Config) => {
         cell: ({ getValue, row }) => {
           const accumulatedAssetId = row.original.assetIn
           const meta = accumulatedAssetId
-            ? assets.getAsset(accumulatedAssetId)
+            ? getAsset(accumulatedAssetId)
             : undefined
 
           return (

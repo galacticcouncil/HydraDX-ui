@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next"
-import { TPool, TXYKPool } from "sections/pools/PoolsPage.utils"
 import { useFarms } from "api/farms"
 import { FarmDetailsCard } from "sections/pools/farms/components/detailsCard/FarmDetailsCard"
 import { useState } from "react"
@@ -9,13 +8,15 @@ import { FarmDetailsModal } from "sections/pools/farms/modals/details/FarmDetail
 import { useBestNumber } from "api/chain"
 import { Text } from "components/Typography/Text/Text"
 import { Separator } from "components/Separator/Separator"
+import { usePoolData } from "sections/pools/pool/Pool"
 
-export const AvailableFarms = ({ pool }: { pool: TPool | TXYKPool }) => {
+export const AvailableFarms = () => {
   const { t } = useTranslation()
   const [selectedFarmId, setSelectedFarmId] = useState<{
     yieldFarmId: u32
     globalFarmId: u32
   } | null>(null)
+  const { pool } = usePoolData()
   const farms = useFarms([pool.id])
   const bestNumber = useBestNumber()
 
@@ -62,7 +63,6 @@ export const AvailableFarms = ({ pool }: { pool: TPool | TXYKPool }) => {
               <FarmDetailsCard
                 compact
                 key={i}
-                poolId={pool.id}
                 farm={farm}
                 onSelect={() => {
                   setSelectedFarmId({
@@ -82,9 +82,7 @@ export const AvailableFarms = ({ pool }: { pool: TPool | TXYKPool }) => {
           title={t("farms.modal.details.title")}
         >
           <FarmDetailsModal
-            poolId={pool.id}
             farm={selectedFarm}
-            depositNft={undefined}
             currentBlock={currentBlock?.toNumber()}
           />
         </Modal>

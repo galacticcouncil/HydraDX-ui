@@ -12,6 +12,7 @@ import { useActiveProvider } from "api/provider"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useDisplayAssetStore } from "utils/displayAsset"
+import { useAssets } from "providers/assets"
 
 export const BondsApp = createComponent({
   tagName: "gc-bonds",
@@ -47,7 +48,8 @@ export const BondsTrade = ({
   bondId?: string
   setBondId: (bondId: string) => void
 }) => {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAssets } = useAssets()
   const { account } = useAccount()
   const { createTransaction } = useStore()
   const { stableCoinId } = useDisplayAssetStore()
@@ -61,7 +63,7 @@ export const BondsTrade = ({
     const assetIn = e.detail.assetIn.toString() as string
     const assetOut = e.detail.assetOut.toString() as string
 
-    const bond = assets.getAssets([assetIn, assetOut]).find(assets.isBond)
+    const bond = getAssets([assetIn, assetOut]).find((asset) => asset?.isBond)
 
     if (bond && bondId !== bond.id) {
       setBondId(bond.id)

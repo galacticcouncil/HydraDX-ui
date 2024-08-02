@@ -21,6 +21,7 @@ import { Spacer } from "components/Spacer/Spacer"
 import { Summary } from "components/Summary/Summary"
 import Skeleton from "react-loading-skeleton"
 import { useOTCfee } from "api/consts"
+import { useAssets } from "providers/assets"
 
 const FULL_ORDER_PCT_LBOUND = 99
 
@@ -41,11 +42,12 @@ export const PartialFillOrder = ({
 }: FillOrderProps) => {
   const { t } = useTranslation()
   const { account } = useAccount()
+  const { getAssetWithFallback } = useAssets()
+  const { api } = useRpcProvider()
   const fee = useOTCfee()
-  const { api, assets } = useRpcProvider()
-  const assetInMeta = assets.getAsset(accepting.asset)
+  const assetInMeta = getAssetWithFallback(accepting.asset)
   const assetInBalance = useTokenBalance(accepting.asset, account?.address)
-  const assetOutMeta = assets.getAsset(offering.asset)
+  const assetOutMeta = getAssetWithFallback(offering.asset)
 
   const formSchema = usePartialFillFormSchema({
     offeringAmount: offering.amount,

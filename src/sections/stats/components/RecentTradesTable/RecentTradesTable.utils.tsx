@@ -6,7 +6,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { AssetLogo } from "components/AssetIcon/AssetIcon"
+import { MultipleAssetLogo } from "components/AssetIcon/AssetIcon"
 import { Icon } from "components/Icon/Icon"
 import { Text } from "components/Typography/Text/Text"
 import { isAfter } from "date-fns"
@@ -21,14 +21,12 @@ import {
 import { TRecentTradesTableData } from "./data/RecentTradesTableData.utils"
 import TradeIcon from "assets/icons/TradeTypeIcon.svg?react"
 import { DisplayValue } from "components/DisplayValue/DisplayValue"
-import { useRpcProvider } from "providers/rpcProvider"
-import { MultipleIcons } from "components/MultipleIcons/MultipleIcons"
 import LinkIcon from "assets/icons/LinkIcon.svg?react"
+import { useAssets } from "providers/assets"
 
 export const useRecentTradesTable = (data: TRecentTradesTableData) => {
   const { t } = useTranslation()
-
-  const { assets } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
 
   const { accessor, display } =
     createColumnHelper<TRecentTradesTableData[number]>()
@@ -99,15 +97,11 @@ export const useRecentTradesTable = (data: TRecentTradesTableData) => {
       id: "trade",
       header: isDesktop ? "" : "asset",
       cell: ({ row }) => {
-        const metaIn = assets.getAsset(row.original.assetInId)
-        const iconInIds = assets.isStableSwap(metaIn)
-          ? metaIn.assets
-          : metaIn.id
+        const metaIn = getAssetWithFallback(row.original.assetInId)
+        const iconInIds = metaIn.iconId
 
-        const metaOut = assets.getAsset(row.original.assetOutId)
-        const iconOutIds = assets.isStableSwap(metaOut)
-          ? metaOut.assets
-          : metaOut.id
+        const metaOut = getAssetWithFallback(row.original.assetOutId)
+        const iconOutIds = metaOut.iconId
 
         return (
           <div sx={{ flex: "row", align: "center", gap: 6 }}>
@@ -119,16 +113,7 @@ export const useRecentTradesTable = (data: TRecentTradesTableData) => {
                 })}
               </Text>
             )}
-            {typeof iconInIds === "string" ? (
-              <Icon size={18} icon={<AssetLogo id={iconInIds} />} />
-            ) : (
-              <MultipleIcons
-                size={18}
-                icons={iconInIds.map((id) => ({
-                  icon: <AssetLogo key={id} id={id} />,
-                }))}
-              />
-            )}
+            <MultipleAssetLogo size={18} iconId={iconInIds} />
 
             <Icon sx={{ color: "brightBlue600" }} icon={<TradeIcon />} />
 
@@ -140,17 +125,7 @@ export const useRecentTradesTable = (data: TRecentTradesTableData) => {
                 })}
               </Text>
             )}
-
-            {typeof iconOutIds === "string" ? (
-              <Icon size={18} icon={<AssetLogo id={iconOutIds} />} />
-            ) : (
-              <MultipleIcons
-                size={18}
-                icons={iconOutIds.map((id) => ({
-                  icon: <AssetLogo key={id} id={id} />,
-                }))}
-              />
-            )}
+            <MultipleAssetLogo size={18} iconId={iconOutIds} />
           </div>
         )
       },

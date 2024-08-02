@@ -10,27 +10,28 @@ import { TOAST_MESSAGES } from "state/toasts"
 import { theme } from "theme"
 import { separateBalance } from "utils/balance"
 import { useClaimFarmMutation, useClaimableAmount } from "utils/farms/claiming"
-import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { Card } from "components/Card/Card"
 import { TDeposit } from "api/deposits"
+import { useAssets } from "providers/assets"
+import { usePoolData } from "sections/pools/pool/Pool"
 
 export const ClaimRewardsCard = (props: {
-  poolId: string
   depositNft?: TDeposit
   onTxClose?: () => void
 }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { pool } = usePoolData()
+  const { getAssetWithFallback } = useAssets()
   const { account } = useAccount()
 
-  const claimable = useClaimableAmount(props.poolId, props.depositNft)
+  const claimable = useClaimableAmount(pool.id, props.depositNft)
 
   const { claimableAssets, toastValue } = useMemo(() => {
     const claimableAssets = []
 
     for (let key in claimable.data?.assets) {
-      const asset = assets.getAsset(key)
+      const asset = getAssetWithFallback(key)
       const balance = separateBalance(claimable.data?.assets[key], {
         fixedPointScale: asset.decimals,
         type: "token",
@@ -52,7 +53,7 @@ export const ClaimRewardsCard = (props: {
     })
 
     return { claimableAssets, toastValue }
-  }, [assets, claimable.data?.assets, t])
+  }, [getAssetWithFallback, claimable.data?.assets, t])
 
   const toast = TOAST_MESSAGES.reduce((memo, type) => {
     const msType = type === "onError" ? "onLoading" : type
@@ -68,7 +69,7 @@ export const ClaimRewardsCard = (props: {
   }, {} as ToastMessage)
 
   const claimAll = useClaimFarmMutation(
-    props.poolId,
+    pool.id,
     props.depositNft,
     toast,
     props.onTxClose,

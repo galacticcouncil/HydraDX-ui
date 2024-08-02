@@ -10,14 +10,14 @@ import {
 } from "./HeaderSettingsDisplayAsset.styled"
 import { HeaderSettingsDisplayAssetSkeleton } from "./skeleton/HeaderSettingsDisplayAssetSkeleton"
 import { Icon } from "components/Icon/Icon"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 type Props = { onSelect: () => void }
 
 export const HeaderSettingsDisplayAsset = ({ onSelect }: Props) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
-  const sortedTokens = assets.tradeAssets
+  const { tradable } = useAssets()
+  const sortedTokens = tradable
     .filter((tradeAsset) => tradeAsset.isToken)
     .sort((a, b) => a.symbol.localeCompare(b.symbol))
 

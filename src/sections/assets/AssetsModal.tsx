@@ -1,5 +1,4 @@
 import { u32 } from "@polkadot/types"
-import { TAsset } from "api/assetDetails"
 import { useTranslation } from "react-i18next"
 import { Maybe, sortAssets } from "utils/helpers"
 import { Text } from "components/Typography/Text/Text"
@@ -15,6 +14,7 @@ import { Button } from "components/Button/Button"
 import { ModalScrollableContent } from "components/Modal/Modal"
 import { useAssetsData } from "./AssetsModal.utils"
 import { AssetsModalRowSkeleton } from "./AssetsModalRowSkeleton"
+import { TAsset } from "providers/assets"
 
 type Props = {
   allowedAssets?: Maybe<u32 | string>[]

@@ -11,11 +11,11 @@ import {
 import { HydradxRuntimeXcmAssetLocation } from "@polkadot/types/lookup"
 import DropletIcon from "assets/icons/DropletIcon.svg?react"
 import PlusIcon from "assets/icons/PlusIcon.svg?react"
-import { useRpcProvider } from "providers/rpcProvider"
 import { Spacer } from "components/Spacer/Spacer"
 import { InputBox } from "components/Input/InputBox"
 import { TokenInfo } from "./components/TokenInfo/TokenInfo"
 import { omit } from "utils/rx"
+import { useAssets } from "providers/assets"
 import { createComponent } from "@lit-labs/react"
 import { Separator } from "components/Separator/Separator"
 import { TokenInfoHeader } from "./components/TokenInfo/TokenInfoHeader"
@@ -49,17 +49,16 @@ enum TokenState {
 
 export const AddTokenFormModal: FC<Props> = ({ asset, onClose }) => {
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { externalInvalid } = useAssets()
   const { getTokenByInternalId } = useUserExternalTokenStore()
 
-  const chainStored = assets.external.find(
+  const chainStored = externalInvalid.find(
     (chainAsset) =>
       chainAsset.externalId === asset.id &&
       chainAsset.parachainId === asset.origin.toString(),
   )
 
   const userStored = getTokenByInternalId(chainStored?.id ?? "")
-
   const rugCheckIds = chainStored && !userStored ? [chainStored.id] : undefined
   const rugCheck = useExternalTokensRugCheck(rugCheckIds)
   const rugCheckData = rugCheck.tokensMap.get(chainStored?.id ?? "")

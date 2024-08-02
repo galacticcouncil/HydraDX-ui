@@ -6,7 +6,7 @@ import { m as motion } from "framer-motion"
 import { TSlice } from "sections/stats/components/DoughnutChart/DoughnutChart"
 import { useMedia } from "react-use"
 import { theme } from "theme"
-import { useRpcProvider } from "providers/rpcProvider"
+import { useAssets } from "providers/assets"
 
 export const DefaultSliceLabel = ({
   slices,
@@ -17,10 +17,10 @@ export const DefaultSliceLabel = ({
 }) => {
   const isDesktop = useMedia(theme.viewport.gte.sm)
   const { t } = useTranslation()
-  const { assets } = useRpcProvider()
+  const { getAsset } = useAssets()
 
   const sortedSlices = [...slices]
-    .filter((slice) => assets.getAsset(slice.id).assetType !== "StableSwap")
+    .filter((slice) => getAsset(slice.id)?.type !== "StableSwap")
     .sort((a, b) => b.percentage - a.percentage)
     .slice(0, 3)
 

@@ -19,6 +19,7 @@ import { TOAST_MESSAGES } from "state/toasts"
 import { useQueryClient } from "@tanstack/react-query"
 import { QUERY_KEYS } from "utils/queryKeys"
 import { useState } from "react"
+import { useAssets } from "providers/assets"
 
 type CreateXYKPoolFormProps = {
   assetA: string
@@ -38,10 +39,11 @@ export const CreateXYKPoolForm = ({
   const { t } = useTranslation()
   const queryClient = useQueryClient()
 
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
 
-  const assetAMeta = assets.getAsset(assetA ?? "")
-  const assetBMeta = assets.getAsset(assetB ?? "")
+  const assetAMeta = getAssetWithFallback(assetA ?? "")
+  const assetBMeta = getAssetWithFallback(assetB ?? "")
 
   const { account } = useAccount()
 

@@ -22,6 +22,7 @@ import { useMemo } from "react"
 import { scale } from "utils/balance"
 import { getAccountResolver } from "utils/farms/claiming/accountResolver"
 import { useAccountBalances, useAccountsBalances } from "./accountBalances"
+import { useAssets } from "providers/assets"
 
 const NEW_YIELD_FARMS_BLOCKS = (48 * 60 * 60) / PARACHAIN_BLOCK_TIME.toNumber() // 48 hours
 
@@ -41,12 +42,13 @@ export interface Farm {
 }
 
 export function useActiveYieldFarms(poolIds: Array<string>) {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAssetWithFallback, isShareToken } = useAssets()
 
   return useQueries({
     queries: poolIds.map((poolId) => {
-      const meta = assets.getAsset(poolId)
-      const isXYK = assets.isShareToken(meta)
+      const meta = getAssetWithFallback(poolId)
+      const isXYK = isShareToken(meta)
 
       return {
         queryKey: isXYK
@@ -81,12 +83,13 @@ const getActiveYieldFarms =
   }
 
 export function useYieldFarms(ids: FarmIds[]) {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAssetWithFallback, isShareToken } = useAssets()
 
   return useQueries({
     queries: ids.map(({ poolId, globalFarmId, yieldFarmId }) => {
-      const meta = assets.getAsset(poolId)
-      const isXYK = assets.isShareToken(meta)
+      const meta = getAssetWithFallback(poolId)
+      const isXYK = isShareToken(meta)
 
       return {
         queryKey: isXYK
@@ -133,12 +136,13 @@ const getYieldFarm =
   }
 
 export function useGlobalFarms(ids: FarmIds[]) {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAssetWithFallback, isShareToken } = useAssets()
 
   return useQueries({
     queries: ids.map(({ poolId, globalFarmId }) => {
-      const meta = assets.getAsset(poolId)
-      const isXYK = assets.isShareToken(meta)
+      const meta = getAssetWithFallback(poolId)
+      const isXYK = isShareToken(meta)
 
       return {
         queryKey: isXYK
@@ -164,7 +168,8 @@ const getGlobalFarm =
   }
 
 export const useFarms = (poolIds: Array<string>) => {
-  const { api, assets } = useRpcProvider()
+  const { api } = useRpcProvider()
+  const { getAssetWithFallback } = useAssets()
   const activeYieldFarmsQuery = useActiveYieldFarms(poolIds)
 
   const farmIds = activeYieldFarmsQuery
@@ -176,7 +181,7 @@ export const useFarms = (poolIds: Array<string>) => {
 
   const accountResolver = getAccountResolver(api.registry)
   const globalFarmPotAddresses = farmIds?.map((farm) => {
-    const isXyk = assets.getAsset(farm.poolId).isShareToken
+    const isXyk = getAssetWithFallback(farm.poolId).isShareToken
     const potAddresss = accountResolver(
       Number(farm.globalFarmId),
       isXyk,
@@ -381,7 +386,7 @@ function getFarmApr(
 }
 
 export const useFarmApr = (farm: Farm) => {
-  const { assets } = useRpcProvider()
+  const { native } = useAssets()
   const bestNumber = useBestNumber()
   const rewardCurrency = farm.globalFarm.rewardCurrency.toString()
   const incentivizedAsset = farm.globalFarm.incentivizedAsset.toString()
@@ -394,7 +399,7 @@ export const useFarmApr = (farm: Farm) => {
     (bestNumber, oraclePrice) => {
       const rewardCurrency = farm.globalFarm.rewardCurrency.toString()
       const potBalance =
-        rewardCurrency === assets.native.id
+        rewardCurrency === native.id
           ? accountBalance.data?.native.freeBalance
           : accountBalance.data?.balances.find(
               (balance) => balance.id.toString() === rewardCurrency,
@@ -412,7 +417,7 @@ export const useFarmApr = (farm: Farm) => {
 }
 
 export const useFarmAprs = (farms: Farm[]) => {
-  const { assets } = useRpcProvider()
+  const { native } = useAssets()
   const bestNumber = useBestNumber()
   const ids = farms.map((farm) => ({
     rewardCurrency: farm.globalFarm.rewardCurrency.toString(),
@@ -437,7 +442,7 @@ export const useFarmAprs = (farms: Farm[]) => {
       )
 
       const potBalance = accountBalance
-        ? rewardCurrency === assets.native.id
+        ? rewardCurrency === native.id
           ? accountBalance.native.freeBalance
           : accountBalance.balances.find(
               (balance) => balance.id.toString() === rewardCurrency,
