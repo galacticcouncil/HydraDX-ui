@@ -30,7 +30,7 @@ export const EVM_PROVIDERS: WalletProviderType[] = [
   WalletProviderType.MetaMask,
   WalletProviderType.TalismanEvm,
   WalletProviderType.SubwalletEvm,
-  //WalletProviderType.TrustWallet,
+  WalletProviderType.TrustWallet,
   WalletProviderType.BraveWallet,
   WalletProviderType.Phantom,
   WalletProviderType.WalletConnect,
