@@ -6,6 +6,7 @@ export enum WalletProviderType {
   SubwalletEvm = "subwallet-evm",
   PolkadotJS = "polkadot-js",
   NovaWallet = "nova-wallet",
+  NovaWalletEvm = "nova-wallet-evm",
   TrustWallet = "trustwallet",
   BraveWallet = "bravewallet",
   Phantom = "phantom",
@@ -20,6 +21,7 @@ export enum WalletProviderType {
 
 export const MOBILE_ONLY_PROVIDERS: WalletProviderType[] = [
   WalletProviderType.NovaWallet,
+  WalletProviderType.NovaWalletEvm,
 ]
 
 export const DESKTOP_ONLY_PROVIDERS: WalletProviderType[] = [
@@ -30,6 +32,7 @@ export const EVM_PROVIDERS: WalletProviderType[] = [
   WalletProviderType.MetaMask,
   WalletProviderType.TalismanEvm,
   WalletProviderType.SubwalletEvm,
+  WalletProviderType.NovaWalletEvm,
   //WalletProviderType.TrustWallet,
   WalletProviderType.BraveWallet,
   WalletProviderType.Phantom,

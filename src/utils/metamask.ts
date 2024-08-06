@@ -10,6 +10,7 @@ const METAMASK_LIKE_CHECKS = [
   "isTalisman",
   "isSubWallet",
   "isPhantom",
+  "isNovaWallet",
   "isTrust",
   "isBraveWallet",
   "isEnkrypt",
@@ -87,6 +88,12 @@ export function isSubWallet(provider: Maybe<ExternalProvider>) {
 
 export function isPhantom(provider: Maybe<ExternalProvider>) {
   return isMetaMaskLike(provider) && !!provider?.isPhantom
+}
+
+export function isNovaWalletEvm(
+  provider: Maybe<ExternalProvider>,
+): provider is Required<MetaMaskLikeProvider> {
+  return isMetaMaskLike(provider) && !!provider?.isNovaWallet
 }
 
 export function isTrustWallet(provider: Maybe<ExternalProvider>) {

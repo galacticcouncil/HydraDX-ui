@@ -5,6 +5,7 @@ import { MetaMask } from "./MetaMask"
 import { Talisman } from "./Talisman"
 import { TalismanEvm } from "./TalismanEvm"
 import { NovaWallet } from "./NovaWallet"
+import { NovaWalletEvm } from "./NovaWalletEvm"
 import { WalletConnect } from "./WalletConnect"
 import { H160, isEvmAddress } from "utils/evm"
 import { SubWalletEvm } from "./SubWalletEvm"
@@ -48,6 +49,9 @@ const onMetaMaskLikeAccountChange =
   }
 
 const novaWallet: Wallet = new NovaWallet()
+const novaWalletEvm: Wallet = new NovaWalletEvm({
+  onAccountsChanged: onMetaMaskLikeAccountChange(WalletProviderType.NovaWallet),
+})
 
 const talisman = new Talisman()
 const talismanEvm: Wallet = new TalismanEvm({
@@ -99,6 +103,7 @@ export let SUPPORTED_WALLET_PROVIDERS: WalletProvider[] = [
   subwallet,
   trustWallet,
   novaWallet,
+  novaWalletEvm,
   walletConnect,
   externalWallet,
 ].map((wallet) => ({
