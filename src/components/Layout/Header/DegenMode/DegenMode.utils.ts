@@ -1,4 +1,4 @@
-import { useExternalAssetRegistry } from "api/externalAssetRegistry"
+import { useExternalAssetRegistry } from "api/external"
 import { useProviderRpcUrlStore, useRefetchProviderData } from "api/provider"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useEffect, useMemo, useRef } from "react"

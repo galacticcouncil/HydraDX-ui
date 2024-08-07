@@ -1,8 +1,4 @@
-import {
-  PENDULUM_ID,
-  TRugCheckData,
-  useParachainAmount,
-} from "api/externalAssetRegistry"
+import { assethub, TRugCheckData, useParachainAmount } from "api/external"
 import { Separator } from "components/Separator/Separator"
 import { Text } from "components/Typography/Text/Text"
 import { useTranslation } from "react-i18next"
@@ -187,7 +183,7 @@ export const TokenInfo = ({
         }
       />
       <Separator opacity={0.3} color="darkBlue400" />
-      {externalAsset.origin !== PENDULUM_ID && (
+      {externalAsset.origin === assethub.parachainId && (
         <TokenInfoRow
           tooltip={t("wallet.addToken.form.info.masterAccount.tooltip")}
           label={t("wallet.addToken.form.info.masterAccount")}

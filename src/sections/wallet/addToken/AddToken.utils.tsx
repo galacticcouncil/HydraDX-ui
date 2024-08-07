@@ -1,28 +1,21 @@
 import { useMutation } from "@tanstack/react-query"
 import { ExternalAssetCursor } from "@galacticcouncil/apps"
 import { useRpcProvider } from "providers/rpcProvider"
-import { ToastMessage, useSettingsStore, useStore } from "state/store"
-import {
-  HydradxRuntimeXcmAssetLocation,
-  XcmV3Junction,
-} from "@polkadot/types/lookup"
+import { Transaction, useSettingsStore, useStore } from "state/store"
+
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import { TOAST_MESSAGES } from "state/toasts"
-import { Trans, useTranslation } from "react-i18next"
-import {
-  ASSET_HUB_ID,
-  PENDULUM_ID,
-  useExternalAssetRegistry,
-} from "api/externalAssetRegistry"
+import { createToastMessages } from "state/toasts"
+import { useTranslation } from "react-i18next"
+import { assethub, pendulum, useExternalAssetRegistry } from "api/external"
 import { TEnv, useProviderRpcUrlStore } from "api/provider"
 import { isNotNil } from "utils/helpers"
 import { u32 } from "@polkadot/types"
 import { useCallback, useMemo } from "react"
 import { omit } from "utils/rx"
-import { getPendulumInputData } from "utils/externalAssets"
+import { getInputData, TExternalAssetWithLocation } from "utils/externalAssets"
 import { useShallow } from "hooks/useShallow"
-import BN from "bignumber.js"
+import { ISubmittableResult } from "@polkadot/types/types"
 
 const pink = {
   decimals: 10,
@@ -166,23 +159,10 @@ const internalIds = new Map([
   ["2230", "1000073"],
 ])
 
-export const SELECTABLE_PARACHAINS_IDS = [ASSET_HUB_ID, PENDULUM_ID]
-
-export const PARACHAIN_CONFIG: {
-  [x: number]: {
-    palletInstance: string
-    network: string
-    parents: string
-    interior: HydradxRuntimeXcmAssetLocation["interior"]["type"]
-  }
-} = {
-  [ASSET_HUB_ID]: {
-    palletInstance: "50",
-    network: "polkadot",
-    parents: "1",
-    interior: "X3",
-  },
-}
+export const SELECTABLE_PARACHAINS_IDS = [
+  assethub.parachainId,
+  pendulum.parachainId,
+]
 
 export type TExternalAsset = {
   id: string
@@ -190,7 +170,7 @@ export type TExternalAsset = {
   symbol: string
   name: string
   origin: number
-  supply: BN
+  supply?: string
   isWhiteListed: boolean
 }
 
@@ -198,68 +178,41 @@ export type TRegisteredAsset = Omit<TExternalAsset, "supply"> & {
   internalId: string
 }
 
-export type InteriorTypes = {
-  [x: string]: InteriorProp[]
-}
-
-export type InteriorProp = {
-  [K in XcmV3Junction["type"]]: { [P in K]: any }
-}[XcmV3Junction["type"]]
-
-export const isGeneralKey = (
-  prop: InteriorProp,
-): prop is { GeneralKey: string } => {
-  return typeof prop !== "string" && "GeneralKey" in prop
-}
-
-export type TExternalAssetInput = {
-  parents: string
-  interior: InteriorTypes | string
-}
-
 export const useRegisterToken = ({
   onSuccess,
-  assetName,
+  steps,
 }: {
-  onSuccess: (assetId: string) => void
-  assetName: string
-}) => {
+  onSuccess?: (assetId: string, asset: TExternalAssetWithLocation) => void
+  steps?: Transaction["steps"]
+} = {}) => {
   const { api } = useRpcProvider()
   const { createTransaction } = useStore()
   const { t } = useTranslation()
 
-  return useMutation(async (assetInput: TExternalAssetInput) => {
-    const toast = TOAST_MESSAGES.reduce((memo, type) => {
-      const msType = type === "onError" ? "onLoading" : type
-      memo[type] = (
-        <Trans
-          t={t}
-          i18nKey={`wallet.addToken.toast.register.${msType}`}
-          tOptions={{
-            name: assetName,
-          }}
-        >
-          <span />
-          <span className="highlight" />
-        </Trans>
-      )
-      return memo
-    }, {} as ToastMessage)
+  return useMutation(async (asset: TExternalAssetWithLocation) => {
+    const assetInput = getInputData(asset)
+
+    if (!assetInput) throw new Error("Invalid asset input data")
 
     return await createTransaction(
       {
+        title: t("wallet.addToken.reviewTransaction.modal.register.title"),
         tx: api.tx.assetRegistry.registerExternal(assetInput),
       },
       {
-        toast,
+        steps,
+        toast: createToastMessages("wallet.addToken.toast.register", {
+          t,
+          tOptions: {
+            name: asset.name,
+          },
+          components: ["span.highlight"],
+        }),
         onSuccess: async (res) => {
-          const data = res.events.find(
-            (event) => event.event.method === "Registered",
-          )?.event.data as { assetId?: u32 }
-
+          const data = getInternalIdFromResult(res)
           const assetId = data?.assetId?.toString()
 
-          if (assetId) onSuccess(assetId)
+          if (assetId) onSuccess?.(assetId, asset)
         },
       },
     )
@@ -450,34 +403,6 @@ export const useExternalTokenMeta = () => {
   return getExtrernalToken
 }
 
-export const getInputData = (
-  asset: TExternalAsset & { location?: HydradxRuntimeXcmAssetLocation },
-): TExternalAssetInput | undefined => {
-  if (asset.origin === ASSET_HUB_ID) {
-    const { parents, palletInstance } = PARACHAIN_CONFIG[ASSET_HUB_ID]
-    return {
-      parents,
-      interior: {
-        X3: [
-          {
-            Parachain: asset.origin.toString(),
-          },
-          {
-            PalletInstance: palletInstance,
-          },
-          {
-            GeneralIndex: asset.id,
-          },
-        ],
-      },
-    }
-  }
-
-  if (asset.origin === PENDULUM_ID && asset.location) {
-    return getPendulumInputData(asset.location)
-  }
-}
-
 export const updateExternalAssetsCursor = (
   externalAssets: TRegisteredAsset[],
   options: { degenMode: boolean; dataEnv: TEnv },
@@ -535,4 +460,15 @@ export const useRegisteredExternalTokens = () => {
       return tokens[dataEnv]
     }
   }, [assets.external, dataEnv, isLoaded, degenMode, externalAssets, tokens])
+}
+
+export const getInternalIdFromResult = (res: ISubmittableResult) => {
+  const data = res.events.find((event) => event.event.method === "Registered")
+    ?.event.data
+
+  if (!data) {
+    return { assetId: undefined }
+  }
+
+  return data as { assetId?: u32 }
 }

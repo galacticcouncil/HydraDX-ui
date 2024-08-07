@@ -71,6 +71,7 @@ const useSubheaderComponent = () => {
 
 export const Page = ({ className }: Props) => {
   const { pathname } = useLocation()
+  const matchRoute = useMatchRoute()
   const ref = useRef<HTMLDivElement>(null)
 
   const subHeaderComponent = useSubheaderComponent()
@@ -82,6 +83,8 @@ export const Page = ({ className }: Props) => {
     })
   }, [pathname])
 
+  const flippedBg = !!matchRoute({ to: LINKS.memepad })
+
   return (
     <>
       <SPage ref={ref}>
@@ -89,7 +92,7 @@ export const Page = ({ className }: Props) => {
           sx={{ flex: "column", height: "100%" }}
           css={{ position: "relative" }}
         >
-          <SGradientBg />
+          <SGradientBg flipped={flippedBg} />
           <Header />
           <SPageContent>
             {subHeaderComponent && (

@@ -1,20 +1,31 @@
 import styled from "@emotion/styled"
 import { theme } from "theme"
 
-export const SStepperContainer = styled.div`
+export const SStepperContainer = styled.div<{ width?: number | string }>`
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
 
-  @media (${theme.viewport.gte.sm}) {
-    width: 400px;
+  width: 100%;
+  margin: 0 auto;
+
+  & > div {
+    position: relative;
+  }
+
+  & > div:first-of-type > p {
+    left: ${({ width }) => (width === "100%" ? "0" : "auto")};
+  }
+
+  & > div:last-of-type > p {
+    right: ${({ width }) => (width === "100%" ? "0" : "auto")};
   }
 `
 
 export const SCircle = styled.div`
-  width: 26px;
-  height: 26px;
+  width: 14px;
+  height: 14px;
 
   border-radius: 9999px;
   border: 1px solid ${theme.colors.basic500};
@@ -25,11 +36,16 @@ export const SCircle = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+
+  @media ${theme.viewport.gte.sm} {
+    width: 26px;
+    height: 26px;
+  }
 `
 
 export const SThumbContainer = styled.div<{ isDone?: boolean }>`
-  width: 18px;
-  height: 18px;
+  width: 10px;
+  height: 10px;
 
   border-radius: 9999px;
 
@@ -41,6 +57,11 @@ export const SThumbContainer = styled.div<{ isDone?: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
+
+  @media ${theme.viewport.gte.sm} {
+    width: 18px;
+    height: 18px;
+  }
 `
 
 export const SStepperLine = styled.div`

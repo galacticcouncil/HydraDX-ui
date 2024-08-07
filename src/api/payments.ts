@@ -31,11 +31,13 @@ export const getAcceptedCurrency = (api: ApiPromise) => async () => {
 
 export const useAcceptedCurrencies = (ids: string[]) => {
   const {
+    isLoaded,
     api,
     assets: { native },
   } = useRpcProvider()
 
   return useQuery(QUERY_KEYS.acceptedCurrencies, getAcceptedCurrency(api), {
+    enabled: isLoaded && ids.length > 0,
     select: (assets) => {
       return ids.map((id) => {
         const response = assets.find((asset) => asset.id === id)

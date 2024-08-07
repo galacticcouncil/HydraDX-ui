@@ -75,7 +75,7 @@ export const AssetSelect = (props: {
         <div sx={{ flex: "row", justify: "space-between" }}>
           <Text
             fw={500}
-            fs={12}
+            fs={11}
             lh={22}
             tTransform="uppercase"
             color="whiteish500"

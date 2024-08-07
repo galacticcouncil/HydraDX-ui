@@ -36,6 +36,8 @@ export const SItem = styled.span<{ isActive?: boolean }>`
   white-space: nowrap;
   text-transform: uppercase;
 
+  position: relative;
+
   border-radius: 4px;
   transition: ${theme.transitions.slow};
 

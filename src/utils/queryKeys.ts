@@ -417,10 +417,28 @@ export const QUERY_KEYS = {
   externalAssetRegistry: ["externalAssetRegistry"],
   assetHubAssetRegistry: ["assetHubAssetRegistry"],
   pendulumAssetRegistry: ["pendulumAssetRegistry"],
+  assetHubNativeBalance: (address: Maybe<AccountId32 | string>) => [
+    "assetHubNativeBalance",
+    address?.toString(),
+  ],
+  polkadotRegistry: ["polkadotRegistry"],
   assetHubTokenBalance: (address: string, id: string) => [
     "assetHubTokenBalance",
     address,
     id,
   ],
+  assetHubExistentialDeposit: (id: string) => [
+    "assetHubExistentialDeposit",
+    id,
+  ],
+  memepadDryRun: (address: string) => ["memepadDryRun", address],
   bridgeLink: (hash: string) => ["bridgeLink", hash],
+  xcmTransfer: (
+    asset: string,
+    srcAddr: string,
+    srcChain: string,
+    dstAddr: string,
+    dstChain: string,
+  ) => ["xcmTransfer", asset, srcAddr, srcChain, dstAddr, dstChain],
+  externalApi: (chain: string) => ["externalApi", chain],
 } as const

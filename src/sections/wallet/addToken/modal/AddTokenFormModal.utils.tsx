@@ -4,14 +4,13 @@ import { Trans, useTranslation } from "react-i18next"
 import {
   TExternalAsset,
   TRegisteredAsset,
-  getInputData,
   useRegisterToken,
   useUserExternalTokenStore,
 } from "sections/wallet/addToken/AddToken.utils"
 import { useToast } from "state/toasts"
 import { pick } from "utils/rx"
 
-const externalAssetToRegisteredAsset = (
+export const externalAssetToRegisteredAsset = (
   asset: TExternalAsset,
   internalId: string,
 ): TRegisteredAsset => {
@@ -42,15 +41,11 @@ export const useAddTokenFormModalActions = (
       addToken(externalAssetToRegisteredAsset(asset, id))
       refetchProvider()
     },
-    assetName: asset.name,
   })
 
   const registerToken = async () => {
     if (!asset) throw new Error("Selected asset cannot be added")
-    const input = getInputData(asset)
-    if (input) {
-      await mutation.mutateAsync(input)
-    }
+    await mutation.mutateAsync(asset)
   }
 
   const addTokenToUser = async (asset: TRegisteredAsset) => {

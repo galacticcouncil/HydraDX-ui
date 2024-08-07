@@ -4,6 +4,7 @@ import { InputSkeleton } from "components/Skeleton/InputSkeleton"
 import { TableSkeleton } from "components/Skeleton/TableSkeleton"
 
 import { Suspense, lazy } from "react"
+import { MemepadPageSkeleton } from "sections/memepad/skeleton/MemepadPageSkeleton"
 import { ReferralsSkeleton } from "sections/referrals/ReferralsSkeleton"
 import { StatsAssetPageSkeleton } from "sections/stats/skeleton/StatsAssetPageSkeleton"
 import { StatsPageSkeleton } from "sections/stats/skeleton/StatsPageSkeleton"
@@ -104,6 +105,10 @@ const ReferralsWrapper = lazy(async () => ({
 const SubmitTransaction = lazy(async () => ({
   default: (await import("sections/submit-transaction/SubmitTransaction"))
     .SubmitTransaction,
+}))
+
+const MemepadPage = lazy(async () => ({
+  default: (await import("sections/memepad/MemepadPage")).MemepadPage,
 }))
 
 export const routes: Route[] = [
@@ -375,6 +380,14 @@ export const routes: Route[] = [
     element: (
       <Suspense fallback={null}>
         <SubmitTransaction />
+      </Suspense>
+    ),
+  },
+  {
+    path: LINKS.memepad,
+    element: (
+      <Suspense fallback={<MemepadPageSkeleton />}>
+        <MemepadPage />
       </Suspense>
     ),
   },

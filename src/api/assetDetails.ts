@@ -13,7 +13,7 @@ import { BN_0 } from "utils/constants"
 import { useUserExternalTokenStore } from "sections/wallet/addToken/AddToken.utils"
 import { omit } from "utils/rx"
 import { useProviderRpcUrlStore } from "./provider"
-import { PENDULUM_ID } from "./externalAssetRegistry"
+import { pendulum } from "./external"
 import { getGeneralIndex, getGeneralKey } from "utils/externalAssets"
 import { ExternalAssetCursor } from "@galacticcouncil/apps"
 import { useSettingsStore } from "state/store"
@@ -410,7 +410,7 @@ export const getAssets = async (api: ApiPromise) => {
 
         const externalId =
           location && !location.isNone
-            ? parachainId === PENDULUM_ID.toString()
+            ? parachainId === pendulum.parachainId.toString()
               ? getGeneralKey(location)
               : getGeneralIndex(location)
             : undefined

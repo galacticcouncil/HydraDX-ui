@@ -1,4 +1,4 @@
-import { useExternalAssetRegistry } from "api/externalAssetRegistry"
+import { useExternalAssetRegistry } from "api/external"
 import { Modal } from "components/Modal/Modal"
 import { useModalPagination } from "components/Modal/Modal.utils"
 import { ModalContents } from "components/Modal/contents/ModalContents"

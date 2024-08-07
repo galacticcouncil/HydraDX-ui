@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
-import { useAssetHubAssetRegistry } from "api/externalAssetRegistry"
+import { useAssetHubAssetRegistry } from "api/external/assethub"
 import { useProviderRpcUrlStore } from "api/provider"
 import { getXYKVolumeAssetTotalValue, useXYKTradeVolumes } from "api/volume"
 import { useRpcProvider } from "providers/rpcProvider"

@@ -13,7 +13,7 @@ import { useRpcProvider } from "providers/rpcProvider"
 import { useTranslation } from "react-i18next"
 import { AnyParachain } from "@galacticcouncil/xcm-core"
 import { isAnyParachain } from "utils/helpers"
-import { useExternalAssetsWhiteList } from "api/externalAssetRegistry"
+import { useExternalAssetsWhiteList } from "api/external"
 
 const chains = Array.from(chainsMap.values())
 

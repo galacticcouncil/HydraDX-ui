@@ -4,11 +4,7 @@ import { Button } from "components/Button/Button"
 import { FC, useMemo } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import {
-  TExternalAsset,
-  useUserExternalTokenStore,
-} from "sections/wallet/addToken/AddToken.utils"
-import { HydradxRuntimeXcmAssetLocation } from "@polkadot/types/lookup"
+import { useUserExternalTokenStore } from "sections/wallet/addToken/AddToken.utils"
 import DropletIcon from "assets/icons/DropletIcon.svg?react"
 import PlusIcon from "assets/icons/PlusIcon.svg?react"
 import { useRpcProvider } from "providers/rpcProvider"
@@ -19,8 +15,9 @@ import { omit } from "utils/rx"
 import { createComponent } from "@lit-labs/react"
 import { Separator } from "components/Separator/Separator"
 import { TokenInfoHeader } from "./components/TokenInfo/TokenInfoHeader"
-import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
+import { useExternalTokensRugCheck } from "api/external"
 import { useAddTokenFormModalActions } from "./AddTokenFormModal.utils"
+import { TExternalAssetWithLocation } from "utils/externalAssets"
 
 export const UigcAssetId = createComponent({
   tagName: "uigc-asset-id",
@@ -29,7 +26,7 @@ export const UigcAssetId = createComponent({
 })
 
 type Props = {
-  asset: TExternalAsset & { location?: HydradxRuntimeXcmAssetLocation }
+  asset: TExternalAssetWithLocation
   onClose: () => void
 }
 
@@ -50,6 +47,7 @@ enum TokenState {
 export const AddTokenFormModal: FC<Props> = ({ asset, onClose }) => {
   const { t } = useTranslation()
   const { assets } = useRpcProvider()
+
   const { getTokenByInternalId } = useUserExternalTokenStore()
 
   const chainStored = assets.external.find(

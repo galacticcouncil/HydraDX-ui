@@ -1,7 +1,4 @@
-import {
-  RugSeverityLevel,
-  getIconByRugSeverity,
-} from "api/externalAssetRegistry"
+import { RugSeverityLevel, getIconByRugSeverity } from "api/external"
 import { InfoTooltip } from "components/InfoTooltip/InfoTooltip"
 import { SInfoIcon } from "components/InfoTooltip/InfoTooltip.styled"
 import { Text } from "components/Typography/Text/Text"

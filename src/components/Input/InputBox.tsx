@@ -2,6 +2,7 @@ import { forwardRef } from "react"
 import { InputProps } from "./Input"
 import { SInputBoxContainer, SInputBox } from "./Input.styled"
 import { Text } from "components/Typography/Text/Text"
+import { ErrorMessage } from "components/Label/Label.styled"
 
 export const InputBox = forwardRef<HTMLInputElement, InputProps>(
   (
@@ -29,7 +30,11 @@ export const InputBox = forwardRef<HTMLInputElement, InputProps>(
           }}
         >
           {withLabel && (
-            <Text tTransform="uppercase" color="basic500" fs={11}>
+            <Text
+              tTransform="uppercase"
+              color={p.error ? "error" : "basic500"}
+              fs={11}
+            >
               {label}
             </Text>
           )}
@@ -58,6 +63,7 @@ export const InputBox = forwardRef<HTMLInputElement, InputProps>(
             {...p}
           />
         </div>
+        {p.error && <ErrorMessage>{p.error}</ErrorMessage>}
       </SInputBoxContainer>
     )
   },

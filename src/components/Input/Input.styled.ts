@@ -99,6 +99,8 @@ export const SInputBoxContainer = styled.label<{
   error?: boolean
   disabled?: boolean
 }>`
+  display: block;
+
   padding: 12px;
 
   transition: ${theme.transitions.default};

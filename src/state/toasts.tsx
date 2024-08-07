@@ -1,11 +1,13 @@
 import { create } from "zustand"
-import { ReactElement, ReactNode, useMemo } from "react"
+import React, { ReactElement, ReactNode, useMemo } from "react"
 import { v4 as uuid } from "uuid"
 import { renderToString } from "react-dom/server"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { Maybe, safelyParse } from "utils/helpers"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { differenceInSeconds } from "date-fns"
+import { Trans } from "react-i18next"
+import { ToastMessage } from "./store"
 
 export const TOAST_MESSAGES = ["onLoading", "onSuccess", "onError"] as const
 export type ToastVariant =
@@ -292,4 +294,35 @@ export const useToast = () => {
     temporary,
     edit,
   }
+}
+
+type TransProps = Omit<
+  React.ComponentPropsWithRef<typeof Trans>,
+  "components"
+> & {
+  components?: string[]
+}
+
+export const createToastMessages = (
+  i18nKeyPrefix: string,
+  options: TransProps,
+) => {
+  const { t, tOptions, components = [], ...rest } = options || {}
+
+  return TOAST_MESSAGES.reduce((memo, type) => {
+    const msType = type === "onError" ? "onLoading" : type
+    memo[type] = (
+      <Trans
+        t={t}
+        tOptions={tOptions}
+        {...rest}
+        i18nKey={`${i18nKeyPrefix}.${msType}` as TransProps["i18nKey"]}
+        components={components.map((tag) => {
+          const [element, className] = tag.split(".")
+          return React.createElement(element, { className })
+        })}
+      ></Trans>
+    )
+    return memo
+  }, {} as ToastMessage)
 }

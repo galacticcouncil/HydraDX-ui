@@ -60,8 +60,6 @@ export const SIconContainer = styled.div`
   justify-content: center;
   align-items: center;
 
-  padding: 5px;
-
   border-radius: 9999px;
 
   background: ${theme.colors.darkBlue400};

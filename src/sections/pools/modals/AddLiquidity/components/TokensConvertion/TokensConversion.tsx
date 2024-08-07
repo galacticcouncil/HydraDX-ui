@@ -24,7 +24,13 @@ export const TokensConversion = ({
 
   return (
     <div
-      sx={{ flex: "row", height: 35, my: 16, align: "center", mx: "-24px" }}
+      sx={{
+        flex: "row",
+        height: 35,
+        my: 16,
+        align: "center",
+        mx: "calc(var(--modal-content-padding) * -1)",
+      }}
       css={{ position: "relative" }}
     >
       <Separator />

@@ -1,9 +1,6 @@
 import { AssetId, AssetBadge } from "@galacticcouncil/ui"
 import { createComponent } from "@lit-labs/react"
-import {
-  ExternalAssetBadgeVariant,
-  RugSeverityLevel,
-} from "api/externalAssetRegistry"
+import { ExternalAssetBadgeVariant, RugSeverityLevel } from "api/external"
 import { Icon } from "components/Icon/Icon"
 import { Text } from "components/Typography/Text/Text"
 import * as React from "react"

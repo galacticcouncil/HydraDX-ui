@@ -26,7 +26,8 @@ export const SInputWrapper = styled.div<{
   align-items: center;
   gap: 6px;
 
-  width: calc(100% - 50px);
+  min-width: 0;
+  width: 100%;
 
   color: ${({ disabled }) =>
     disabled ? theme.colors.basic600 : theme.colors.white};

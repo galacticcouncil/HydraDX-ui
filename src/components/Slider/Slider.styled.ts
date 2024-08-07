@@ -1,5 +1,6 @@
 import styled from "@emotion/styled"
-import { Range, Root, Thumb, Track } from "@radix-ui/react-slider"
+import { Root, Thumb, Track } from "@radix-ui/react-slider"
+import { ColorKey, GradientKey } from "./Slider"
 import { theme } from "theme"
 
 export const SRoot = styled(Root)`
@@ -18,11 +19,24 @@ export const SRoot = styled(Root)`
   }
 `
 
-export const SRange = styled(Range)`
+const isGradient = (color: string): color is GradientKey =>
+  color in theme.gradients
+
+const isColor = (color: string): color is ColorKey => color in theme.gradients
+
+export const SRange = styled.div<{
+  color: GradientKey | ColorKey
+}>`
   position: absolute;
   height: 100%;
 
-  background-color: ${theme.colors.brightBlue600};
+  background: ${({ color }) =>
+    isGradient(color)
+      ? theme.gradients[color]
+      : isColor(color)
+        ? theme.colors[color]
+        : theme.colors.brightBlue600};
+
   border-radius: 9999px;
 `
 

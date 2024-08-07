@@ -25,7 +25,7 @@ import { useRpcProvider } from "providers/rpcProvider"
 import { ExternalAssetImportModal } from "sections/trade/modal/ExternalAssetImportModal"
 import { useState } from "react"
 import { useExternalTokenMeta } from "sections/wallet/addToken/AddToken.utils"
-import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
+import { useExternalTokensRugCheck } from "api/external"
 import { ExternalAssetUpdateModal } from "sections/trade/modal/ExternalAssetUpdateModal"
 
 type Props = {

@@ -1,4 +1,4 @@
-import { useExternalTokensRugCheck } from "api/externalAssetRegistry"
+import { useExternalTokensRugCheck } from "api/external"
 import { Modal } from "components/Modal/Modal"
 import { ModalContents } from "components/Modal/contents/ModalContents"
 import { useTranslation } from "react-i18next"

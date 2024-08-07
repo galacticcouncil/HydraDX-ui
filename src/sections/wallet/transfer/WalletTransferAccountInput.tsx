@@ -25,6 +25,7 @@ interface Props {
   placeholder?: string
   rightIcon?: ReactNode
   openAddressBook?: () => void
+  className?: string
 }
 
 export const WalletTransferAccountInput = (props: Props) => {
@@ -43,22 +44,21 @@ export const WalletTransferAccountInput = (props: Props) => {
         disabled={isDisabled}
         htmlFor={props.name}
         error={!!props.error}
+        className={props.className}
       >
-        <Text fs={12} color="basic500" tTransform={"uppercase"} sx={{ mb: 8 }}>
+        <Text fs={11} color="basic500" tTransform={"uppercase"} sx={{ mb: 8 }}>
           {props.label}
         </Text>
-        <div sx={{ flex: "row", justify: "space-between", align: "center" }}>
-          {validAddress ? (
-            <AccountAvatar
-              address={validAddress}
-              size={45}
-              css={{ transform: "scale(0.85)", transformOrigin: "left" }}
-            />
-          ) : (
-            <SIconContainer>
-              <GuestIcon width={35} height={35} />
-            </SIconContainer>
-          )}
+        <div sx={{ flex: "row", align: "center" }}>
+          <div>
+            {validAddress ? (
+              <AccountAvatar address={validAddress} size={30} />
+            ) : (
+              <SIconContainer>
+                <GuestIcon width={30} height={30} />
+              </SIconContainer>
+            )}
+          </div>
 
           {props.openAddressBook && (
             <SAddressBookButton type="button" onClick={props.openAddressBook}>

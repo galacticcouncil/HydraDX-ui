@@ -1,4 +1,5 @@
 import { FC, Fragment, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { Range } from "@radix-ui/react-slider"
 import {
   SDash,
   SRange,
@@ -6,25 +7,31 @@ import {
   SThumb,
   STrack,
 } from "components/Slider/Slider.styled"
+import { theme } from "theme"
 
 const dashCount = 20
 
-type Props = {
+export type GradientKey = keyof typeof theme.gradients
+export type ColorKey = keyof typeof theme.colors
+
+export type SliderProps = {
   value: number[]
   onChange: (value: number[]) => void
   min: number
   max: number
   step: number
   disabled?: boolean
+  color?: GradientKey | ColorKey
 }
 
-export const Slider: FC<Props> = ({
+export const Slider: FC<SliderProps> = ({
   min,
   max,
   step,
   value,
   onChange,
   disabled,
+  color = "brightBlue600",
 }) => {
   const [rootWidth, setRootWidth] = useState(0)
   const rootRef = useRef<HTMLSpanElement>(null)
@@ -64,7 +71,9 @@ export const Slider: FC<Props> = ({
     >
       {dashes}
       <STrack>
-        <SRange />
+        <Range asChild>
+          <SRange color={color} />
+        </Range>
       </STrack>
       <SThumb />
     </SRoot>

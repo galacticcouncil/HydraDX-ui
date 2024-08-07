@@ -223,11 +223,6 @@ export const ReviewTransactionForm: FC<Props> = (props) => {
 
   return (
     <>
-      {props.title && (
-        <Text color="basic400" fw={400} sx={{ mb: 16 }}>
-          {props.title}
-        </Text>
-      )}
       <ModalScrollableContent
         sx={{
           mx: "calc(-1 * var(--modal-content-padding))",

@@ -8,6 +8,7 @@ import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import { useAccountNFTPositions } from "api/deposits"
 import { useAccountBalances } from "api/accountBalances"
+import { SBadge } from "components/Layout/SubNavigation/SubNavigation.styled"
 
 export const HeaderMenu = forwardRef<HTMLElement>((_, ref) => {
   const { t } = useTranslation()
@@ -56,7 +57,12 @@ export const HeaderMenu = forwardRef<HTMLElement>((_, ref) => {
             data-intersect={item.key}
           >
             {({ isActive }) => (
-              <SItem isActive={isActive}>{t(`header.${item.key}`)}</SItem>
+              <SItem isActive={isActive}>
+                {t(`header.${item.key}`)}
+                {LINKS.memepad === item.href && (
+                  <SBadge css={{ right: 5, top: -8 }}>{t("beta")}</SBadge>
+                )}
+              </SItem>
             )}
           </Link>
         )

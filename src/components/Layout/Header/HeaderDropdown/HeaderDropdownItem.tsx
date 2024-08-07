@@ -10,6 +10,9 @@ import { Switch } from "components/Switch/Switch"
 import { undefinedNoop } from "utils/helpers"
 import { InfoTooltip } from "components/InfoTooltip/InfoTooltip"
 import { SInfoIcon } from "components/InfoTooltip/InfoTooltip.styled"
+import { SBadge } from "components/Layout/SubNavigation/SubNavigation.styled"
+import { LINKS } from "utils/navigation"
+import { useTranslation } from "react-i18next"
 
 type ItemHtmlAttributes = ComponentPropsWithoutRef<typeof SItemLink> &
   ComponentPropsWithoutRef<typeof SItemButton>
@@ -34,6 +37,7 @@ export const HeaderDropdownItem: React.FC<HeaderDropdownItemProps> = ({
   toggleValue = false,
   ...props
 }) => {
+  const { t } = useTranslation()
   const id = useId()
   const isButton = !!onClick
   const Item = isButton ? SItemButton : SItemLink
@@ -50,7 +54,7 @@ export const HeaderDropdownItem: React.FC<HeaderDropdownItemProps> = ({
           icon={icon}
         />
       )}
-      <div sx={{ flex: "column", gap: 3 }}>
+      <div sx={{ flex: "column", gap: 3 }} css={{ position: "relative" }}>
         <Text
           fs={14}
           lh={14}
@@ -69,6 +73,17 @@ export const HeaderDropdownItem: React.FC<HeaderDropdownItemProps> = ({
           <Text fs={12} lh={18} fw={400} color="basic500">
             {subtitle}
           </Text>
+        )}
+        {LINKS.memepad === props.to && (
+          <SBadge
+            css={{
+              left: 65,
+              width: "min-content",
+              position: "absolute",
+            }}
+          >
+            {t("beta")}
+          </SBadge>
         )}
       </div>
       {variant === "navigation" && <IconArrow />}

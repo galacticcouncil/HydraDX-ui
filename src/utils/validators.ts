@@ -24,3 +24,7 @@ export const maxBalance = (balance: BigNumber, decimals: number) => {
       i18n.t("error.maxBalance"),
     )
 }
+
+export const noWhitespace = z
+  .string()
+  .refine((s) => !/\s/gi.test(s), i18n.t("error.whitespace"))

@@ -1,48 +1,64 @@
 import { useGetXYKPools } from "api/xyk"
-import { Modal } from "components/Modal/Modal"
-import { useModalPagination } from "components/Modal/Modal.utils"
-import { ModalContents } from "components/Modal/contents/ModalContents"
 import { useMemo, useState } from "react"
-import { useTranslation } from "react-i18next"
 import { AssetsModalContent } from "sections/assets/AssetsModal"
 import { CreateXYKPoolForm } from "./CreateXYKPoolForm"
 import {
+  CreateXYKPoolFormData,
   createPoolExclusivityMap,
   filterIdsByExclusivity,
   useAllowedXYKPoolAssets,
+  useCreateXYKPool,
+  useCreateXYKPoolForm,
 } from "./CreateXYKPoolForm.utils"
+import { UseFormReturn } from "react-hook-form"
+import { TAsset } from "api/assetDetails"
 
 type CreateXYKPoolProps = {
-  isOpen: boolean
-  onClose: () => void
+  controlledForm?: UseFormReturn<CreateXYKPoolFormData>
+  defaultAssetA?: string
+  defaultAssetB?: string
+  submitHidden?: boolean
+  onTxClose?: () => void
+  onAssetAOpen?: () => void
+  onAssetBOpen?: () => void
+  onAssetASelect?: (asset: TAsset) => void
+  onAssetBSelect?: (asset: TAsset) => void
+  onAssetSelectClose?: () => void
+  children: (props: {
+    form: JSX.Element
+    assetsA: JSX.Element
+    assetsB: JSX.Element
+  }) => JSX.Element
 }
 
-enum ModalPage {
-  FORM,
-  ASSET_A_SELECT,
-  ASSET_B_SELECT,
-}
-
-export const CreateXYKPool = ({ isOpen, onClose }: CreateXYKPoolProps) => {
-  const { t } = useTranslation()
-
+export const CreateXYKPool = ({
+  controlledForm,
+  defaultAssetA = "",
+  defaultAssetB = "",
+  submitHidden,
+  onTxClose,
+  onAssetAOpen,
+  onAssetBOpen,
+  onAssetASelect,
+  onAssetBSelect,
+  onAssetSelectClose,
+  children,
+}: CreateXYKPoolProps) => {
   const { data: xykPools } = useGetXYKPools()
 
   const allowedAssets = useAllowedXYKPoolAssets()
   const allowedAssetIds = allowedAssets.map(({ id }) => id)
-
-  const { page, direction, paginateTo } = useModalPagination()
-  const back = () => paginateTo(ModalPage.FORM)
-  const onAssetASelect = () => paginateTo(ModalPage.ASSET_A_SELECT)
-  const onAssetBSelect = () => paginateTo(ModalPage.ASSET_B_SELECT)
 
   const poolExclusivityMap = useMemo(
     () => createPoolExclusivityMap(xykPools?.map(({ assets }) => assets) ?? []),
     [xykPools],
   )
 
-  const [assetA, setAssetA] = useState("")
-  const [assetB, setAssetB] = useState("")
+  const [assetA, setAssetA] = useState(defaultAssetA)
+  const [assetB, setAssetB] = useState(defaultAssetB)
+
+  const defaultForm = useCreateXYKPoolForm(assetA, assetB)
+  const formInstance = controlledForm || defaultForm
 
   const allowedAssetsA = useMemo(
     () => filterIdsByExclusivity(assetB, allowedAssetIds, poolExclusivityMap),
@@ -54,65 +70,59 @@ export const CreateXYKPool = ({ isOpen, onClose }: CreateXYKPoolProps) => {
     [assetA, allowedAssetIds, poolExclusivityMap],
   )
 
-  return (
-    <Modal open={isOpen} disableCloseOutside={true} onClose={onClose}>
-      <ModalContents
-        disableAnimation
-        page={page}
-        direction={direction}
-        onClose={onClose}
-        onBack={back}
-        contents={[
-          {
-            title: t("liquidity.pool.xyk.create"),
-            content: (
-              <CreateXYKPoolForm
-                onClose={onClose}
-                onAssetAOpen={onAssetASelect}
-                onAssetBOpen={onAssetBSelect}
-                assetA={assetA}
-                assetB={assetB}
-              />
-            ),
-          },
-          {
-            title: t("selectAsset.title"),
-            content: (
-              <AssetsModalContent
-                allowedAssets={allowedAssetsA}
-                allAssets
-                withBonds
-                withExternal
-                hideInactiveAssets
-                onSelect={(asset) => {
-                  setAssetA(asset.id)
-                  back()
-                }}
-              />
-            ),
-            noPadding: true,
-            headerVariant: "GeistMono",
-          },
-          {
-            title: t("selectAsset.title"),
-            content: (
-              <AssetsModalContent
-                allowedAssets={allowedAssetsB}
-                allAssets
-                withBonds
-                withExternal
-                hideInactiveAssets
-                onSelect={(asset) => {
-                  setAssetB(asset.id)
-                  back()
-                }}
-              />
-            ),
-            noPadding: true,
-            headerVariant: "GeistMono",
-          },
-        ]}
-      />
-    </Modal>
+  const createXykPool = useCreateXYKPool({
+    onClose: onTxClose,
+    onSubmitted: () => {
+      onTxClose?.()
+      formInstance.reset()
+    },
+  })
+
+  const form = (
+    <CreateXYKPoolForm
+      form={formInstance}
+      onSubmit={createXykPool.mutateAsync}
+      onAssetAOpen={onAssetAOpen}
+      onAssetBOpen={onAssetBOpen}
+      submitHidden={submitHidden}
+    />
   )
+
+  const assetsA = (
+    <AssetsModalContent
+      allowedAssets={allowedAssetsA}
+      allAssets
+      withBonds
+      withExternal
+      hideInactiveAssets
+      onSelect={(asset) => {
+        formInstance.setValue("assetAId", asset.id)
+        setAssetA(asset.id)
+        onAssetASelect?.(asset)
+        onAssetSelectClose?.()
+      }}
+    />
+  )
+
+  const assetsB = (
+    <AssetsModalContent
+      allowedAssets={allowedAssetsB}
+      allAssets
+      withBonds
+      withExternal
+      hideInactiveAssets
+      onSelect={(asset) => {
+        formInstance.setValue("assetBId", asset.id)
+        setAssetB(asset.id)
+        onAssetBSelect?.(asset)
+        onAssetSelectClose?.()
+      }}
+    />
+  )
+
+  return children({
+    form,
+    assetsA,
+    assetsB,
+  })
 }

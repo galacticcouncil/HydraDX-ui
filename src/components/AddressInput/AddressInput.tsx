@@ -37,7 +37,12 @@ export const AddressInput = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <SInputWrapper disabled={props.disabled} className={props.className}>
-        <div sx={{ flex: "column", width: "calc(100% - 34px)" }}>
+        <div
+          sx={{
+            flex: "column",
+            width: props.rightIcon ? "calc(100% - 50px)" : "100%",
+          }}
+        >
           <SInput
             ref={ref}
             onChange={(e) => props.onChange?.(e.target.value)}
@@ -55,7 +60,12 @@ export const AddressInput = forwardRef<HTMLInputElement, InputProps>(
               color="brightBlue300"
               fs={12}
               lh={16}
-              css={{ wordWrap: "break-word" }}
+              css={{
+                wordWrap: "break-word",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
             >
               {t("address.input.native", {
                 symbol: native.symbol,

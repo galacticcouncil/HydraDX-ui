@@ -24,6 +24,7 @@ import { PermitResult } from "sections/web3-connect/signer/EthereumSigner"
 import { useSettingsStore } from "state/store"
 import { useToast } from "state/toasts"
 import { H160, getEvmChainById, getEvmTxLink, isEvmAccount } from "utils/evm"
+import { isAnyParachain } from "utils/helpers"
 import { createSubscanLink } from "utils/formatting"
 
 type TxMethod = AnyJson & {
@@ -355,7 +356,17 @@ export const useSendTransactionMutation = (
             clearTimeout(timeout)
           }
 
-          const onComplete = createResultOnCompleteHandler(api, {
+          const externalChain =
+            xcallMeta?.srcChain && xcallMeta.srcChain !== "hydradx"
+              ? chainsMap.get(xcallMeta?.srcChain)
+              : null
+
+          const apiPromise =
+            externalChain && isAnyParachain(externalChain)
+              ? await externalChain.api
+              : api
+
+          const onComplete = createResultOnCompleteHandler(apiPromise, {
             onError: (error) => {
               clearTimeout(timeout)
               reject(error)

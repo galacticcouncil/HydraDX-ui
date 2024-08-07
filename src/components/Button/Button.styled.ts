@@ -229,7 +229,7 @@ const variantStyles: Record<ButtonVariant, SerializedStyles> = {
   warning: css`
     border-radius: 4px;
     background: rgba(${theme.rgbColors.warning300}, 0.2);
-    color: ${theme.colors.warning300};
+    color: ${theme.colors.warning100};
     border: 1px solid rgba(${theme.rgbColors.warning300}, 0.5);
     box-shadow: unset;
 

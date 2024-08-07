@@ -27,7 +27,6 @@ type Props = TxProps & {
 }
 
 export const ReviewTransactionXCallForm: FC<Props> = ({
-  title,
   xcall,
   xcallMeta,
   onEvmSigned,
@@ -76,11 +75,6 @@ export const ReviewTransactionXCallForm: FC<Props> = ({
 
   return (
     <>
-      {title && (
-        <Text color="basic400" fw={400} sx={{ mb: 16 }}>
-          {title}
-        </Text>
-      )}
       <ModalScrollableContent
         sx={{
           mx: "calc(-1 * var(--modal-content-padding))",
