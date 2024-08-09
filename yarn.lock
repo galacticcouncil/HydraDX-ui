@@ -2275,10 +2275,10 @@
     lit "^3.1.4"
     ts-debounce "^4.0.0"
 
-"@galacticcouncil/xcm-cfg@^3.2.0":
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/@galacticcouncil/xcm-cfg/-/xcm-cfg-3.2.0.tgz#40a7d48bc19110acf5e346ee02b5ec92eb577524"
-  integrity sha512-Ur7kyZ1YlzklUZ/bOGOVJdoWqRhyyMeIBFTSuWKeGLHMPt9eTQ0H8Yl7D2WqZzVcOSuyHr8iYb3XxN3wfZV8Sg==
+"@galacticcouncil/xcm-cfg@^3.3.0":
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/@galacticcouncil/xcm-cfg/-/xcm-cfg-3.3.0.tgz#7d80654c5b4480a008dc95c7ed377316a0b1a2a8"
+  integrity sha512-yti75PEOscGrsiDsSaqq9QtRldYBbZhhK1hoXmullhDdJ/dP2gjhrIEX8XCD0qfBXrwbeDLSOxzlypq4uXVuZA==
   dependencies:
     "@galacticcouncil/xcm-core" "^2.2.0"
 
@@ -2294,10 +2294,10 @@
     big.js "^6.2.1"
     buffer "^6.0.3"
 
-"@galacticcouncil/xcm-sdk@^4.1.0":
-  version "4.1.0"
-  resolved "https://registry.yarnpkg.com/@galacticcouncil/xcm-sdk/-/xcm-sdk-4.1.0.tgz#58e0a89e027789900140ea318669c879f0928620"
-  integrity sha512-SxmHL0DpMgjfwiI/pwGoUY5Mplkd0L/PEZPHkdcUAZVfWKKl+uhovB+tWepftBQpLjilPds+i/kLg6K6BwHVTQ==
+"@galacticcouncil/xcm-sdk@^4.2.0":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@galacticcouncil/xcm-sdk/-/xcm-sdk-4.2.0.tgz#2fb40f1ca686f94264d2ee1c6ab7beabf2bfe56f"
+  integrity sha512-F7Xy3IMfEc6r+RPmI4/Skhf5pHg3TMICFZdOdCmoczzmQGO9Nrlb6J96fXmhym0SrOjgm//AjFNDuoMZis+ldw==
   dependencies:
     "@galacticcouncil/xcm-core" "^2.1.0"
 
