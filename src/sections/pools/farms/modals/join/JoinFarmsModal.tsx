@@ -1,37 +1,32 @@
-import { u32 } from "@polkadot/types"
 import { Farm } from "api/farms"
-import { Button } from "components/Button/Button"
 import { Modal } from "components/Modal/Modal"
 import { useModalPagination } from "components/Modal/Modal.utils"
 import { ModalContents } from "components/Modal/contents/ModalContents"
 import { Text } from "components/Typography/Text/Text"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import { FarmDepositMutationType } from "utils/farms/deposit"
+import { TJoinFarmsInput, useJoinFarms } from "utils/farms/deposit"
 import { FarmDetailsCard } from "sections/pools/farms/components/detailsCard/FarmDetailsCard"
 import { FarmDetailsModal } from "sections/pools/farms/modals/details/FarmDetailsModal"
-import { SJoinFarmContainer } from "./JoinFarmsModal.styled"
 import { useBestNumber } from "api/chain"
 import { useRpcProvider } from "providers/rpcProvider"
-import { Alert } from "components/Alert/Alert"
-import { Controller, useForm } from "react-hook-form"
-import { scaleHuman } from "utils/balance"
-import { WalletTransferAssetSelect } from "sections/wallet/transfer/WalletTransferAssetSelect"
-import { useZodSchema } from "./JoinFarmsModal.utils"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Spacer } from "components/Spacer/Spacer"
-import { FormValues } from "utils/helpers"
-import { FarmRedepositMutationType } from "utils/farms/redeposit"
 import { TLPData } from "utils/omnipool"
 import { TMiningNftPosition } from "sections/pools/PoolsPage.utils"
+import { JoinFarmsForm } from "./JoinFarmsForm"
+import { getStepState, LoadgingPage, Stepper } from "components/Stepper/Stepper"
 
 type JoinFarmModalProps = {
   onClose: () => void
   poolId: string
   position?: TLPData
   farms: Farm[]
-  mutation: FarmDepositMutationType | FarmRedepositMutationType
   depositNft?: TMiningNftPosition
+}
+
+export enum Page {
+  JOIN_FARM,
+  FARM_DETAILS,
+  WAIT,
 }
 
 export const JoinFarmModal = ({
@@ -39,48 +34,40 @@ export const JoinFarmModal = ({
   poolId,
   position,
   farms,
-  mutation,
   depositNft,
 }: JoinFarmModalProps) => {
   const { t } = useTranslation()
   const { assets } = useRpcProvider()
-  const [selectedFarmId, setSelectedFarmId] = useState<{
-    yieldFarmId: u32
-    globalFarmId: u32
-  } | null>(null)
-  const meta = assets.getAsset(poolId)
+  const [selectedFarm, setSelectedFarm] = useState<Farm | null>(null)
+  const [currentStep, setCurrentStep] = useState(0)
+
   const bestNumber = useBestNumber()
-  const shouldValidate =
-    !!position?.amount || (meta.isShareToken && !depositNft)
+  const { page, direction, paginateTo } = useModalPagination()
 
-  const zodSchema = useZodSchema({
-    id: meta.id,
+  const meta = assets.getAsset(poolId)
+  const isMultipleFarms = farms.length > 1
+
+  const joinFarms = useJoinFarms({
+    poolId,
     farms,
-    position,
-    enabled: shouldValidate,
-  })
-
-  const form = useForm<{ amount: string }>({
-    mode: "onChange",
-    defaultValues: {
-      amount: position
-        ? scaleHuman(position.shares, meta.decimals).toString()
-        : undefined,
+    deposit: {
+      onClose,
+      disableAutoClose: isMultipleFarms,
+      onSuccess: () => setCurrentStep(1),
+      onSubmitted: () => (isMultipleFarms ? paginateTo(Page.WAIT) : null),
     },
-    resolver: zodSchema ? zodResolver(zodSchema) : undefined,
+    redeposit: {
+      onClose,
+    },
   })
 
-  const selectedFarm = farms.find(
-    (farm) =>
-      farm.globalFarm.id.eq(selectedFarmId?.globalFarmId) &&
-      farm.yieldFarm.id.eq(selectedFarmId?.yieldFarmId),
-  )
-
-  const { page, direction, back, next } = useModalPagination()
+  const onSubmit = (input: TJoinFarmsInput) => {
+    joinFarms(input)
+  }
 
   const onBack = () => {
-    back()
-    setSelectedFarmId(null)
+    paginateTo(Page.JOIN_FARM)
+    setSelectedFarm(null)
   }
 
   const currentBlock = bestNumber.data?.relaychainBlockNumber
@@ -88,21 +75,40 @@ export const JoinFarmModal = ({
     .dividedToIntegerBy(
       selectedFarm?.globalFarm.blocksPerPeriod.toNumber() ?? 1,
     )
-  const positionValue =
-    position?.totalValueShifted ??
-    (depositNft ? scaleHuman(depositNft.data.shares, meta.decimals) : undefined)
 
-  const onSubmit = (values: FormValues<typeof form>) => {
-    mutation.mutate({
-      shares: values.amount,
-      value: positionValue?.toString() ?? "",
-    })
-  }
-
-  const error = form.formState.errors.amount?.message
+  const steps = [
+    {
+      id: 0,
+      label: t("farms.modal.join.first"),
+      loadingLabel: t("farms.modal.join.first.loading"),
+    },
+    ...(isMultipleFarms
+      ? [
+          {
+            id: 1,
+            label: t("farms.modal.join.rest"),
+            loadingLabel: t("farms.modal.join.rest.loading"),
+          },
+        ]
+      : []),
+  ]
 
   return (
-    <Modal open onClose={onClose} disableCloseOutside>
+    <Modal
+      open
+      onClose={onClose}
+      disableCloseOutside
+      topContent={
+        isMultipleFarms ? (
+          <Stepper
+            steps={steps.map((step) => ({
+              label: step.label,
+              state: getStepState(step.id, currentStep),
+            }))}
+          />
+        ) : undefined
+      }
+    >
       <ModalContents
         onClose={onClose}
         page={page}
@@ -123,93 +129,25 @@ export const JoinFarmModal = ({
                   </Text>
                 )}
                 <div sx={{ flex: "column", gap: 8 }}>
-                  {farms.map((farm, i) => {
-                    return (
-                      <FarmDetailsCard
-                        key={i}
-                        poolId={poolId}
-                        farm={farm}
-                        onSelect={() => {
-                          setSelectedFarmId({
-                            globalFarmId: farm.globalFarm.id,
-                            yieldFarmId: farm.yieldFarm.id,
-                          })
-                          next()
-                        }}
-                      />
-                    )
-                  })}
+                  {farms.map((farm, i) => (
+                    <FarmDetailsCard
+                      key={i}
+                      poolId={poolId}
+                      farm={farm}
+                      onSelect={() => {
+                        setSelectedFarm(farm)
+                        paginateTo(Page.FARM_DETAILS)
+                      }}
+                    />
+                  ))}
                 </div>
-
-                <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="off">
-                  <SJoinFarmContainer>
-                    {positionValue ? (
-                      <div
-                        sx={{
-                          flex: ["column", "row"],
-                          justify: "space-between",
-                          p: 30,
-                          gap: [4, 120],
-                        }}
-                      >
-                        <div sx={{ flex: "column", gap: 13 }}>
-                          <Text>{t("farms.modal.footer.title")}</Text>
-                        </div>
-                        <Text
-                          color="pink600"
-                          fs={20}
-                          css={{ whiteSpace: "nowrap" }}
-                        >
-                          {t("value.tokenWithSymbol", {
-                            value: positionValue,
-                            symbol: meta.symbol,
-                          })}
-                        </Text>
-                      </div>
-                    ) : (
-                      <>
-                        <Spacer size={20} />
-                        <Controller
-                          name="amount"
-                          control={form.control}
-                          render={({
-                            field: { name, value, onChange },
-                            fieldState: { error },
-                          }) => (
-                            <WalletTransferAssetSelect
-                              title={t(
-                                "wallet.assets.transfer.asset.label_mob",
-                              )}
-                              name={name}
-                              value={value}
-                              onChange={onChange}
-                              asset={poolId}
-                              error={error?.message}
-                            />
-                          )}
-                        />
-                        <Spacer size={20} />
-                      </>
-                    )}
-
-                    {error && position && (
-                      <Alert variant="error" css={{ margin: "20px 0" }}>
-                        {error}
-                      </Alert>
-                    )}
-
-                    <Button
-                      fullWidth
-                      variant="primary"
-                      isLoading={mutation.isLoading}
-                      disabled={shouldValidate ? !!error || !zodSchema : false}
-                    >
-                      {t("farms.modal.join.button.label", {
-                        count: farms.length,
-                      })}
-                    </Button>
-                  </SJoinFarmContainer>
-                </form>
+                <JoinFarmsForm
+                  poolId={poolId}
+                  position={position}
+                  farms={farms}
+                  depositNft={depositNft}
+                  onSubmit={onSubmit}
+                />
               </>
             ),
           },
@@ -222,6 +160,11 @@ export const JoinFarmModal = ({
                 currentBlock={currentBlock?.toNumber()}
               />
             ),
+          },
+          {
+            title: steps[currentStep].label,
+            headerVariant: "gradient",
+            content: <LoadgingPage title={steps[currentStep].loadingLabel} />,
           },
         ]}
       />

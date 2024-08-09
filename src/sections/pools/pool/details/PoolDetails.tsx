@@ -36,6 +36,7 @@ import { useDisplayPrice } from "utils/displayAsset"
 import { BN_1 } from "utils/constants"
 import BN from "bignumber.js"
 import { AvailableFarms } from "sections/pools/pool/availableFarms/AvailableFarms"
+import { useFarms } from "api/farms"
 
 export const PoolDetails = ({
   pool,
@@ -56,6 +57,9 @@ export const PoolDetails = ({
   const omnipoolFee = useOmnipoolFee()
 
   const ixXYKPool = isXYKPoolType(pool)
+
+  const farms = useFarms([pool.id])
+  const isFarms = farms.data.length
 
   return (
     <>
@@ -143,7 +147,9 @@ export const PoolDetails = ({
               }}
             >
               <Icon icon={<PlusIcon />} sx={{ mr: 8, height: 16 }} />
-              {t("liquidity.asset.actions.addLiquidity")}
+              {t(
+                `liquidity.asset.actions.addLiquidity${isFarms ? ".farms" : ""}`,
+              )}
             </div>
           </Button>
         </div>
@@ -279,6 +285,7 @@ export const PoolDetails = ({
           isOpen
           onClose={() => setAddLiquidityPool(undefined)}
           pool={addLiquidityPool}
+          farms={farms.data}
         />
       )}
       {addLiquidityStablepool !== undefined && !ixXYKPool && (

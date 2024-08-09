@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
 import FPIcon from "assets/icons/PoolsAndFarms.svg?react"
 import { JoinFarmModal } from "sections/pools/farms/modals/join/JoinFarmsModal"
-import { useFarmDepositMutation } from "utils/farms/deposit"
 import { TLPData } from "utils/omnipool"
 
 export const JoinFarmsButton = (props: {
@@ -18,14 +17,6 @@ export const JoinFarmsButton = (props: {
   const { account } = useAccount()
   const [joinFarm, setJoinFarm] = useState(false)
   const farms = useFarms([props.poolId])
-
-  const mutation = useFarmDepositMutation(
-    props.poolId,
-    props.position?.id ?? "",
-    farms.data,
-    () => setJoinFarm(false),
-    props.onSuccess,
-  )
 
   return (
     <>
@@ -46,7 +37,6 @@ export const JoinFarmsButton = (props: {
           poolId={props.poolId}
           onClose={() => setJoinFarm(false)}
           position={props.position}
-          mutation={mutation}
         />
       )}
     </>

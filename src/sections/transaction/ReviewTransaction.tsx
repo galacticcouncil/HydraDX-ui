@@ -48,8 +48,9 @@ export const ReviewTransaction = (props: Transaction) => {
           disableClose: isLoading,
         }
       : {
-          title: t("liquidity.reviewTransaction.modal.title"),
-          description: t("liquidity.reviewTransaction.modal.desc"),
+          title: props.title ?? t("liquidity.reviewTransaction.modal.title"),
+          description:
+            props.description ?? t("liquidity.reviewTransaction.modal.desc"),
         }
 
   const handleTxOnClose = () => {
@@ -68,6 +69,11 @@ export const ReviewTransaction = (props: Transaction) => {
   const onClose = () => {
     handleTxOnClose()
     props.onClose?.()
+  }
+
+  const onMinimizeModal = () => {
+    handleTxOnClose()
+    if (!props.disableAutoClose) props.onClose?.()
   }
 
   const onBack = props.onBack
@@ -93,7 +99,7 @@ export const ReviewTransaction = (props: Transaction) => {
           error={error}
           link={txLink}
           onReview={onReview}
-          onClose={onClose}
+          onClose={onMinimizeModal}
           toastMessage={props.toastMessage}
           bridge={bridge}
         />
@@ -108,12 +114,15 @@ export const ReviewTransaction = (props: Transaction) => {
         {...modalProps}
       >
         {isLoading ? (
-          <ReviewTransactionPending txState={txState} onClose={onClose} />
+          <ReviewTransactionPending
+            txState={txState}
+            onClose={onMinimizeModal}
+          />
         ) : isSuccess ? (
-          <ReviewTransactionSuccess onClose={onClose} />
+          <ReviewTransactionSuccess onClose={onMinimizeModal} />
         ) : isError ? (
           <ReviewTransactionError
-            onClose={onClose}
+            onClose={onMinimizeModal}
             onReview={onReview}
             error={error}
           />

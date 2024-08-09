@@ -15,11 +15,10 @@ import { FarmDetailsModal } from "sections/pools/farms/modals/details/FarmDetail
 import { ToastMessage } from "state/store"
 import { TOAST_MESSAGES } from "state/toasts"
 import { useFarmExitAllMutation } from "utils/farms/exit"
-import { useFarmRedepositMutation } from "utils/farms/redeposit"
 import { useRpcProvider } from "providers/rpcProvider"
 import { useAccount } from "sections/web3-connect/Web3Connect.utils"
-import { scaleHuman } from "utils/balance"
 import { useDepositShare } from "sections/pools/farms/position/FarmingPosition.utils"
+import { useJoinFarms } from "utils/farms/deposit"
 
 function isFarmJoined(depositNft: TMiningNftPosition, farm: Farm) {
   return depositNft.data.yieldFarmEntries.find(
@@ -40,18 +39,22 @@ function JoinedFarmsDetailsRedeposit(props: {
   const { account } = useAccount()
   const farms = useFarms([props.poolId])
   const meta = assets.getAsset(props.poolId)
+  const isXYK = assets.isShareToken(meta)
   const position = useDepositShare(props.poolId, props.depositNft.id.toString())
 
   const availableFarms = farms.data?.filter(
     (farm) => !isFarmJoined(props.depositNft, farm),
   )
 
-  const redeposit = useFarmRedepositMutation(
-    availableFarms,
-    props.depositNft,
-    props.poolId,
-    props.onTxClose,
-  )
+  const joinFarms = useJoinFarms({
+    poolId: props.poolId,
+    farms: availableFarms,
+    redeposit: {
+      onSubmitted: () => props.onTxClose(),
+      onBack: () => {},
+      onClose: () => props.onTxClose(),
+    },
+  })
 
   if (!availableFarms?.length) return null
 
@@ -79,16 +82,18 @@ function JoinedFarmsDetailsRedeposit(props: {
           variant="primary"
           sx={{ mt: 16 }}
           onClick={() =>
-            redeposit.mutate({
-              shares: scaleHuman(
-                props.depositNft.data.shares.toString(),
-                meta.decimals,
-              ).toString(),
-              value: position.data?.totalValueShifted.toString() ?? "",
-            })
+            isXYK
+              ? joinFarms({
+                  depositId: props.depositNft.id,
+                  shares: props.depositNft.data.shares.toString(),
+                })
+              : joinFarms({
+                  positionId: "",
+                  value: position.data?.totalValueShifted.toString() ?? "",
+                  depositId: props.depositNft.id,
+                })
           }
           disabled={account?.isExternalWalletConnected}
-          isLoading={redeposit.isLoading}
         >
           {t("farms.modal.joinedFarms.button.joinAll.label")}
         </Button>

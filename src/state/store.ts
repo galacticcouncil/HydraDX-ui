@@ -24,6 +24,7 @@ export interface Account {
 
 export interface TransactionInput {
   title?: string
+  description?: string
   tx?: SubmittableExtrinsic
   xcall?: XCallEvm
   xcallMeta?: Record<string, string>
@@ -44,21 +45,25 @@ export interface Transaction extends TransactionInput {
   steps?: Array<StepProps>
   onBack?: () => void
   onClose?: () => void
+  disableAutoClose?: boolean
+}
+
+export type TransactionOptions = {
+  onSuccess?: (result: ISubmittableResult) => void
+  onSubmitted?: () => void
+  toast?: ToastMessage
+  isProxy?: boolean
+  steps?: Array<StepProps>
+  onBack?: () => void
+  onClose?: () => void
+  disableAutoClose?: boolean
 }
 
 interface Store {
   transactions?: Transaction[]
   createTransaction: (
     transaction: TransactionInput,
-    options?: {
-      onSuccess?: (result: ISubmittableResult) => void
-      onSubmitted?: () => void
-      toast?: ToastMessage
-      isProxy?: boolean
-      steps?: Array<StepProps>
-      onBack?: () => void
-      onClose?: () => void
-    },
+    options?: TransactionOptions,
   ) => Promise<ISubmittableResult>
   cancelTransaction: (hash: string) => void
 }
@@ -99,6 +104,7 @@ export const useStore = create<Store>((set) => ({
               steps: options?.steps,
               onBack: options?.onBack,
               onClose: options?.onClose,
+              disableAutoClose: options?.disableAutoClose,
             },
             ...(store.transactions ?? []),
           ],
