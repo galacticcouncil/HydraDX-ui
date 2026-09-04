@@ -219,13 +219,6 @@ export const SMoreWalletsDropdown = styled(Box)(
   `,
 )
 
-export const SMoreWalletsList = styled(Flex)(
-  ({ theme }) => css`
-    flex-direction: column;
-    padding-top: ${theme.space.xs};
-  `,
-)
-
 export const SEmptyState = styled(Flex)(
   ({ theme }) => css`
     align-items: center;

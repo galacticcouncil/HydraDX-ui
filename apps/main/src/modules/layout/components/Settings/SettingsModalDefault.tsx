@@ -23,7 +23,7 @@ export const SettingsModalDefault: FC<Props> = ({
   const { isConnected } = useAccount()
 
   return (
-    <ModalBody sx={{ padding: 0 }}>
+    <ModalBody noPadding>
       <SSettingsContent>
         <SSettingsSection>
           {isConnected && <PaymentAsset onClick={onPaymentAssetClick} />}

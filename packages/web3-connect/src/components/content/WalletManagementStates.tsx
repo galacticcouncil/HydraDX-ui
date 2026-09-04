@@ -4,6 +4,7 @@ import {
   WalletIcon,
 } from "@galacticcouncil/ui/assets/icons"
 import { Flex, Icon, Spinner, Text } from "@galacticcouncil/ui/components"
+import { getToken } from "@galacticcouncil/ui/utils"
 import { ChevronRight, Download } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -60,11 +61,11 @@ export const WalletErrorState: React.FC<{
             lh={1}
             font="primary"
             align="center"
-            color="text.high"
+            color={getToken("text.high")}
           >
             {t("error.title")}
           </Text>
-          <Text fs="p5" lh="m" color="text.medium" align="center">
+          <Text fs="p5" lh={1.3} color={getToken("text.medium")} align="center">
             {error || t("error.unknown")}
           </Text>
         </SCenteredTextGroup>
@@ -107,7 +108,7 @@ export const WalletChainSelectState: React.FC<{
           lh={1}
           font="primary"
           align="center"
-          color="text.high"
+          color={getToken("text.high")}
         >
           {group.title}
         </Text>
@@ -187,11 +188,11 @@ export const WalletConnectState: React.FC<{
             lh={1}
             font="primary"
             align="center"
-            color="text.high"
+            color={getToken("text.high")}
           >
             {wallet.title}
           </Text>
-          <Text fs="p5" lh="m" color="text.medium" align="center">
+          <Text fs="p5" lh={1.3} color={getToken("text.medium")} align="center">
             {!wallet.installed
               ? t("provider.walletNotInstalledDescription", {
                   wallet: wallet.title,

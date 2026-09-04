@@ -126,14 +126,14 @@ export const WalletSourceButton: React.FC<{
         </SStackedSourceLogos>
       ) : null}
       <STruncatingColumn>
-        <Text fs="p5" fw={500} color="text.high" truncate>
+        <Text fs="p5" fw={500} color={getToken("text.high")} truncate>
           {title}
         </Text>
         {subtitle && (
           <Text
             fs="p7"
             fw={500}
-            lh="xs"
+            lh={1.2}
             color={getToken("text.medium")}
             truncate
           >

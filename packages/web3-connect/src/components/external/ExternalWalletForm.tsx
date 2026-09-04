@@ -2,14 +2,11 @@ import { Close } from "@galacticcouncil/ui/assets/icons"
 import {
   AccountAvatar,
   Box,
-  BoxProps,
   Button,
-  ButtonIcon,
   CopyButton,
   Flex,
   FormError,
   Icon,
-  Input,
   Separator,
   Stack,
   Text,
@@ -39,6 +36,12 @@ import {
 } from "@/components/address-book/AddressBook.store"
 import { AddressBookButton } from "@/components/address-book/AddressBookButton"
 import { ExternalWalletFormValues } from "@/components/external/ExternalWalletForm.form"
+import {
+  SExternalAddressActionButton,
+  SExternalAddressInput,
+  SSavedExternalWalletCopyButton,
+  SSavedExternalWalletTile,
+} from "@/components/external/ExternalWalletForm.styled"
 import { WalletProviderType } from "@/config/providers"
 import { WalletMode } from "@/config/wallet"
 import { useWeb3Connect, useWeb3Enable } from "@/hooks"
@@ -255,7 +258,7 @@ const ExternalWalletAddressInput: React.FC<{
   }
 
   return (
-    <Input
+    <SExternalAddressInput
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
@@ -263,7 +266,6 @@ const ExternalWalletAddressInput: React.FC<{
       customSize="large"
       isError={isError}
       spellCheck={false}
-      sx={externalAddressInputSx}
       trailingElement={
         <Flex align="center" gap="xs" sx={{ flexShrink: 0 }}>
           {hasValue ? (
@@ -272,32 +274,33 @@ const ExternalWalletAddressInput: React.FC<{
                 size="small"
                 variant="secondary"
                 disabled={!canSave && !isSaved}
-                sx={externalAddressInlineButtonSx}
+                py="s"
+                px="m"
+                height="auto"
+                sx={{ flexShrink: 0 }}
                 onClick={canSave ? onSave : undefined}
               >
                 {isSaved
                   ? t("external.addressSaved")
                   : t("external.saveAddress")}
               </Button>
-              <ButtonIcon
+              <SExternalAddressActionButton
                 aria-label={t("external.clearAddress")}
-                sx={externalAddressActionButtonSx}
                 onClick={() => onChange("")}
               >
                 <Icon size="s" component={Close} />
-              </ButtonIcon>
+              </SExternalAddressActionButton>
             </>
           ) : (
             <>
-              <ButtonIcon
+              <SExternalAddressActionButton
                 aria-label={t("external.pasteAddress")}
-                sx={externalAddressActionButtonSx}
                 onClick={handlePaste}
               >
                 <Icon size="s" component={ArrowDownToLine} />
-              </ButtonIcon>
+              </SExternalAddressActionButton>
               <AddressBookButton
-                sx={externalAddressContactsButtonSx}
+                sx={{ flexShrink: 0 }}
                 onClick={onAddressBookOpen}
               />
             </>
@@ -318,7 +321,7 @@ const SavedExternalWallets: React.FC<{
   return (
     <Flex direction="column" gap="base">
       <Flex align="center">
-        <Text fs="p5" fw={500} color="text.high">
+        <Text fs="p5" fw={500} color={getToken("text.high")}>
           {t("external.savedWallets")}
         </Text>
       </Flex>
@@ -348,12 +351,11 @@ const SavedExternalWalletTile: React.FC<{
   const modeIcon = mode ? getWalletModeIcon(mode) : null
 
   return (
-    <Flex
+    <SSavedExternalWalletTile
       align="center"
       gap="base"
       role="button"
       tabIndex={0}
-      sx={savedExternalWalletTileSx}
       onClick={onSelect}
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget) return
@@ -383,77 +385,20 @@ const SavedExternalWalletTile: React.FC<{
         </Flex>
       </Flex>
       <Flex align="center" gap="base">
-        <Box
+        <SSavedExternalWalletCopyButton
           asChild
-          sx={savedExternalWalletCopyButtonSx}
           onClick={(event) => event.stopPropagation()}
         >
-          <CopyButton aria-label="Copy address" text={wallet.address} />
-        </Box>
+          <CopyButton
+            aria-label={t("addressBook.copyAddress")}
+            text={wallet.address}
+          />
+        </SSavedExternalWalletCopyButton>
         <AccountDeleteButton
           aria-label={t("external.removeAddress")}
           onClick={onRemove}
         />
       </Flex>
-    </Flex>
+    </SSavedExternalWalletTile>
   )
-}
-
-const savedExternalWalletTileSx: BoxProps["sx"] = {
-  p: "base",
-  borderRadius: "m",
-  borderWidth: 1,
-  borderStyle: "solid",
-  borderColor: getToken("details.borders"),
-  bg: getToken("surfaces.containers.dim.dimOnBg"),
-  cursor: "pointer",
-  transition: "colors",
-  "&:hover": {
-    borderColor: getToken("buttons.secondary.outline.outline"),
-    bg: getToken("buttons.secondary.outline.fill"),
-  },
-}
-
-const externalAddressInputSx: BoxProps["sx"] = {
-  minWidth: 0,
-  input: {
-    minWidth: 0,
-    textOverflow: "ellipsis",
-  },
-}
-
-const externalAddressActionButtonSx: BoxProps["sx"] = {
-  color: getToken("text.medium"),
-  flexShrink: 0,
-  p: "xs",
-  "&:hover:not(:disabled)": {
-    color: getToken("text.high"),
-  },
-}
-
-const externalAddressInlineButtonSx: BoxProps["sx"] = {
-  py: "s",
-  px: "m",
-  height: "auto",
-  flexShrink: 0,
-}
-
-const externalAddressContactsButtonSx: BoxProps["sx"] = {
-  py: "s",
-  px: "m",
-  height: "auto",
-  flexShrink: 0,
-}
-
-const savedExternalWalletCopyButtonSx: BoxProps["sx"] = {
-  display: "flex",
-  color: getToken("text.medium"),
-  cursor: "pointer",
-  flexShrink: 0,
-  "&[data-copied='true']": {
-    color: getToken("accents.success.emphasis"),
-  },
-  "&:hover:not(:disabled)": {
-    color: getToken("text.high"),
-  },
 }

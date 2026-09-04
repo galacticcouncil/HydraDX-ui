@@ -18,11 +18,7 @@ import {
   Text,
 } from "@galacticcouncil/ui/components"
 import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
-import {
-  formatCurrency,
-  shortenAccountAddress,
-  stringEquals,
-} from "@galacticcouncil/utils"
+import { shortenAccountAddress, stringEquals } from "@galacticcouncil/utils"
 import {
   COMPATIBLE_WALLET_PROVIDERS,
   useAccount,
@@ -182,7 +178,7 @@ export const UserMenu: FC<Props> = ({
               {t("userMenu.connectedWallets")}
             </Text>
           </Flex>
-          <MicroButton sx={{ py: "s" }} asChild>
+          <MicroButton py="s" asChild>
             <Link to="/wallet" onClick={() => onOpenChange(false)}>
               {t("userMenu.goToWallet")}
             </Link>
@@ -238,7 +234,7 @@ export const UserMenu: FC<Props> = ({
           const accountSummary = hasPositiveBalance
             ? t("userMenu.accountsBalance", {
                 count: providerAccounts.length,
-                balance: formatCurrency(providerBalance),
+                balance: providerBalance,
               })
             : t("userMenu.accountsCount", {
                 count: providerAccounts.length,

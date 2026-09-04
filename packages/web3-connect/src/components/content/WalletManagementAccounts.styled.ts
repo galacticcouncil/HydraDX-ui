@@ -86,7 +86,7 @@ export const SAccountTileCopyButton = styled(Box)(
     cursor: pointer;
     flex-shrink: 0;
 
-    mnargin-left: auto;
+    margin-left: auto;
 
     &[data-copied="true"] {
       color: ${theme.accents.success.emphasis};

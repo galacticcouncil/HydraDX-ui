@@ -1,6 +1,6 @@
 import { Search, WalletIcon } from "@galacticcouncil/ui/assets/icons"
 import { Flex, Icon, ScrollArea, Text } from "@galacticcouncil/ui/components"
-import { pxToRem } from "@galacticcouncil/ui/utils"
+import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react"
 import {
   useCallback,
@@ -29,7 +29,6 @@ import {
   SModalBody,
   SModalHeader,
   SMoreWalletsDropdown,
-  SMoreWalletsList,
   SRightColumn,
   SRightColumnBody,
   SRightPanelFrame,
@@ -490,10 +489,14 @@ export const WalletManagementContent = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: showAccountPanel ? pxToRem(10) : "base",
+                    gap: showAccountPanel ? "m" : "base",
                   }}
                 >
-                  <SSourceSectionLabel fs="p5" fw={500} color="text.low">
+                  <SSourceSectionLabel
+                    fs="p5"
+                    fw={500}
+                    color={getToken("text.low")}
+                  >
                     {t("provider.installedAndRecent")}
                   </SSourceSectionLabel>
 
@@ -603,7 +606,7 @@ export const WalletManagementContent = () => {
                       <SSourceOtherSectionLabel
                         fs="p5"
                         fw={500}
-                        color="text.low"
+                        color={getToken("text.low")}
                         showAccountPanel={showAccountPanel}
                       >
                         {showAccountPanel
@@ -627,7 +630,7 @@ export const WalletManagementContent = () => {
                             }
                           />
                           {isMoreWalletsListOpen && (
-                            <SMoreWalletsList>
+                            <Flex direction="column" pt="xs">
                               {visibleOtherWalletGroups.map((group) =>
                                 group.wallets.length === 1 ? (
                                   <WalletProviderSourceButton
@@ -665,7 +668,7 @@ export const WalletManagementContent = () => {
                                   />
                                 ),
                               )}
-                            </SMoreWalletsList>
+                            </Flex>
                           )}
                         </SMoreWalletsDropdown>
                       ) : (
@@ -850,7 +853,7 @@ export const WalletManagementContent = () => {
                         )
                       ) : (
                         <SEmptyState>
-                          <Text fs="p4" color="text.medium">
+                          <Text fs="p4" color={getToken("text.medium")}>
                             {t("account.noResults")}
                           </Text>
                         </SEmptyState>

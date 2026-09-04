@@ -29,7 +29,7 @@ export const AddressBook: FC<AddressBookProps> = ({
           <Label
             fw={500}
             fs="p5"
-            lh="s"
+            lh={1.2}
             color={getToken("text.medium")}
             htmlFor={id}
           >

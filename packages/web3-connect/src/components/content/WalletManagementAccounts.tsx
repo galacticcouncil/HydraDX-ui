@@ -51,7 +51,7 @@ export const WalletAccountSection: React.FC<{
   <Flex direction="column" gap="s">
     <STruncatingRow gap="xs">
       {logo && <SSectionLogo src={logo} alt="" lazy={false} />}
-      <Text fs="p4" fw={500} color="text.high" truncate>
+      <Text fs="p4" fw={500} color={getToken("text.high")} truncate>
         {title}
       </Text>
     </STruncatingRow>
@@ -106,7 +106,7 @@ export const WalletAccountTile: React.FC<{
               {modeIcon && (
                 <SAccountModeIcon src={modeIcon} alt="" lazy={false} />
               )}
-              <Text fs="p4" fw={500} color="text.high" truncate>
+              <Text fs="p4" fw={500} color={getToken("text.high")} truncate>
                 {account.name}
               </Text>
               {isActive && (
@@ -115,7 +115,7 @@ export const WalletAccountTile: React.FC<{
                 </Chip>
               )}
             </STruncatingRow>
-            <SAccountTileBalance fs="p4" fw={500} color="text.high">
+            <SAccountTileBalance fs="p4" fw={500} color={getToken("text.high")}>
               {isBalanceLoading && account.balance === undefined
                 ? ""
                 : account.balance !== undefined
@@ -139,7 +139,7 @@ export const WalletAccountTile: React.FC<{
               onKeyDown={(event) => event.stopPropagation()}
             >
               <CopyButton
-                aria-label="Copy address"
+                aria-label={t("addressBook.copyAddress")}
                 text={account.displayAddress}
                 iconSize="xs"
               />

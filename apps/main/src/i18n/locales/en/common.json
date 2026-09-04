@@ -440,7 +440,7 @@
   "userMenu.disconnect": "Disconnect {{provider}}",
   "userMenu.logOutAll": "Log out all",
   "userMenu.accountsCount": "{{count}} Accounts",
-  "userMenu.accountsBalance": "{{count}} Accounts • {{balance}}",
+  "userMenu.accountsBalance": "{{count}} Accounts • {{balance, currency}}",
   "userMenu.accountsBalanceLoading": "{{count}} Accounts • Loading balance",
   "userMenu.active": "ACTIVE",
   "userMenu.manageWallets": "Manage wallets"
