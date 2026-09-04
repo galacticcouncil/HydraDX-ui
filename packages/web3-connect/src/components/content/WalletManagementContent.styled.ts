@@ -39,8 +39,7 @@ export const SWalletManagementShell = styled(Box, {
 
     ${mq("md")} {
       width: ${showAccountPanel ? pxToRem(650) : pxToRem(452)};
-      height: ${showAccountPanel ? "min(720px, 80vh)" : "80vh"};
-      max-height: 80vh;
+      max-height: 80dvh;
     }
   `,
 )

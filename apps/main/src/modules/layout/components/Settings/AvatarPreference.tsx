@@ -8,11 +8,9 @@ import {
   MenuItemLabel,
   ToggleGroup,
   ToggleGroupItem,
-  Tooltip,
   useAvatarStyleStore,
 } from "@galacticcouncil/ui/components"
-import { useBreakpoints } from "@galacticcouncil/ui/theme"
-import { createElement, FC } from "react"
+import { FC } from "react"
 import { useTranslation } from "react-i18next"
 
 const getIconByStyle = (style: AvatarStyle) =>
@@ -23,7 +21,6 @@ const avatarStyles: AvatarStyle[] = ["identican", "emoji"]
 export const AvatarPreference: FC = () => {
   const { t } = useTranslation()
   const { avatarStyle, setAvatarStyle } = useAvatarStyleStore()
-  const { isMobile } = useBreakpoints()
 
   return (
     <MenuItem>
@@ -42,16 +39,8 @@ export const AvatarPreference: FC = () => {
           onValueChange={(value) => setAvatarStyle(value as AvatarStyle)}
         >
           {avatarStyles.map((style) => (
-            <ToggleGroupItem key={style} value={style}>
-              <Tooltip
-                text={isMobile ? undefined : t(`avatar.${style}`)}
-                side="top"
-                size="small"
-                sideOffset={10}
-                asChild
-              >
-                {createElement(getIconByStyle(style))}
-              </Tooltip>
+            <ToggleGroupItem key={style} value={style} sx={{ px: "m" }}>
+              {t(`avatar.${style}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

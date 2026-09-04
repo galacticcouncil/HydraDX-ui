@@ -31,8 +31,8 @@ export const SettingsModalDefault: FC<Props> = ({
         </SSettingsSection>
         <ModalContentDivider />
         <SSettingsSection>
-          <ThemePreference />
           <AvatarPreference />
+          <ThemePreference />
         </SSettingsSection>
       </SSettingsContent>
     </ModalBody>
