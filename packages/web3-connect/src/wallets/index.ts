@@ -19,7 +19,12 @@ import { Slush } from "@/wallets/Slush"
 import { Solflare } from "@/wallets/Solflare"
 import { SubWallet, SubWalletEvm, SubWalletH160 } from "@/wallets/SubWallet"
 import { Suiet } from "@/wallets/Suiet"
-import { Talisman, TalismanEvm, TalismanH160 } from "@/wallets/Talisman"
+import {
+  Talisman,
+  TalismanEvm,
+  TalismanH160,
+  TalismanSol,
+} from "@/wallets/Talisman"
 
 export {
   AlephZero,
@@ -48,6 +53,7 @@ export {
   Talisman,
   TalismanEvm,
   TalismanH160,
+  TalismanSol,
 }
 
 const wallets = [
@@ -78,6 +84,7 @@ const wallets = [
   // Solana
   new Phantom(),
   new Solflare(),
+  new TalismanSol(),
   new BraveWalletSol(),
 
   // Sui

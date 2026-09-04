@@ -34,7 +34,7 @@ Single workspace dev/build/lint: `yarn workspace @galacticcouncil/<name> <script
 
 The root `yarn i18n` task is wired through Turborepo but has no concrete implementation in any package today — translation files in `apps/main/src/i18n/locales/` are edited by hand.
 
-There is no test runner configured in this repo.
+Tests run on Vitest: `yarn test` from the root (Turborepo `test` task, run in CI). `packages/web3-connect` and `packages/ui` each have a `vitest.config.ts` and a `test: vitest run` script; other workspaces have no tests yet.
 
 ## Code style
 
@@ -126,7 +126,7 @@ Turborepo (`turbo.json`) handles ordering via `dependsOn: ["^build"]`. Within a 
 
 ## Testing
 
-There is no automated test suite in this repo. UI changes must be verified manually:
+Vitest covers pure logic only (`packages/web3-connect`, `packages/ui`); there is no component or e2e suite, so UI changes must still be verified manually:
 
 - **Storybook** for `packages/ui` components: `yarn workspace @galacticcouncil/ui dev` (port 6006).
 - **App** for end-to-end behavior: `yarn workspace @galacticcouncil/main dev` and exercise the affected flow in a browser.

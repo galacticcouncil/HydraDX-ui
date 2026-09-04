@@ -12,7 +12,8 @@
     "preview": "turbo preview",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
-    "i18n": "turbo i18n"
+    "i18n": "turbo i18n",
+    "test": "turbo test"
   },
   "resolutions": {
     "polkadot-api": "^2.1.7",

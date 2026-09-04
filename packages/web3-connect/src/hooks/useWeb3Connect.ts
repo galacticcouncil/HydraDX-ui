@@ -4,15 +4,13 @@ import { omit, uniqueBy } from "remeda"
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
+import { Web3ConnectModalPage } from "@/config/modal"
+import { WalletProviderType } from "@/config/providers"
 import {
-  EVM_PROVIDERS,
-  SOLANA_PROVIDERS,
-  SUBSTRATE_H160_PROVIDERS,
-  SUBSTRATE_PROVIDERS,
-  SUI_PROVIDERS,
-  WalletProviderType,
-} from "@/config/providers"
-import { WalletMode } from "@/config/wallet"
+  COMPATIBLE_WALLET_PROVIDERS,
+  PROVIDERS_BY_WALLET_MODE,
+  WalletMode,
+} from "@/config/wallet"
 import { getUniqueAccountKey } from "@/utils/wallet"
 import { ExternalWallet, getWallet } from "@/wallets"
 import { BaseSubstrateWallet } from "@/wallets/BaseSubstrateWallet"
@@ -26,26 +24,7 @@ export enum WalletProviderStatus {
 
 export { WalletMode } from "@/config/wallet"
 
-export const COMPATIBLE_WALLET_PROVIDERS: WalletProviderType[] = [
-  ...SUBSTRATE_PROVIDERS,
-  ...EVM_PROVIDERS,
-]
-
-export const PROVIDERS_BY_WALLET_MODE: Record<
-  WalletMode,
-  WalletProviderType[]
-> = {
-  [WalletMode.Default]: COMPATIBLE_WALLET_PROVIDERS,
-  [WalletMode.EVM]: EVM_PROVIDERS,
-  [WalletMode.Substrate]: SUBSTRATE_PROVIDERS,
-  [WalletMode.SubstrateEVM]: [...SUBSTRATE_PROVIDERS, ...EVM_PROVIDERS],
-  [WalletMode.SubstrateH160]: SUBSTRATE_H160_PROVIDERS,
-  [WalletMode.Solana]: SOLANA_PROVIDERS,
-  [WalletMode.Sui]: SUI_PROVIDERS,
-  [WalletMode.Near]: [],
-  [WalletMode.Zcash]: [],
-  [WalletMode.Unknown]: [],
-}
+export { COMPATIBLE_WALLET_PROVIDERS, PROVIDERS_BY_WALLET_MODE }
 
 export type StoredAccount = {
   name: string
@@ -62,12 +41,15 @@ export type StoredAccount = {
 
 export type Account = StoredAccount & {
   displayAddress: string
-  isIncompatible?: boolean
+  canUseOnHydration: boolean
 }
 
 type Web3ConnectModalMeta = {
   title?: string
   description?: string
+  hideExternalWallet?: boolean
+  initialPage?: Web3ConnectModalPage
+  initialProvider?: WalletProviderType
 }
 
 export type WalletProviderEntry = {
@@ -79,6 +61,7 @@ export type WalletProviderState = {
   open: boolean
   providers: WalletProviderEntry[]
   recentProvider: WalletProviderType | null
+  recentlyDisconnectedProviders: WalletProviderType[]
   account: StoredAccount | null
   accounts: StoredAccount[]
   mode: WalletMode
@@ -106,6 +89,7 @@ const initialState: WalletProviderState = {
   open: false,
   providers: [],
   recentProvider: null,
+  recentlyDisconnectedProviders: [],
   account: null,
   accounts: [],
   mode: WalletMode.Default,
@@ -234,28 +218,51 @@ export const useWeb3Connect = create<WalletProviderStore>()(
           (type) => type === givenProvider,
         )
 
-        set((state) => ({
-          ...state,
-          ...initialState,
-          account:
+        set((state) => {
+          const isDisconnectingActive =
             !provider || provider === state.account?.provider
-              ? null
-              : state.account,
-          accounts: provider
+          const remainingAccounts = provider
             ? state.accounts.filter((a) => a.provider !== provider)
-            : [],
-          providers: provider
+            : []
+          const remainingProviders = provider
             ? state.providers.filter((p) => p.type !== provider)
-            : [],
-          recentProvider: null,
-          mode: state.mode,
-          open: state.open,
-        }))
+            : []
+          const nextAccount = isDisconnectingActive
+            ? (remainingAccounts[0] ?? null)
+            : state.account
+
+          if (nextAccount) {
+            const wallet = getWallet(nextAccount.provider)
+            if (wallet instanceof BaseSubstrateWallet) {
+              const signerAddress = nextAccount.isMultisig
+                ? (nextAccount.multisigSignerAddress ?? nextAccount.address)
+                : nextAccount.address
+              wallet.setSigner(signerAddress)
+            }
+          }
+
+          return {
+            ...state,
+            ...initialState,
+            account: nextAccount,
+            accounts: remainingAccounts,
+            providers: remainingProviders,
+            recentProvider: null,
+            recentlyDisconnectedProviders: provider
+              ? uniqueBy(
+                  [provider, ...state.recentlyDisconnectedProviders],
+                  (type) => type,
+                ).slice(0, 3)
+              : [],
+            mode: state.mode,
+            open: state.open,
+          }
+        })
       },
     }),
     {
       name: "web3-connect",
-      partialize: omit(["open", "error", "accounts"]),
+      partialize: omit(["open", "error", "accounts", "mode", "meta"]),
       version: 10,
     },
   ),

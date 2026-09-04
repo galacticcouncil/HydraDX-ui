@@ -13,7 +13,7 @@ import {
   HDXClassic,
   HistoryIcon,
   Repeat2Icon,
-  WalletCardsIcon,
+  WalletIcon,
   WavesIcon,
 } from "@galacticcouncil/ui/assets/icons"
 import { neckwork } from "@galacticcouncil/utils"
@@ -162,14 +162,14 @@ export const NAVIGATION: NavigationItem[] = [
   {
     key: "portfolio",
     to: LINKS.portfolio,
-    icon: WalletCardsIcon,
+    icon: WalletIcon,
     defaultChild: LINKS.portfolio,
     children: [
       {
         key: "portfolioOverview",
         to: LINKS.portfolioOverview,
         exact: true,
-        icon: WalletCardsIcon,
+        icon: WalletIcon,
       },
       {
         key: "portfolioTracked",

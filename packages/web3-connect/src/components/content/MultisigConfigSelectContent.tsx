@@ -58,7 +58,7 @@ export const MultisigConfigSelectContent = () => {
       <ModalHeader
         title={t("multisig.configSelect.title")}
         align="center"
-        onBack={() => setPage(Web3ConnectModalPage.ProviderSelect)}
+        onBack={() => setPage(Web3ConnectModalPage.Wallets)}
       />
       <ModalBody scrollable>
         <Grid gap="base">

@@ -1,39 +1,29 @@
 import { useEffect, useRef, useState } from "react"
-import { prop } from "remeda"
 
-import { Web3ConnectModalPage } from "@/config/modal"
-import {
-  useWeb3Connect,
-  WalletMode,
-  WalletProviderStatus,
-} from "@/hooks/useWeb3Connect"
+import { isModalPage, Web3ConnectModalPage } from "@/config/modal"
+import { useWeb3Connect, WalletProviderStatus } from "@/hooks/useWeb3Connect"
 
+/** These drive their own navigation; a connection must not yank the user off them. */
 const MULTISIG_PAGES: Web3ConnectModalPage[] = [
   Web3ConnectModalPage.MultisigSetup,
   Web3ConnectModalPage.MultisigConfigSelect,
   Web3ConnectModalPage.MultisigSignerSelect,
 ]
 
-const getInitialPage = (mode: WalletMode) => {
-  const { getConnectedProviders, accounts } = useWeb3Connect.getState()
-
-  const connectedProviders = getConnectedProviders(mode)
-  const connectedProviderTypes = connectedProviders.map(prop("type"))
-
-  const connectedAccounts = accounts.filter((account) =>
-    connectedProviderTypes.includes(account.provider),
-  )
-
-  if (connectedAccounts.length > 0) {
-    return Web3ConnectModalPage.AccountSelect
-  }
-
-  return Web3ConnectModalPage.ProviderSelect
-}
-
-export const useWeb3ConnectInit = ({ mode }: { mode: WalletMode }) => {
+/**
+ * Which screen the modal opens on, and the one transition it makes on its own:
+ * connecting or fully disconnecting a wallet returns to the wallets screen.
+ *
+ * Connection state is not a page. `WalletManagementContent` derives what to
+ * show - accounts, an error, a connecting spinner - from the store directly.
+ */
+export const useWeb3ConnectInit = ({
+  initialPage,
+}: {
+  initialPage?: Web3ConnectModalPage
+}) => {
   const [page, setPage] = useState<Web3ConnectModalPage>(() =>
-    getInitialPage(mode),
+    isModalPage(initialPage) ? initialPage : Web3ConnectModalPage.Wallets,
   )
 
   const pageRef = useRef(page)
@@ -43,36 +33,22 @@ export const useWeb3ConnectInit = ({ mode }: { mode: WalletMode }) => {
 
   useEffect(() => {
     return useWeb3Connect.subscribe(
-      ({ recentProvider, error, getStatus, providers }) => {
+      ({ recentProvider, getStatus, providers }) => {
+        if (MULTISIG_PAGES.includes(pageRef.current)) return
+
         const status = getStatus(recentProvider)
+        const isConnecting =
+          status === WalletProviderStatus.Connected ||
+          status === WalletProviderStatus.Pending
+        const isFullyDisconnected =
+          status === WalletProviderStatus.Disconnected && providers.length === 0
 
-        const isConnected = status === WalletProviderStatus.Connected
-        const isDisconnected = status === WalletProviderStatus.Disconnected
-        const isPending = status === WalletProviderStatus.Pending
-        const isError = status === WalletProviderStatus.Error
-
-        const hasConnectedProviders = providers.length > 0
-
-        if (isError && error) {
-          return setPage(Web3ConnectModalPage.Error)
-        }
-
-        // Don't auto-navigate away from multisig setup/signer-select pages
-        // when a wallet connects — those pages manage navigation themselves.
-        if (MULTISIG_PAGES.includes(pageRef.current)) {
-          return
-        }
-
-        if (isConnected || isPending) {
-          return setPage(Web3ConnectModalPage.AccountSelect)
-        }
-
-        if (isDisconnected && !hasConnectedProviders) {
-          return setPage(Web3ConnectModalPage.ProviderSelect)
+        if (isConnecting || isFullyDisconnected) {
+          setPage(Web3ConnectModalPage.Wallets)
         }
       },
     )
-  }, [setPage])
+  }, [])
 
   return { page, setPage }
 }

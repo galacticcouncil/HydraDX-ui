@@ -10,7 +10,7 @@ import { toStoredAccount } from "@/utils"
 import { ExternalWallet, getWallet } from "@/wallets"
 import { BaseSubstrateWallet } from "@/wallets/BaseSubstrateWallet"
 
-export const useWeb3EagerEnable = (enabled = true) => {
+export const useWeb3EagerEnable = () => {
   const { enable, disconnect } = useWeb3Enable()
   const { providers, setAccount } = useWeb3Connect(
     useShallow(pick(["providers", "setAccount"])),
@@ -21,7 +21,6 @@ export const useWeb3EagerEnable = (enabled = true) => {
   const hasTriedEagerEnable = useRef(false)
 
   useMount(() => {
-    if (!enabled) return
     window.dispatchEvent(new Event("eip6963:requestProvider"))
     setProvidersRequested(true)
   })

@@ -33,7 +33,7 @@ export const MultisigSetupContent = () => {
       <ModalHeader
         title={t("multisig.setup.title")}
         align="center"
-        onBack={() => setPage(Web3ConnectModalPage.ProviderSelect)}
+        onBack={() => setPage(Web3ConnectModalPage.Wallets)}
       />
       <ModalBody scrollable={false} noPadding>
         <MultisigSetupNew

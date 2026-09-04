@@ -4,7 +4,7 @@ import { css, styled } from "@galacticcouncil/ui/utils"
 export const SConnectedButton = styled(Button)(
   ({ theme }) => css`
     background: ${theme.buttons.outlineDark.rest};
-    gap: ${theme.space.s};
+    gap: ${theme.space.base};
     padding: ${theme.space.base};
 
     &:not(:disabled):hover,

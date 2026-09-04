@@ -1,9 +1,21 @@
+/**
+ * The screens the modal can show. One member per screen that actually renders
+ * differently - connection state is derived inside `WalletManagementContent`,
+ * not encoded here.
+ */
 export enum Web3ConnectModalPage {
-  ProviderSelect = "ProviderSelect",
+  Wallets = "Wallets",
   ExternalWallet = "ExternalWallet",
-  AccountSelect = "AccountSelect",
   MultisigSetup = "MultisigSetup",
   MultisigConfigSelect = "MultisigConfigSelect",
   MultisigSignerSelect = "MultisigSignerSelect",
-  Error = "Error",
 }
+
+/**
+ * `meta.initialPage` is persisted, so it can outlive a page it named. Anything
+ * unrecognised falls back to the wallets screen rather than rendering nothing.
+ */
+export const isModalPage = (
+  page: string | undefined,
+): page is Web3ConnectModalPage =>
+  !!page && (Object.values(Web3ConnectModalPage) as string[]).includes(page)

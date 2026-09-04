@@ -1,4 +1,4 @@
-import { ClassicWallet, Search } from "@galacticcouncil/ui/assets/icons"
+import { Search, WalletIcon } from "@galacticcouncil/ui/assets/icons"
 import TrackedWalletImage from "@galacticcouncil/ui/assets/images/TrackedWallet.webp"
 import {
   Button,
@@ -61,7 +61,7 @@ export const TrackedWallets: FC<Props> = ({
             outline
             onClick={() => setIsManageOpen(true)}
           >
-            <Icon size="xs" component={ClassicWallet} />
+            <Icon size="xs" component={WalletIcon} />
             {t("myAssets.tracked.manage")}
           </Button>
           {onSearchPhraseChange && (

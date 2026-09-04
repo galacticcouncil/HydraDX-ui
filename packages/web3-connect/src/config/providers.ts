@@ -22,6 +22,7 @@ export enum WalletProviderType {
   Talisman = "talisman",
   TalismanEvm = "talisman-evm",
   TalismanH160 = "talisman-h160",
+  TalismanSol = "talisman-sol",
   TrustWallet = "trustwallet",
   Slush = "slush",
   Suiet = "suiet",
@@ -36,11 +37,6 @@ export const isWalletProviderType = (
     provider as WalletProviderType,
   )
 }
-
-export const TALISMAN_PROVIDERS: WalletProviderType[] = [
-  WalletProviderType.Talisman,
-  WalletProviderType.TalismanEvm,
-]
 
 export const EVM_PROVIDERS: WalletProviderType[] = [
   WalletProviderType.MetaMask,
@@ -75,6 +71,7 @@ export const SUBSTRATE_H160_PROVIDERS: WalletProviderType[] = [
 export const SOLANA_PROVIDERS: WalletProviderType[] = [
   WalletProviderType.Phantom,
   WalletProviderType.Solflare,
+  WalletProviderType.TalismanSol,
   WalletProviderType.BraveWalletSol,
 ]
 
@@ -82,10 +79,6 @@ export const SUI_PROVIDERS: WalletProviderType[] = [
   WalletProviderType.Suiet,
   WalletProviderType.Slush,
   WalletProviderType.PhantomSui,
-]
-
-export const ALTERNATIVE_PROVIDERS: WalletProviderType[] = [
-  WalletProviderType.ExternalWallet,
 ]
 
 export const NOVA_WALLET_BLACKLISTED_PROVIDERS: WalletProviderType[] = [

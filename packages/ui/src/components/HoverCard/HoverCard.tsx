@@ -25,7 +25,7 @@ const HoverCardContent: FC<
   align = "start",
   sideOffset = 4,
   collisionPadding = 4,
-  p = 12,
+  p = "base",
   children,
   ref,
   ...props

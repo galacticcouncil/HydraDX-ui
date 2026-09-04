@@ -3,9 +3,7 @@ import { getToken } from "@galacticcouncil/ui/utils"
 import { FC, useId } from "react"
 import { useTranslation } from "react-i18next"
 
-import { useAddressStore } from "@/components/address-book/AddressBook.store"
 import { AddressBookButton } from "@/components/address-book/AddressBookButton"
-import { TALISMAN_PROVIDERS } from "@/config/providers"
 import i18n from "@/i18n"
 
 export type AddressBookProps = {
@@ -23,9 +21,6 @@ export const AddressBook: FC<AddressBookProps> = ({
 }) => {
   const { t } = useTranslation("translations", { i18n })
   const id = useId()
-  const { addresses } = useAddressStore()
-  const provider = addresses.find((a) => a.address === address)?.provider
-  const isTalisman = !!provider && TALISMAN_PROVIDERS.includes(provider)
 
   return (
     <Flex py="xl" direction="column" justify="flex-end">
@@ -46,7 +41,6 @@ export const AddressBook: FC<AddressBookProps> = ({
           id={id}
           value={address}
           onChange={onAddressChange}
-          avatarTheme={isTalisman ? "talisman" : "auto"}
           placeholder={t("addressBook.placeholder")}
           isError={!!error}
         />

@@ -35,7 +35,7 @@ export const ExternalWalletContent = () => {
         title={t("external.viewAccount")}
         description={t("external.description")}
         align="center"
-        onBack={() => setPage(Web3ConnectModalPage.ProviderSelect)}
+        onBack={() => setPage(Web3ConnectModalPage.Wallets)}
       />
       <ModalBody>
         <ExternalWalletForm

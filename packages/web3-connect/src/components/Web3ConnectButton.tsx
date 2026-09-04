@@ -1,4 +1,4 @@
-import { CaretDown, Wallet } from "@galacticcouncil/ui/assets/icons"
+import { CaretDown, WalletIcon } from "@galacticcouncil/ui/assets/icons"
 import {
   AccountAvatar,
   Button,
@@ -14,6 +14,7 @@ import { FC, Ref } from "react"
 import { useTranslation } from "react-i18next"
 
 import { AccountAddressBookIdentity } from "@/components/account/AccountIdentity"
+import { ShortAddress } from "@/components/account/ShortAddress"
 import {
   SConnectedButton,
   SHoverText,
@@ -28,16 +29,21 @@ import { useAccount } from "@/hooks/useAccount"
 import { useActiveMultisigConfig } from "@/hooks/useMultisigConfigs"
 import { useWeb3ConnectModal } from "@/hooks/useWeb3ConnectModal"
 import i18n from "@/i18n"
-import { getAccountAvatarTheme } from "@/utils"
 
 export type Web3ConnectButtonProps = ButtonProps & {
-  allowIncompatibleAccounts?: boolean
+  /**
+   * Set on buttons that start a Hydration action. The connected account is
+   * then only shown if Hydration can use it - otherwise the button falls back
+   * to prompting for a different account. Connecting itself is never
+   * restricted, so plain connect buttons leave this off.
+   */
+  requiresHydrationAccount?: boolean
   mode?: WalletMode
 }
 
 export const Web3ConnectButton: FC<
   Web3ConnectButtonProps & { ref?: Ref<HTMLButtonElement> }
-> = ({ ref, allowIncompatibleAccounts = false, mode, ...props }) => {
+> = ({ ref, requiresHydrationAccount = false, mode, ...props }) => {
   const { account } = useAccount()
   const { toggle } = useWeb3ConnectModal()
 
@@ -48,9 +54,10 @@ export const Web3ConnectButton: FC<
     return hasConnectedProvider && !state.account
   })
 
-  const isIncompatible = !allowIncompatibleAccounts && !!account?.isIncompatible
+  const needsDifferentAccount =
+    requiresHydrationAccount && !!account && !account.canUseOnHydration
 
-  if (isIncompatible || isConnectedWithoutAccount) {
+  if (needsDifferentAccount || isConnectedWithoutAccount) {
     return (
       <SelectAccountButton ref={ref} onClick={() => toggle(mode)} {...props} />
     )
@@ -84,7 +91,7 @@ const SelectAccountButton: FC<ConnectButtonProps> = ({
   const { t } = useTranslation("translations", { i18n })
   return (
     <Button ref={ref} onClick={onClick} {...props} variant="accent" outline>
-      <Icon size="m" component={Wallet} mr="s" />
+      <Icon size="m" component={WalletIcon} mr="s" />
       <Text fs="p3">{t("button.selectAccount")}</Text>
     </Button>
   )
@@ -98,7 +105,7 @@ const ConnectWalletButton: FC<ConnectButtonProps> = ({
   const { t } = useTranslation("translations", { i18n })
   return (
     <Button ref={ref} onClick={onClick} {...props}>
-      <Icon size="m" component={Wallet} mr="s" />
+      <Icon size="m" component={WalletIcon} mr="s" />
       <Text fs="p3">{t("button.connect")}</Text>
     </Button>
   )
@@ -128,11 +135,7 @@ const ConnectedAccountButton: React.FC<ConnectedMultisigAccountButtonProps> = ({
 
   return (
     <SConnectedButton ref={ref} onClick={onClick} {...props} variant="tertiary">
-      <AccountAvatar
-        size={24}
-        address={account.displayAddress}
-        theme={getAccountAvatarTheme(account)}
-      />
+      <AccountAvatar address={account.displayAddress} size={24} />
       <Flex direction="column">
         <Flex gap="xs" align="flex-end">
           <Text fs="p3" lh={1.2} truncate={pxToRem(140)}>
@@ -154,14 +157,17 @@ const ConnectedAccountButton: React.FC<ConnectedMultisigAccountButtonProps> = ({
               />
             </Text>
             <Text as="span">
-              {shortenAccountAddress(account.multisigSignerAddress)}
+              <ShortAddress
+                address={account.multisigSignerAddress}
+                length={6}
+              />
             </Text>
           </SHoverText>
         ) : (
           shortDisplayAddr &&
           !stringEquals(account.name, shortDisplayAddr) && (
             <Text fs="p6" color={getToken("text.medium")}>
-              {shortDisplayAddr}
+              <ShortAddress address={account.displayAddress} length={6} />
             </Text>
           )
         )}

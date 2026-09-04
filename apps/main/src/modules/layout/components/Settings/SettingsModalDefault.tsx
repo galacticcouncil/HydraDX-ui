@@ -2,6 +2,7 @@ import { ModalBody, ModalContentDivider } from "@galacticcouncil/ui/components"
 import { useAccount } from "@galacticcouncil/web3-connect"
 import { FC } from "react"
 
+import { AvatarPreference } from "@/modules/layout/components/Settings/AvatarPreference"
 import { Contacts } from "@/modules/layout/components/Settings/Contacts"
 import { PaymentAsset } from "@/modules/layout/components/Settings/PaymentAsset"
 import {
@@ -31,6 +32,7 @@ export const SettingsModalDefault: FC<Props> = ({
         <ModalContentDivider />
         <SSettingsSection>
           <ThemePreference />
+          <AvatarPreference />
         </SSettingsSection>
       </SSettingsContent>
     </ModalBody>

@@ -1,9 +1,7 @@
-import { AccountAvatarTheme } from "@galacticcouncil/ui/components"
 import {
   EvmAddr,
   isEvmParachainAccount,
   isH160Address,
-  METADATA_CDN_URL,
   NearAddr,
   safeConvertAddressSS58,
   safeConvertH160toSS58,
@@ -23,53 +21,24 @@ import {
   SUI_PROVIDERS,
   WalletProviderType,
 } from "@/config/providers"
-import {
-  WALLET_ACCOUNT_FILTER_OPTIONS,
-  WalletAccountFilterOption,
-  WalletAccountFilterOptionOverride,
-  WalletMode,
+import { WalletMode } from "@/config/wallet"
+
+/**
+ * The mode lookups live in the registry now. Re-exported here because every
+ * call site still imports them from `@/utils`.
+ */
+export {
+  getWalletModeIcon,
+  getWalletModeName,
+  getWalletModesByProviderType,
 } from "@/config/wallet"
 import {
   Account,
   COMPATIBLE_WALLET_PROVIDERS,
-  PROVIDERS_BY_WALLET_MODE,
   StoredAccount,
   useWeb3Connect,
 } from "@/hooks/useWeb3Connect"
 import { Wallet, WalletAccount } from "@/types/wallet"
-
-const walletModeNames = {
-  [WalletMode.Substrate]: "Polkadot",
-  [WalletMode.EVM]: "EVM",
-  [WalletMode.Solana]: "Solana",
-  [WalletMode.Sui]: "Sui",
-  [WalletMode.SubstrateH160]: "Substrate H160",
-  [WalletMode.Near]: "NEAR",
-  [WalletMode.Zcash]: "Zcash",
-} satisfies Record<WalletAccountFilterOptionOverride, string>
-
-export const getWalletModeName = (
-  mode: WalletAccountFilterOptionOverride,
-): string => walletModeNames[mode]
-
-export const addressToPublicKey = (address: string): string => {
-  switch (true) {
-    case EvmAddr.isValid(address):
-      return address.toLowerCase()
-    case Ss58Addr.isValid(address):
-      return safeConvertSS58toPublicKey(address)
-    case SolanaAddr.isValid(address):
-      return address
-    case SuiAddr.isValid(address):
-      return address
-    case NearAddr.isValid(address):
-      return address
-    case ZecAddr.isValid(address):
-      return address
-    default:
-      return ""
-  }
-}
 
 const toStoredSolanaAccount = ({
   address,
@@ -144,22 +113,19 @@ export const toAccount = (account: StoredAccount): Account => {
     displayAddress: isEvmParachainAccount(account.address)
       ? safeConvertSS58toH160(account.address)
       : account.rawAddress,
-    isIncompatible:
-      !COMPATIBLE_WALLET_PROVIDERS.includes(account.provider) &&
-      account.provider !== WalletProviderType.ExternalWallet,
+    /**
+     * Whether Hydration can represent this account's address at all. Solana
+     * and Sui addresses cannot be, so those accounts connect and display
+     * everywhere but cannot drive a Hydration action.
+     *
+     * Watched addresses pass: the user pasted an address Hydration accepts.
+     * They still cannot sign - `ReviewTransactionSubmitButton` blocks that
+     * separately, on the provider rather than on this flag.
+     */
+    canUseOnHydration:
+      COMPATIBLE_WALLET_PROVIDERS.includes(account.provider) ||
+      account.provider === WalletProviderType.ExternalWallet,
   }
-}
-
-export const getAccountAvatarTheme = (account: Account): AccountAvatarTheme => {
-  if (
-    account.provider === WalletProviderType.Talisman ||
-    account.provider === WalletProviderType.TalismanEvm ||
-    account.provider === WalletProviderType.TalismanH160
-  ) {
-    return "talisman"
-  }
-
-  return "auto"
 }
 
 export const getWalletModeByAddress = (address: string) => {
@@ -179,17 +145,6 @@ export const getWalletModeByAddress = (address: string) => {
     default:
       return null
   }
-}
-
-export const getDefaultAccountFilterByMode = (
-  mode: WalletMode,
-): WalletAccountFilterOption => {
-  if (mode !== WalletMode.Default)
-    return (
-      WALLET_ACCOUNT_FILTER_OPTIONS.find((option) => option === mode) ||
-      WalletMode.Default
-    )
-  return WalletMode.Default
 }
 
 export type AccountsSubscribeOptions = {
@@ -238,32 +193,4 @@ export function getUniqueAccountKey(account: {
   publicKey: string
 }) {
   return `${account.provider}-${account.publicKey}`
-}
-
-export function getWalletModesByProviderType(
-  walletType: WalletProviderType,
-): WalletMode[] {
-  return Object.entries(PROVIDERS_BY_WALLET_MODE)
-    .filter(([_, providers]) => providers.includes(walletType))
-    .map(([mode, _]) => mode as WalletMode)
-}
-
-export function getWalletModeIcon(mode: WalletMode) {
-  switch (mode) {
-    case WalletMode.EVM:
-      return `${METADATA_CDN_URL}/v2/ethereum/1/icon.svg`
-    case WalletMode.Substrate:
-    case WalletMode.SubstrateH160:
-      return `${METADATA_CDN_URL}/v2/polkadot/2034/assets/5/icon.svg`
-    case WalletMode.Solana:
-      return `${METADATA_CDN_URL}/v2/solana/101/icon.svg`
-    case WalletMode.Sui:
-      return `${METADATA_CDN_URL}/v2/polkadot/2034/assets/1000753/icon.svg`
-    case WalletMode.Near:
-      return `${METADATA_CDN_URL}/v2/near/near/icon.svg`
-    case WalletMode.Zcash:
-      return `${METADATA_CDN_URL}/v2/zcash/zec/icon.svg`
-    default:
-      return ""
-  }
 }
