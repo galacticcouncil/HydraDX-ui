@@ -1,5 +1,6 @@
 import { shortenAccountAddress } from "@galacticcouncil/utils"
 import {
+  getWallets,
   isWalletWithRequiredFeatureSet,
   WalletWithRequiredFeatures,
 } from "@mysten/wallet-standard"
@@ -9,6 +10,13 @@ import { WalletProviderType } from "@/config/providers"
 import { SuiSigner } from "@/signers/SuiSigner"
 import { SubscriptionFn, Wallet, WalletAccount } from "@/types/wallet"
 import { AuthError, NotInstalledError } from "@/utils/errors"
+
+const getSuiStandardWallet = (name: string): StandardWallet | undefined =>
+  getWallets()
+    .get()
+    .find(
+      (wallet) => wallet.name === name && wallet.chains.includes("sui:mainnet"),
+    )
 
 export class BaseSuiWallet implements Wallet {
   provider = "" as WalletProviderType
@@ -26,14 +34,24 @@ export class BaseSuiWallet implements Wallet {
   _accounts: WalletAccount[] = []
 
   get installed() {
-    return !!this._provider && isWalletWithRequiredFeatureSet(this._provider)
+    const provider = this.rawExtension
+    return !!provider && isWalletWithRequiredFeatureSet(provider)
   }
 
   get enabled() {
     return this._enabled
   }
 
+  /**
+   * Resolved lazily rather than in a constructor: the extension may not
+   * have registered yet when the wallet is constructed. `sui:mainnet` is
+   * required — a wallet announcing only devnet/testnet is not usable here.
+   */
   get rawExtension() {
+    if (!this._provider && this.accessor) {
+      this._provider = getSuiStandardWallet(this.accessor)
+    }
+
     return this._provider
   }
 
