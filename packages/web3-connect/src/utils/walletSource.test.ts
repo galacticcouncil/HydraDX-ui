@@ -9,6 +9,8 @@ import { WalletMode } from "@/config/wallet"
 import {
   getSelectableWallets,
   getWalletGroupSourceModes,
+  getWalletSourceAction,
+  getWalletSourceGroupAction,
   getWalletSourceModeLabel,
   getWalletSourceModes,
   groupWalletsBySource,
@@ -30,6 +32,8 @@ const TALISMAN_H160 = wallet(WalletProviderType.TalismanH160, "Talisman")
 const POLKADOT_JS = wallet(WalletProviderType.PolkadotJS, "Polkadot.js")
 const PHANTOM = wallet(WalletProviderType.Phantom, "Phantom")
 const SUBWALLET = wallet(WalletProviderType.Subwallet, "SubWallet")
+const NOVA = wallet(WalletProviderType.NovaWallet, "Nova Wallet")
+const RABBY = wallet(WalletProviderType.RabbyWallet, "Rabby")
 const NOT_INSTALLED = wallet(WalletProviderType.Enkrypt, "Enkrypt", false)
 
 const titles = (groups: { title: string }[]) => groups.map((g) => g.title)
@@ -156,15 +160,17 @@ describe("selectWalletSources", () => {
     expect(titles(recentGroups)).toEqual(["Talisman", "Phantom"])
   })
 
-  it("caps recents at three; overflow goes to installed", () => {
+  it("caps recents at five; overflow goes to installed", () => {
     const { recentGroups, installedGroups } = selectWalletSources(
-      [PHANTOM, POLKADOT_JS, TALISMAN, SUBWALLET],
+      [PHANTOM, POLKADOT_JS, TALISMAN, SUBWALLET, NOVA, RABBY],
       null,
       [],
       [
         WalletProviderType.Phantom,
         WalletProviderType.PolkadotJS,
         WalletProviderType.Subwallet,
+        WalletProviderType.NovaWallet,
+        WalletProviderType.RabbyWallet,
         WalletProviderType.Talisman,
       ],
     )
@@ -173,6 +179,8 @@ describe("selectWalletSources", () => {
       "Phantom",
       "Polkadot.js",
       "SubWallet",
+      "Nova Wallet",
+      "Rabby",
     ])
     expect(titles(installedGroups)).toEqual(["Talisman"])
   })
@@ -238,5 +246,78 @@ describe("getWalletSourceModeLabel", () => {
   it("falls back for composite and absent modes", () => {
     expect(getWalletSourceModeLabel(WalletMode.SubstrateEVM)).toBe("Wallet")
     expect(getWalletSourceModeLabel(undefined)).toBe("Wallet")
+  })
+})
+
+describe("getWalletSourceAction", () => {
+  it("connects an installed, disconnected wallet", () => {
+    expect(getWalletSourceAction(TALISMAN, "disconnected")).toBe("connect")
+  })
+
+  it("only selects a wallet that is connected or already connecting", () => {
+    expect(getWalletSourceAction(TALISMAN, "connected")).toBe("select")
+    expect(getWalletSourceAction(TALISMAN, "pending")).toBe("select")
+    expect(getWalletSourceAction(TALISMAN, "error")).toBe("select")
+  })
+
+  it("installs a wallet that is not installed", () => {
+    expect(getWalletSourceAction(NOT_INSTALLED, "disconnected")).toBe("install")
+  })
+})
+
+describe("getWalletSourceGroupAction", () => {
+  const groupOf = (...wallets: WalletSourceLike[]) => {
+    const [group] = groupWalletsBySource(wallets)
+    if (!group) throw new Error("no group")
+    return group
+  }
+
+  it("opens the mode picker when several wallets are selectable", () => {
+    const action = getWalletSourceGroupAction(
+      groupOf(TALISMAN, TALISMAN_EVM),
+      [],
+    )
+    expect(action.kind).toBe("modes")
+  })
+
+  it("acts on the single selectable wallet", () => {
+    const action = getWalletSourceGroupAction(
+      groupOf(
+        TALISMAN,
+        wallet(WalletProviderType.TalismanSol, "Talisman", false),
+      ),
+      [],
+    )
+    expect(action).toEqual({ kind: "wallet", wallet: TALISMAN })
+  })
+
+  it("falls back to the first wallet when none is selectable", () => {
+    const uninstalled = wallet(
+      WalletProviderType.TalismanEvm,
+      "Talisman",
+      false,
+    )
+    const action = getWalletSourceGroupAction(
+      groupOf(
+        wallet(WalletProviderType.Talisman, "Talisman", false),
+        uninstalled,
+      ),
+      [],
+    )
+    expect(action).toEqual({
+      kind: "wallet",
+      wallet: wallet(WalletProviderType.Talisman, "Talisman", false),
+    })
+  })
+
+  it("counts a connected but uninstalled wallet as selectable", () => {
+    const action = getWalletSourceGroupAction(
+      groupOf(
+        TALISMAN,
+        wallet(WalletProviderType.TalismanEvm, "Talisman", false),
+      ),
+      [WalletProviderType.TalismanEvm],
+    )
+    expect(action.kind).toBe("modes")
   })
 })

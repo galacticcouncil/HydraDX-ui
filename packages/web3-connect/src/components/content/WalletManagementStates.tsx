@@ -31,6 +31,7 @@ import { WalletProviderStatus } from "@/hooks/useWeb3Connect"
 import { Wallet } from "@/types/wallet"
 import {
   getWalletPrimaryMode,
+  getWalletSourceAction,
   getWalletSourceModeLabel,
 } from "@/utils/walletSource"
 
@@ -84,10 +85,9 @@ export const WalletChainSelectState: React.FC<{
   readonly getStatus: (
     provider: WalletProviderType | null,
   ) => WalletProviderStatus
-  readonly onConnect: (wallet: Wallet) => void
   readonly onInstall: (wallet: Wallet) => void
   readonly onSelect: (wallet: Wallet) => void
-}> = ({ group, getStatus, onConnect, onInstall, onSelect }) => {
+}> = ({ group, getStatus, onInstall, onSelect }) => {
   const { t } = useTranslation()
   const selectableWallets = group.wallets.filter((wallet) => {
     const status = getStatus(wallet.provider)
@@ -136,15 +136,15 @@ export const WalletChainSelectState: React.FC<{
                 pending={isPending}
                 onClick={() => {
                   if (isPending) return
-                  if (isConnected) {
-                    onSelect(wallet)
+
+                  if (getWalletSourceAction(wallet, status) === "install") {
+                    onInstall(wallet)
                     return
                   }
-                  if (wallet.installed) {
-                    onConnect(wallet)
-                    return
-                  }
-                  onInstall(wallet)
+
+                  // select the mode first, so the panel follows the click
+                  // through connecting and into that mode's accounts
+                  onSelect(wallet)
                 }}
                 action={
                   <SSourceAction as="span">

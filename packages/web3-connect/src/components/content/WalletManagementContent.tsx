@@ -34,6 +34,9 @@ import {
   SScrollAreaContent,
   SSearchInput,
   SSourceColumn,
+  SSourceFooter,
+  SSourceFooterAction,
+  SSourceFooterGradient,
   SSourceList,
   SSourceOtherSectionLabel,
   SSourceScrollFrame,
@@ -78,6 +81,8 @@ import {
 } from "@/utils/accountFilter"
 import {
   getSelectableWallets,
+  getWalletSourceAction,
+  getWalletSourceGroupAction,
   isWalletSourceGroupId,
   selectWalletSources,
   WalletSourceId,
@@ -364,26 +369,18 @@ export const WalletManagementContent = () => {
   const handleWalletClick = (wallet: Wallet) => {
     handleProviderSelect(wallet)
 
-    const status = getStatus(wallet.provider)
-    if (wallet.installed && status === WalletProviderStatus.Disconnected) {
+    if (
+      getWalletSourceAction(wallet, getStatus(wallet.provider)) === "connect"
+    ) {
       void enable(wallet.provider).catch(() => undefined)
     }
   }
 
   const handleWalletGroupSelect = (group: WalletSourceGroup) => {
-    const selectableWallets = getSelectableWallets(
-      group,
-      connectedProviderTypes,
-    )
-    const [wallet] = selectableWallets
+    const action = getWalletSourceGroupAction(group, connectedProviderTypes)
 
-    if (wallet && selectableWallets.length === 1) {
-      handleWalletClick(wallet)
-      return
-    }
-
-    if (!wallet) {
-      handleWalletClick(group.wallets[0])
+    if (action.kind === "wallet") {
+      handleWalletClick(action.wallet)
       return
     }
 
@@ -486,7 +483,7 @@ export const WalletManagementContent = () => {
               placeholder={t("provider.searchWallets")}
             />
 
-            <SSourceScrollFrame>
+            <SSourceScrollFrame hasFooter={hasConnectedWalletState}>
               <ScrollArea>
                 <SScrollAreaContent
                   sx={{
@@ -523,8 +520,7 @@ export const WalletManagementContent = () => {
                   )}
 
                   {(visibleInstalledWalletGroups.length > 0 ||
-                    showExternalWallet ||
-                    hasConnectedWalletState) && (
+                    showExternalWallet) && (
                     <SSourceList>
                       {visibleInstalledWalletGroups.length > 0 && (
                         <SSourceSectionLabel
@@ -557,17 +553,6 @@ export const WalletManagementContent = () => {
                           onDisconnect={() =>
                             disconnect(WalletProviderType.ExternalWallet)
                           }
-                        />
-                      )}
-
-                      {hasConnectedWalletState && (
-                        <WalletSourceButton
-                          title={t("provider.logOutAll")}
-                          icon={LogOut}
-                          variant={
-                            showAccountPanel ? "management" : "firstConnection"
-                          }
-                          onClick={() => disconnect()}
                         />
                       )}
                     </SSourceList>
@@ -626,6 +611,21 @@ export const WalletManagementContent = () => {
                   )}
                 </SScrollAreaContent>
               </ScrollArea>
+              {hasConnectedWalletState && (
+                <SSourceFooter>
+                  <SSourceFooterGradient />
+                  <SSourceFooterAction>
+                    <WalletSourceButton
+                      title={t("provider.logOutAll")}
+                      icon={LogOut}
+                      variant={
+                        showAccountPanel ? "management" : "firstConnection"
+                      }
+                      onClick={() => disconnect()}
+                    />
+                  </SSourceFooterAction>
+                </SSourceFooter>
+              )}
             </SSourceScrollFrame>
           </SSourceColumn>
 
@@ -658,7 +658,6 @@ export const WalletManagementContent = () => {
               <WalletChainSelectState
                 group={selectedWalletGroup}
                 getStatus={getStatus}
-                onConnect={(wallet) => enable(wallet.provider)}
                 onInstall={(wallet) => {
                   if (wallet.installUrl) {
                     window.open(
@@ -668,7 +667,7 @@ export const WalletManagementContent = () => {
                     )
                   }
                 }}
-                onSelect={handleProviderSelect}
+                onSelect={handleWalletClick}
               />
             ) : showSelectedWalletConnectState && selectedWallet ? (
               <WalletConnectState

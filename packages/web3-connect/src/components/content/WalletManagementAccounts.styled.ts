@@ -107,3 +107,20 @@ export const STruncatingRow = styled(Flex)`
 export const STruncatingText = styled(Text)`
   min-width: 0;
 `
+
+/**
+ * Provider label of a group in the all-accounts list. Sticks to the top of the
+ * scroll viewport while its group is on screen; the group box is the sticky
+ * containing block, so the next group's label pushes it out on its way in.
+ */
+export const SSectionLabel = styled(STruncatingRow)(
+  ({ theme }) => css`
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    /* opaque so account rows scroll underneath rather than through */
+    background: ${theme.controls.dim.base};
+    padding-bottom: ${theme.space.s};
+  `,
+)

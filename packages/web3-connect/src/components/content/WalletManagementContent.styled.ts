@@ -19,6 +19,7 @@ export const SScrollAreaContent = styled(Box)(
   ({ theme }) => css`
     min-width: 0;
     padding-right: calc(${theme.space.xs} + ${pxToRem(6)});
+    padding-bottom: var(--source-footer-height, 0px);
   `,
 )
 
@@ -133,12 +134,53 @@ export const SSourceOtherSectionLabel = styled(Text, {
   `,
 )
 
-export const SSourceScrollFrame = styled(Box)`
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
+const SOURCE_FOOTER_GRADIENT_HEIGHT = pxToRem(24)
+const SOURCE_FOOTER_BUTTON_HEIGHT = pxToRem(40)
+
+export const SSourceScrollFrame = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "hasFooter",
+})<{ hasFooter?: boolean }>(
+  ({ hasFooter }) => css`
+    position: relative;
+
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+
+    --source-footer-height: ${hasFooter
+      ? `calc(${SOURCE_FOOTER_GRADIENT_HEIGHT} + ${SOURCE_FOOTER_BUTTON_HEIGHT})`
+      : "0px"};
+  `,
+)
+
+export const SSourceFooter = styled(Box)`
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+
+  display: flex;
+  flex-direction: column;
 `
+
+export const SSourceFooterGradient = styled(Box)(
+  ({ theme }) => css`
+    height: ${SOURCE_FOOTER_GRADIENT_HEIGHT};
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      ${theme.controls.dim.base}
+    );
+    pointer-events: none;
+  `,
+)
+
+export const SSourceFooterAction = styled(Box)(
+  ({ theme }) => css`
+    min-height: ${SOURCE_FOOTER_BUTTON_HEIGHT};
+    background: ${theme.controls.dim.base};
+  `,
+)
 
 export const SSourceList = styled(Flex)(
   ({ theme }) => css`

@@ -16,8 +16,10 @@ import { useTranslation } from "react-i18next"
 import { AccountAddressBookIdentity } from "@/components/account/AccountIdentity"
 import { ShortAddress } from "@/components/account/ShortAddress"
 import {
+  SAvatar,
   SConnectedButton,
   SHoverText,
+  SProviderBadge,
 } from "@/components/Web3ConnectButton.styled"
 import {
   type Account,
@@ -29,6 +31,7 @@ import { useAccount } from "@/hooks/useAccount"
 import { useActiveMultisigConfig } from "@/hooks/useMultisigConfigs"
 import { useWeb3ConnectModal } from "@/hooks/useWeb3ConnectModal"
 import i18n from "@/i18n"
+import { getWallet } from "@/wallets"
 
 export type Web3ConnectButtonProps = ButtonProps & {
   /**
@@ -115,6 +118,9 @@ type ConnectedMultisigAccountButtonProps = ConnectButtonProps & {
   account: Account
 }
 
+const AVATAR_SIZE = 24
+const BADGE_SIZE = AVATAR_SIZE / 2
+
 const ConnectedAccountButton: React.FC<ConnectedMultisigAccountButtonProps> = ({
   ref,
   onClick,
@@ -129,13 +135,21 @@ const ConnectedAccountButton: React.FC<ConnectedMultisigAccountButtonProps> = ({
       ? `(${activeMultisigConfig.threshold}/${activeMultisigConfig.signers.length})`
       : ""
 
+  const wallet = getWallet(account.provider)
+
   const shortDisplayAddr = !account.isMultisig
     ? shortenAccountAddress(account.displayAddress)
     : ""
 
   return (
     <SConnectedButton ref={ref} onClick={onClick} {...props} variant="tertiary">
-      <AccountAvatar address={account.displayAddress} size={24} />
+      <SAvatar>
+        <AccountAvatar address={account.displayAddress} size={AVATAR_SIZE} />
+        {/* Logo-less providers get no badge rather than a broken image. */}
+        {wallet?.logo && (
+          <SProviderBadge wallet={wallet} size={pxToRem(BADGE_SIZE)} />
+        )}
+      </SAvatar>
       <Flex direction="column">
         <Flex gap="xs" align="flex-end">
           <Text fs="p3" lh={1.2} truncate={pxToRem(140)}>

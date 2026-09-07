@@ -241,7 +241,6 @@ export const UserMenu: FC<Props> = ({
               })
           const shouldShowAccountSummary =
             !isExternalWallet &&
-            hydrationAccounts.length > 0 &&
             (providerAccounts.length > 1 || hasPositiveBalance)
 
           return (
@@ -310,6 +309,13 @@ export const UserMenu: FC<Props> = ({
           )
         })}
 
+        <UserMenuSeparator />
+
+        <MenuSelectionItem onClick={() => openManageWallets()}>
+          <MenuItemIcon sx={{ width: "xl", height: "xl" }} component={Plus} />
+          <MenuItemLabel>{t("userMenu.manageWallets")}</MenuItemLabel>
+        </MenuSelectionItem>
+
         <MenuSelectionItem
           onClick={() => {
             disconnect()
@@ -318,13 +324,6 @@ export const UserMenu: FC<Props> = ({
         >
           <MenuItemIcon sx={{ width: "xl", height: "xl" }} component={LogOut} />
           <MenuItemLabel>{t("userMenu.logOutAll")}</MenuItemLabel>
-        </MenuSelectionItem>
-
-        <UserMenuSeparator />
-
-        <MenuSelectionItem onClick={() => openManageWallets()}>
-          <MenuItemIcon sx={{ width: "xl", height: "xl" }} component={Plus} />
-          <MenuItemLabel>{t("userMenu.manageWallets")}</MenuItemLabel>
         </MenuSelectionItem>
       </HoverCardContent>
     </HoverCard>

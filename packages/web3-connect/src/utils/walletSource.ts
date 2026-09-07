@@ -174,3 +174,50 @@ export const selectWalletSources = <T extends WalletSourceLike>(
 
   return { available, recentGroups, installedGroups, otherGroups }
 }
+
+/**
+ * The status of a wallet provider, as the store spells it. Kept as a plain
+ * union so the source utils stay free of any dependency on the store module.
+ */
+export type WalletSourceStatus =
+  | "connected"
+  | "pending"
+  | "disconnected"
+  | "error"
+
+/**
+ * What clicking a wallet source does. `connect` is the only action that talks
+ * to the extension; every action but `install` selects the wallet as the
+ * source first, so the right panel follows the click without a second one.
+ */
+export type WalletSourceAction = "select" | "connect" | "install"
+
+export const getWalletSourceAction = <T extends WalletSourceLike>(
+  wallet: T,
+  status: WalletSourceStatus,
+): WalletSourceAction => {
+  if (!wallet.installed) return "install"
+  return status === "disconnected" ? "connect" : "select"
+}
+
+/**
+ * What clicking a group entry in the source column does: act on a single
+ * wallet when only one is reachable, otherwise open the chain picker so the
+ * user can choose a mode.
+ */
+export type WalletSourceGroupAction<T extends WalletSourceLike> =
+  | { kind: "wallet"; wallet: T }
+  | { kind: "modes" }
+
+export const getWalletSourceGroupAction = <T extends WalletSourceLike>(
+  group: WalletSourceGroup<T>,
+  connectedProviderTypes: WalletProviderType[],
+): WalletSourceGroupAction<T> => {
+  const selectableWallets = getSelectableWallets(group, connectedProviderTypes)
+  const [wallet] = selectableWallets
+
+  if (!wallet) return { kind: "wallet", wallet: group.wallets[0] }
+  if (selectableWallets.length === 1) return { kind: "wallet", wallet }
+
+  return { kind: "modes" }
+}

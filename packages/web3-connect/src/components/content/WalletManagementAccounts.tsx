@@ -7,7 +7,7 @@ import {
   Text,
 } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
-import { formatCurrency } from "@galacticcouncil/utils"
+import { formatCurrency, formatNumber } from "@galacticcouncil/utils"
 import { useTranslation } from "react-i18next"
 
 import { SChangeAccountButton } from "@/components/account/AccountOption.styled"
@@ -19,6 +19,7 @@ import {
   SAccountTileBody,
   SAccountTileCopyButton,
   SAccountTileRow,
+  SSectionLabel,
   SSectionLogo,
   STruncatingRow,
   STruncatingText,
@@ -30,6 +31,8 @@ import { getWallet, MetaMask } from "@/wallets"
 
 export type WalletAccount = ReturnType<typeof toAccount> & {
   balance?: number
+  /** Present means `balance` is a token amount, absent means fiat. */
+  balanceSymbol?: string
   isActive?: boolean
 }
 
@@ -48,13 +51,13 @@ export const WalletAccountSection: React.FC<{
   isBalanceLoading,
   onAccountSelect,
 }) => (
-  <Flex direction="column" gap="s">
-    <STruncatingRow gap="xs">
+  <Flex direction="column">
+    <SSectionLabel gap="xs">
       {logo && <SSectionLogo src={logo} alt="" lazy={false} />}
       <Text fs="p4" fw={500} color={getToken("text.high")} truncate>
         {title}
       </Text>
-    </STruncatingRow>
+    </SSectionLabel>
     <Flex direction="column" gap="base">
       {accounts.map((account) => (
         <WalletAccountTile
@@ -83,6 +86,13 @@ export const WalletAccountTile: React.FC<{
     wallet instanceof MetaMask && isEip1193Provider(wallet.extension)
       ? wallet.extension
       : undefined
+
+  const balanceLabel =
+    account.balance === undefined
+      ? ""
+      : account.balanceSymbol
+        ? `${formatNumber(account.balance)} ${account.balanceSymbol}`
+        : formatCurrency(account.balance)
 
   return (
     <Box>
@@ -118,9 +128,7 @@ export const WalletAccountTile: React.FC<{
             <SAccountTileBalance fs="p4" fw={500} color={getToken("text.high")}>
               {isBalanceLoading && account.balance === undefined
                 ? ""
-                : account.balance !== undefined
-                  ? formatCurrency(account.balance)
-                  : ""}
+                : balanceLabel}
             </SAccountTileBalance>
           </SAccountTileRow>
           <STruncatingRow gap="base" justify="space-between">
