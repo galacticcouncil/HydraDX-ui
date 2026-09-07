@@ -1,6 +1,7 @@
 export { AccountIdentity as Web3ConnectAccountIdentity } from "@/components/account/AccountIdentity"
 export { type AccountIdentityProps as Web3ConnectAccountIdentityProps } from "@/components/account/AccountIdentity"
 export * from "@/components/address-book"
+export { WalletDiscoveryPanel } from "@/components/debug/WalletDiscoveryPanel"
 export { Web3ConnectButton } from "@/components/Web3ConnectButton"
 export { Web3ConnectModalV2 } from "@/components/Web3ConnectModalV2"
 export { Web3ConnectSession } from "@/components/Web3ConnectSession"
