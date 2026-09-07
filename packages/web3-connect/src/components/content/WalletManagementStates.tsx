@@ -1,11 +1,7 @@
-import {
-  CircleAlert,
-  HydrationLogo,
-  WalletIcon,
-} from "@galacticcouncil/ui/assets/icons"
+import { HydrationLogo, WalletIcon } from "@galacticcouncil/ui/assets/icons"
 import { Flex, Icon, Spinner, Text } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
-import { ChevronRight, Download } from "lucide-react"
+import { ChevronRight, CircleAlert, Download } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -52,7 +48,7 @@ export const WalletErrorState: React.FC<{
     <SWalletErrorState>
       <SWalletErrorBody>
         <SWalletErrorIcon>
-          <Icon size="s" component={CircleAlert} />
+          <Icon size="xl" component={CircleAlert} />
         </SWalletErrorIcon>
         <SCenteredTextGroup>
           <Text
@@ -132,8 +128,9 @@ export const WalletChainSelectState: React.FC<{
                     ? t("provider.connected")
                     : wallet.installed
                       ? t("provider.connect")
-                      : t("provider.download")
+                      : t("provider.install")
                 }
+                connected={isConnected}
                 logo={mode === WalletMode.EVM ? undefined : modeIcon}
                 icon={mode === WalletMode.EVM ? HydrationLogo : undefined}
                 pending={isPending}

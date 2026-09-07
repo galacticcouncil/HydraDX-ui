@@ -1,4 +1,3 @@
-import { HydrationLogo } from "@galacticcouncil/ui/assets/icons"
 import { Icon, Spinner, Text } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
 import { ChevronRight, LogOut } from "lucide-react"
@@ -7,6 +6,8 @@ import { useTranslation } from "react-i18next"
 
 import {
   SChainBadgeImage,
+  SConnectedDot,
+  SConnectedSubtitle,
   SSourceAction,
   SSourceButton,
   SSourceButtonContent,
@@ -54,13 +55,6 @@ const getWalletSourceChainBadges = (
     const modeIcon = getWalletModeIcon(mode)
     const badges: WalletSourceChainBadge[] = []
 
-    if (mode === WalletMode.EVM) {
-      badges.push({
-        id: "hydration-evm",
-        icon: HydrationLogo,
-      })
-    }
-
     if (modeIcon) {
       badges.push({
         id: mode,
@@ -79,6 +73,7 @@ export const WalletSourceButton: React.FC<{
   readonly logos?: WalletProviderType[]
   readonly icon?: ComponentType
   readonly pending?: boolean
+  readonly connected?: boolean
   readonly variant?: WalletSourceButtonVariant
   readonly chainModes?: WalletMode[]
   readonly action?: React.ReactNode
@@ -91,6 +86,7 @@ export const WalletSourceButton: React.FC<{
   logos,
   icon,
   pending,
+  connected,
   variant = "management",
   chainModes,
   action,
@@ -129,17 +125,31 @@ export const WalletSourceButton: React.FC<{
         <Text fs="p5" fw={500} color={getToken("text.high")} truncate>
           {title}
         </Text>
-        {subtitle && (
-          <Text
-            fs="p7"
-            fw={500}
-            lh={1.2}
-            color={getToken("text.medium")}
-            truncate
-          >
-            {subtitle}
-          </Text>
-        )}
+        {subtitle &&
+          (connected ? (
+            <SConnectedSubtitle>
+              <SConnectedDot />
+              <Text
+                fs="p7"
+                fw={500}
+                lh={1.2}
+                color={getToken("text.medium")}
+                truncate
+              >
+                {subtitle}
+              </Text>
+            </SConnectedSubtitle>
+          ) : (
+            <Text
+              fs="p7"
+              fw={500}
+              lh={1.2}
+              color={getToken("text.medium")}
+              truncate
+            >
+              {subtitle}
+            </Text>
+          ))}
       </STruncatingColumn>
     </SSourceButtonContent>
     {pending ? (
@@ -169,7 +179,7 @@ export const WalletSourceChainBadges: React.FC<{
       {badges.slice(0, 4).map((badge) => (
         <SSourceChainBadge key={badge.id}>
           {badge.icon ? (
-            <Icon size="xs" component={badge.icon} />
+            <Icon component={badge.icon} />
           ) : badge.iconSrc ? (
             <SChainBadgeImage src={badge.iconSrc} alt="" lazy={false} />
           ) : null}
@@ -201,14 +211,19 @@ export const WalletProviderSourceButton: React.FC<{
   if (!wallet) return null
 
   const isConnected = status === WalletProviderStatus.Connected
-  const chainModes =
-    variant === "management" ? undefined : getWalletSourceModes(wallet.provider)
+  const chainModes = getWalletSourceModes(wallet.provider)
+  const subtitle = isConnected
+    ? t("provider.connected")
+    : wallet.installed
+      ? t("provider.connect")
+      : t("provider.install")
 
   return (
     <WalletSourceButton
       active={active}
       title={wallet.title}
-      subtitle={isConnected ? t("provider.connected") : t("provider.connect")}
+      subtitle={subtitle}
+      connected={isConnected}
       logo={wallet.logo}
       pending={pending}
       variant={variant}
@@ -252,16 +267,24 @@ export const WalletGroupSourceButton: React.FC<{
   onClick,
 }) => {
   const { t } = useTranslation()
+  const chainModes = getWalletGroupSourceModes(group)
+  const isInstalled = group.wallets.some((wallet) => wallet.installed)
+  const subtitle = connected
+    ? t("provider.connected")
+    : isInstalled
+      ? t("provider.connect")
+      : t("provider.install")
 
   return (
     <WalletSourceButton
       active={active}
       title={group.title}
-      subtitle={connected ? t("provider.connected") : t("provider.connect")}
+      subtitle={subtitle}
+      connected={connected}
       logo={group.logo}
       pending={pending}
       variant={variant}
-      chainModes={getWalletGroupSourceModes(group)}
+      chainModes={chainModes}
       onClick={onClick}
     />
   )

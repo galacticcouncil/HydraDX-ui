@@ -1,18 +1,11 @@
 import { uniqueBy } from "remeda"
 
-import { WalletProviderType } from "@/config/providers"
+import {
+  SUBSTRATE_H160_PROVIDERS,
+  WalletProviderType,
+} from "@/config/providers"
 import { getWalletChainModes, WALLET_MODES, WalletMode } from "@/config/wallet"
 
-/**
- * The wallet-source column's derivation, kept apart from the render.
- *
- * Everything here is pure and generic over the wallet shape, so it can be
- * exercised with plain objects - importing the real `Wallet` instances pulls
- * in extension detection that needs a browser. That was the missing seam: the
- * mode rules had no surface to be checked through, which is how two of them
- * shipped broken.
- *
- */
 export type WalletSourceLike = {
   provider: WalletProviderType
   title: string
@@ -76,7 +69,6 @@ export const groupWalletsBySource = <T extends WalletSourceLike>(
   return Array.from(groups.values())
 }
 
-/** The chain modes a provider is badged with. */
 export const getWalletSourceModes = getWalletChainModes
 
 export const getWalletGroupSourceModes = <T extends WalletSourceLike>(
@@ -114,45 +106,71 @@ const isReachable = <T extends WalletSourceLike>(
   connectedProviderTypes: WalletProviderType[],
 ) => wallet.installed || connectedProviderTypes.includes(wallet.provider)
 
-/**
- * The whole wallet-source column, derived in one place.
- *
- * `modeProviders` is the forced mode's gate - `null` means no restriction.
- * ExternalWallet is dropped because it renders in its own slot.
- *
- * Connected sources sort first, then alphabetically. Sources that are neither
- * installed nor connected fall to `otherGroups`, which the UI folds away.
- */
+const RECENT_GROUPS_LIMIT = 5
+
+const NOT_RECENT = Number.MAX_SAFE_INTEGER
+
+const getRecentRank = <T extends WalletSourceLike>(
+  group: WalletSourceGroup<T>,
+  recentlyUsedProviders: WalletProviderType[],
+) =>
+  Math.min(
+    ...group.providers.map((provider) => {
+      const index = recentlyUsedProviders.indexOf(provider)
+      return index === -1 ? NOT_RECENT : index
+    }),
+  )
+
 export const selectWalletSources = <T extends WalletSourceLike>(
   wallets: T[],
   modeProviders: WalletProviderType[] | null,
   connectedProviderTypes: WalletProviderType[],
+  recentlyUsedProviders: WalletProviderType[] = [],
 ) => {
   const available = wallets.filter(
     (wallet) =>
       wallet.provider !== WalletProviderType.ExternalWallet &&
-      (!modeProviders || modeProviders.includes(wallet.provider)),
+      (modeProviders
+        ? modeProviders.includes(wallet.provider)
+        : !SUBSTRATE_H160_PROVIDERS.includes(wallet.provider) ||
+          connectedProviderTypes.includes(wallet.provider)),
   )
 
   const groups = groupWalletsBySource(available)
 
-  const byConnectedThenTitle = (a: boolean, b: boolean) =>
-    a !== b ? (a ? -1 : 1) : 0
-
   const isGroupReachable = (group: WalletSourceGroup<T>) =>
     group.wallets.some((wallet) => isReachable(wallet, connectedProviderTypes))
 
-  const sortedGroups = groups.filter(isGroupReachable).sort(
-    (a, b) =>
-      byConnectedThenTitle(
-        a.providers.some((p) => connectedProviderTypes.includes(p)),
-        b.providers.some((p) => connectedProviderTypes.includes(p)),
-      ) || a.title.localeCompare(b.title),
-  )
+  const isGroupConnected = (group: WalletSourceGroup<T>) =>
+    group.providers.some((provider) =>
+      connectedProviderTypes.includes(provider),
+    )
+
+  const byTitle = (a: WalletSourceGroup<T>, b: WalletSourceGroup<T>) =>
+    a.title.localeCompare(b.title)
+
+  const rankOf = (group: WalletSourceGroup<T>) =>
+    getRecentRank(group, recentlyUsedProviders)
+
+  const reachableGroups = groups.filter(isGroupReachable)
+
+  const recentGroups = reachableGroups
+    .filter((group) => isGroupConnected(group) || rankOf(group) !== NOT_RECENT)
+    .sort(
+      (a, b) =>
+        Number(isGroupConnected(b)) - Number(isGroupConnected(a)) ||
+        rankOf(a) - rankOf(b) ||
+        byTitle(a, b),
+    )
+    .slice(0, RECENT_GROUPS_LIMIT)
+
+  const installedGroups = reachableGroups
+    .filter((group) => !recentGroups.includes(group))
+    .sort(byTitle)
 
   const otherGroups = groups
     .filter((group) => !isGroupReachable(group))
     .sort((a, b) => a.title.localeCompare(b.title))
 
-  return { available, sortedGroups, otherGroups }
+  return { available, recentGroups, installedGroups, otherGroups }
 }

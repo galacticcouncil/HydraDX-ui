@@ -11,7 +11,7 @@ import { ExternalWallet, getWallet } from "@/wallets"
 import { BaseSubstrateWallet } from "@/wallets/BaseSubstrateWallet"
 
 export const useWeb3EagerEnable = () => {
-  const { enable, disconnect } = useWeb3Enable()
+  const { enable, disconnect } = useWeb3Enable({ eager: true })
   const { providers, setAccount } = useWeb3Connect(
     useShallow(pick(["providers", "setAccount"])),
   )

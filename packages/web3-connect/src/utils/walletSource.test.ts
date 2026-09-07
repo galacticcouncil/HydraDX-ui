@@ -26,9 +26,13 @@ const wallet = (
 const TALISMAN = wallet(WalletProviderType.Talisman, "Talisman")
 const TALISMAN_EVM = wallet(WalletProviderType.TalismanEvm, "Talisman")
 const TALISMAN_SOL = wallet(WalletProviderType.TalismanSol, "Talisman")
+const TALISMAN_H160 = wallet(WalletProviderType.TalismanH160, "Talisman")
 const POLKADOT_JS = wallet(WalletProviderType.PolkadotJS, "Polkadot.js")
 const PHANTOM = wallet(WalletProviderType.Phantom, "Phantom")
+const SUBWALLET = wallet(WalletProviderType.Subwallet, "SubWallet")
 const NOT_INSTALLED = wallet(WalletProviderType.Enkrypt, "Enkrypt", false)
+
+const titles = (groups: { title: string }[]) => groups.map((g) => g.title)
 
 describe("groupWalletsBySource", () => {
   it("folds one brand's providers into a single source", () => {
@@ -71,6 +75,24 @@ describe("selectWalletSources", () => {
     ])
   })
 
+  it("never advertises an H160 provider when no mode is forced", () => {
+    const { available } = selectWalletSources(
+      [TALISMAN, TALISMAN_H160],
+      null,
+      [],
+    )
+
+    expect(available).toEqual([TALISMAN])
+  })
+
+  it("keeps a connected H160 provider reachable", () => {
+    const { available } = selectWalletSources([TALISMAN, TALISMAN_H160], null, [
+      WalletProviderType.TalismanH160,
+    ])
+
+    expect(available).toHaveLength(2)
+  })
+
   it("drops ExternalWallet, which renders in its own slot", () => {
     const external = wallet(WalletProviderType.ExternalWallet, "External")
     const { available } = selectWalletSources([TALISMAN, external], null, [])
@@ -78,40 +100,93 @@ describe("selectWalletSources", () => {
     expect(available).toEqual([TALISMAN])
   })
 
-  it("sorts connected sources first, then alphabetically", () => {
-    const { sortedGroups } = selectWalletSources(
-      [PHANTOM, POLKADOT_JS, TALISMAN],
-      null,
-      [WalletProviderType.Talisman],
-    )
-
-    expect(sortedGroups.map((g) => g.title)).toEqual([
-      "Talisman",
-      "Phantom",
-      "Polkadot.js",
-    ])
-  })
-
   it("holds back sources that are neither installed nor connected", () => {
-    const { sortedGroups, otherGroups } = selectWalletSources(
+    const { installedGroups, otherGroups } = selectWalletSources(
       [TALISMAN, NOT_INSTALLED],
       null,
       [],
     )
 
-    expect(sortedGroups.map((g) => g.title)).toEqual(["Talisman"])
-    expect(otherGroups.map((g) => g.title)).toEqual(["Enkrypt"])
+    expect(titles(installedGroups)).toEqual(["Talisman"])
+    expect(titles(otherGroups)).toEqual(["Enkrypt"])
   })
 
   it("promotes an uninstalled source once it is connected", () => {
-    const { sortedGroups, otherGroups } = selectWalletSources(
+    const { recentGroups, otherGroups } = selectWalletSources(
       [NOT_INSTALLED],
       null,
       [WalletProviderType.Enkrypt],
     )
 
-    expect(sortedGroups.map((g) => g.title)).toEqual(["Enkrypt"])
+    expect(titles(recentGroups)).toEqual(["Enkrypt"])
     expect(otherGroups).toEqual([])
+  })
+
+  it("sorts recents by last use, installed by title", () => {
+    const { recentGroups, installedGroups } = selectWalletSources(
+      [PHANTOM, POLKADOT_JS, TALISMAN, SUBWALLET],
+      null,
+      [],
+      [WalletProviderType.Subwallet, WalletProviderType.Talisman],
+    )
+
+    expect(titles(recentGroups)).toEqual(["SubWallet", "Talisman"])
+    expect(titles(installedGroups)).toEqual(["Phantom", "Polkadot.js"])
+  })
+
+  it("ranks a brand by its newest provider", () => {
+    const { recentGroups } = selectWalletSources(
+      [TALISMAN, TALISMAN_EVM, TALISMAN_SOL, PHANTOM],
+      null,
+      [],
+      [WalletProviderType.Phantom, WalletProviderType.TalismanEvm],
+    )
+
+    expect(titles(recentGroups)).toEqual(["Phantom", "Talisman"])
+  })
+
+  it("puts connected sources before newer MRU entries", () => {
+    const { recentGroups } = selectWalletSources(
+      [PHANTOM, TALISMAN],
+      null,
+      [WalletProviderType.Talisman],
+      [WalletProviderType.Phantom, WalletProviderType.Talisman],
+    )
+
+    expect(titles(recentGroups)).toEqual(["Talisman", "Phantom"])
+  })
+
+  it("caps recents at three; overflow goes to installed", () => {
+    const { recentGroups, installedGroups } = selectWalletSources(
+      [PHANTOM, POLKADOT_JS, TALISMAN, SUBWALLET],
+      null,
+      [],
+      [
+        WalletProviderType.Phantom,
+        WalletProviderType.PolkadotJS,
+        WalletProviderType.Subwallet,
+        WalletProviderType.Talisman,
+      ],
+    )
+
+    expect(titles(recentGroups)).toEqual([
+      "Phantom",
+      "Polkadot.js",
+      "SubWallet",
+    ])
+    expect(titles(installedGroups)).toEqual(["Talisman"])
+  })
+
+  it("moves uninstalled remembered wallets to other", () => {
+    const { recentGroups, otherGroups } = selectWalletSources(
+      [TALISMAN, NOT_INSTALLED],
+      null,
+      [],
+      [WalletProviderType.Enkrypt, WalletProviderType.Talisman],
+    )
+
+    expect(titles(recentGroups)).toEqual(["Talisman"])
+    expect(titles(otherGroups)).toEqual(["Enkrypt"])
   })
 })
 

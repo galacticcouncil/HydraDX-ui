@@ -3,7 +3,7 @@ import { BaseEIP1193Wallet } from "@/wallets/BaseEIP1193Wallet"
 import { BaseSolanaWallet } from "@/wallets/BaseSolanaWallet"
 import { BaseSuiWallet } from "@/wallets/BaseSuiWallet"
 
-import logo from "./logo.svg"
+import logo from "./logo.png"
 
 export class OKXWallet extends BaseEIP1193Wallet {
   provider = WalletProviderType.OKXWallet

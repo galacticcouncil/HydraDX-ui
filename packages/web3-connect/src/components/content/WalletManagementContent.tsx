@@ -12,7 +12,7 @@ import {
 import { FormProvider } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { useDebounce } from "react-use"
-import { pick, prop, uniqueBy } from "remeda"
+import { pick, prop } from "remeda"
 import { useShallow } from "zustand/react/shallow"
 
 import { AddressBookModal } from "@/components/address-book"
@@ -28,7 +28,6 @@ import {
   SLayoutGrid,
   SModalBody,
   SModalHeader,
-  SMoreWalletsDropdown,
   SRightColumn,
   SRightColumnBody,
   SRightPanelFrame,
@@ -85,6 +84,12 @@ import {
 } from "@/utils/walletSource"
 import { getWallet, getWallets } from "@/wallets"
 
+const filterWalletGroups = (groups: WalletSourceGroup[], search: string) => {
+  const phrase = search.toLowerCase().trim()
+  if (!phrase) return groups
+  return groups.filter((group) => group.title.toLowerCase().includes(phrase))
+}
+
 export const WalletManagementContent = () => {
   const { t } = useTranslation()
   const { account: currentAccount } = useAccount()
@@ -99,7 +104,7 @@ export const WalletManagementContent = () => {
     toggle,
     providers: walletProviders,
     recentProvider,
-    recentlyDisconnectedProviders,
+    recentlyUsedProviders,
     error,
     meta,
     getStatus,
@@ -110,7 +115,7 @@ export const WalletManagementContent = () => {
         "toggle",
         "providers",
         "recentProvider",
-        "recentlyDisconnectedProviders",
+        "recentlyUsedProviders",
         "error",
         "meta",
         "getStatus",
@@ -181,16 +186,25 @@ export const WalletManagementContent = () => {
   const isProvidersConnecting = pendingProviderTypes.length > 0
   const hasConnectedWalletState =
     connectedProviderTypes.length > 0 || accounts.length > 0
+  const connectedAccountsCount = useMemo(
+    () => filterAccounts(mode)(accounts.map(toAccount)).length,
+    [accounts, mode],
+  )
   const showErrorState = !!error
 
   const {
-    available: compatibleWallets,
-    sortedGroups: sortedWalletGroups,
+    recentGroups: recentWalletGroups,
+    installedGroups: installedWalletGroups,
     otherGroups: otherWalletGroups,
   } = useMemo(
     () =>
-      selectWalletSources(allWallets, modeProviders, connectedProviderTypes),
-    [allWallets, connectedProviderTypes, modeProviders],
+      selectWalletSources(
+        allWallets,
+        modeProviders,
+        connectedProviderTypes,
+        recentlyUsedProviders,
+      ),
+    [allWallets, connectedProviderTypes, modeProviders, recentlyUsedProviders],
   )
 
   const selectedWallet =
@@ -200,9 +214,11 @@ export const WalletManagementContent = () => {
       ? getWallet(selectedSource)
       : undefined
   const selectedWalletGroup = isWalletSourceGroupId(selectedSource)
-    ? [...sortedWalletGroups, ...otherWalletGroups].find(
-        (group) => group.id === selectedSource,
-      )
+    ? [
+        ...recentWalletGroups,
+        ...installedWalletGroups,
+        ...otherWalletGroups,
+      ].find((group) => group.id === selectedSource)
     : undefined
   const selectedWalletStatus = selectedWallet
     ? getStatus(selectedWallet.provider)
@@ -234,70 +250,26 @@ export const WalletManagementContent = () => {
     setModalContentWidth?.(showAccountPanel ? pxToRem(650) : pxToRem(452))
   }, [setModalContentWidth, showAccountPanel])
 
-  const recentlyDisconnectedProviderTypes = useMemo(
-    () =>
-      recentlyDisconnectedProviders.filter((provider) => {
-        const isCompatible = compatibleWallets.some(
-          (wallet) => wallet.provider === provider,
-        )
-        return isCompatible && !connectedProviderTypes.includes(provider)
-      }),
-    [compatibleWallets, connectedProviderTypes, recentlyDisconnectedProviders],
-  )
-  const recentlyConnectedProviderTypes = useMemo(() => {
-    const providers = [
-      ...(recentProvider ? [recentProvider] : []),
-      ...recentlyDisconnectedProviderTypes,
-    ]
-
-    return uniqueBy(
-      providers.filter((provider) => {
-        const isCompatible = compatibleWallets.some(
-          (wallet) => wallet.provider === provider,
-        )
-        return isCompatible && !connectedProviderTypes.includes(provider)
-      }),
-      (provider) => provider,
-    ).slice(0, 3)
-  }, [
-    compatibleWallets,
-    connectedProviderTypes,
-    recentProvider,
-    recentlyDisconnectedProviderTypes,
-  ])
-  const visibleWallets = useMemo(() => {
-    const phrase = walletSearch.toLowerCase().trim()
-    if (!phrase) return sortedWalletGroups
-    return sortedWalletGroups.filter((group) =>
-      group.title.toLowerCase().includes(phrase),
-    )
-  }, [sortedWalletGroups, walletSearch])
-
-  const visibleSuggestedWalletGroups = useMemo(
-    () =>
-      showAccountPanel
-        ? visibleWallets
-        : visibleWallets.filter(
-            (group) =>
-              !group.providers.every((provider) =>
-                recentlyConnectedProviderTypes.includes(provider),
-              ),
-          ),
-    [recentlyConnectedProviderTypes, showAccountPanel, visibleWallets],
+  const visibleRecentWalletGroups = useMemo(
+    () => filterWalletGroups(recentWalletGroups, walletSearch),
+    [recentWalletGroups, walletSearch],
   )
 
-  const visibleOtherWalletGroups = useMemo(() => {
-    const phrase = walletSearch.toLowerCase().trim()
-    if (!phrase) return otherWalletGroups
-    return otherWalletGroups.filter((group) =>
-      group.title.toLowerCase().includes(phrase),
-    )
-  }, [otherWalletGroups, walletSearch])
+  const visibleInstalledWalletGroups = useMemo(
+    () => filterWalletGroups(installedWalletGroups, walletSearch),
+    [installedWalletGroups, walletSearch],
+  )
+
+  const visibleOtherWalletGroups = useMemo(
+    () => filterWalletGroups(otherWalletGroups, walletSearch),
+    [otherWalletGroups, walletSearch],
+  )
+
+  const visibleReachableWalletCount =
+    visibleRecentWalletGroups.length + visibleInstalledWalletGroups.length
 
   const shouldAutoOpenMoreWallets =
-    !showAccountPanel &&
-    visibleSuggestedWalletGroups.length === 0 &&
-    recentlyConnectedProviderTypes.length === 0
+    !showAccountPanel && visibleReachableWalletCount === 0
   const isMoreWalletsListOpen = isMoreOpen || shouldAutoOpenMoreWallets
 
   /**
@@ -418,11 +390,44 @@ export const WalletManagementContent = () => {
     setSelectedSource(group.id)
   }
 
-  const handleRecentWalletsConnect = () => {
-    for (const provider of recentlyConnectedProviderTypes) {
-      if (pendingProviderTypes.includes(provider)) continue
-      enable(provider)
+  const renderWalletGroup = (group: WalletSourceGroup) => {
+    const variant = showAccountPanel ? "management" : "firstConnection"
+
+    if (group.wallets.length === 1) {
+      const [wallet] = group.wallets
+
+      return (
+        <WalletProviderSourceButton
+          key={group.id}
+          wallet={wallet}
+          active={selectedSource === wallet.provider}
+          status={getStatus(wallet.provider)}
+          pending={pendingProviderTypes.includes(wallet.provider)}
+          variant={variant}
+          onClick={() => handleWalletClick(wallet)}
+          onDisconnect={() => disconnect(wallet.provider)}
+        />
+      )
     }
+
+    return (
+      <WalletGroupSourceButton
+        key={group.id}
+        group={group}
+        active={
+          selectedSource === group.id ||
+          group.providers.includes(selectedSource as WalletProviderType)
+        }
+        connected={group.providers.some((provider) =>
+          connectedProviderTypes.includes(provider),
+        )}
+        pending={group.providers.some((provider) =>
+          pendingProviderTypes.includes(provider),
+        )}
+        variant={variant}
+        onClick={() => handleWalletGroupSelect(group)}
+      />
+    )
   }
 
   if (isAddressBookOpen) {
@@ -444,15 +449,13 @@ export const WalletManagementContent = () => {
     )
   }
 
-  const shouldFoldOtherWallets =
-    !showAccountPanel && visibleSuggestedWalletGroups.length >= 3
-  const visibleOtherWalletPreview =
-    shouldFoldOtherWallets && !isMoreWalletsListOpen
-      ? visibleOtherWalletGroups.slice(0, 2)
-      : visibleOtherWalletGroups
-  const hasHiddenOtherWallets =
-    shouldFoldOtherWallets &&
-    visibleOtherWalletPreview.length < visibleOtherWalletGroups.length
+  const otherWalletsPreviewCount = 2
+  const hasMoreOtherWallets =
+    visibleOtherWalletGroups.length > otherWalletsPreviewCount
+  const visibleOtherWallets =
+    !hasMoreOtherWallets || isMoreWalletsListOpen
+      ? visibleOtherWalletGroups
+      : visibleOtherWalletGroups.slice(0, otherWalletsPreviewCount)
 
   return (
     <SWalletManagementShell showAccountPanel={showAccountPanel}>
@@ -492,114 +495,83 @@ export const WalletManagementContent = () => {
                     gap: showAccountPanel ? "m" : "base",
                   }}
                 >
-                  <SSourceSectionLabel
-                    fs="p5"
-                    fw={500}
-                    color={getToken("text.low")}
-                  >
-                    {t("provider.installedAndRecent")}
-                  </SSourceSectionLabel>
-
-                  <SSourceList>
-                    {showAccountPanel && (
+                  {showAccountPanel && connectedAccountsCount > 0 && (
+                    <SSourceList>
                       <WalletSourceButton
                         active={selectedSource === "all"}
                         title={t("provider.allAccountsAndWallets")}
+                        subtitle={t("provider.allAccountsCount", {
+                          count: connectedAccountsCount,
+                        })}
                         icon={WalletIcon}
                         onClick={() => setSelectedSource("all")}
                       />
-                    )}
+                    </SSourceList>
+                  )}
 
-                    {recentlyConnectedProviderTypes.length > 0 && (
-                      <WalletSourceButton
-                        title={t("provider.recentlyConnected")}
-                        subtitle={t("provider.connect")}
-                        logos={recentlyConnectedProviderTypes}
-                        pending={recentlyConnectedProviderTypes.some(
-                          (provider) => pendingProviderTypes.includes(provider),
-                        )}
-                        variant={
-                          showAccountPanel ? "management" : "firstConnection"
-                        }
-                        onClick={handleRecentWalletsConnect}
-                      />
-                    )}
+                  {visibleRecentWalletGroups.length > 0 && (
+                    <SSourceList>
+                      <SSourceSectionLabel
+                        fs="p5"
+                        fw={500}
+                        color={getToken("text.low")}
+                      >
+                        {t("provider.recentlyUsed")}
+                      </SSourceSectionLabel>
+                      {visibleRecentWalletGroups.map(renderWalletGroup)}
+                    </SSourceList>
+                  )}
 
-                    {visibleSuggestedWalletGroups.map((group) =>
-                      group.wallets.length === 1 ? (
+                  {(visibleInstalledWalletGroups.length > 0 ||
+                    showExternalWallet ||
+                    hasConnectedWalletState) && (
+                    <SSourceList>
+                      {visibleInstalledWalletGroups.length > 0 && (
+                        <SSourceSectionLabel
+                          fs="p5"
+                          fw={500}
+                          color={getToken("text.low")}
+                        >
+                          {t("provider.installed")}
+                        </SSourceSectionLabel>
+                      )}
+
+                      {visibleInstalledWalletGroups.map(renderWalletGroup)}
+
+                      {showExternalWallet && (
                         <WalletProviderSourceButton
-                          key={group.id}
-                          wallet={group.wallets[0]}
-                          active={selectedSource === group.wallets[0].provider}
-                          status={getStatus(group.wallets[0].provider)}
-                          pending={pendingProviderTypes.includes(
-                            group.wallets[0].provider,
-                          )}
-                          variant={
-                            showAccountPanel ? "management" : "firstConnection"
-                          }
-                          onClick={() => handleWalletClick(group.wallets[0])}
-                          onDisconnect={() =>
-                            disconnect(group.wallets[0].provider)
-                          }
-                        />
-                      ) : (
-                        <WalletGroupSourceButton
-                          key={group.id}
-                          group={group}
+                          wallet={getWallet(WalletProviderType.ExternalWallet)}
                           active={
-                            selectedSource === group.id ||
-                            group.providers.includes(
-                              selectedSource as WalletProviderType,
-                            )
+                            selectedSource === WalletProviderType.ExternalWallet
                           }
-                          connected={group.providers.some((provider) =>
-                            connectedProviderTypes.includes(provider),
-                          )}
-                          pending={group.providers.some((provider) =>
-                            pendingProviderTypes.includes(provider),
+                          status={getStatus(WalletProviderType.ExternalWallet)}
+                          pending={pendingProviderTypes.includes(
+                            WalletProviderType.ExternalWallet,
                           )}
                           variant={
                             showAccountPanel ? "management" : "firstConnection"
                           }
-                          onClick={() => handleWalletGroupSelect(group)}
+                          onClick={() =>
+                            setSelectedSource(WalletProviderType.ExternalWallet)
+                          }
+                          onDisconnect={() =>
+                            disconnect(WalletProviderType.ExternalWallet)
+                          }
                         />
-                      ),
-                    )}
+                      )}
 
-                    {showExternalWallet && (
-                      <WalletProviderSourceButton
-                        wallet={getWallet(WalletProviderType.ExternalWallet)}
-                        active={
-                          selectedSource === WalletProviderType.ExternalWallet
-                        }
-                        status={getStatus(WalletProviderType.ExternalWallet)}
-                        pending={pendingProviderTypes.includes(
-                          WalletProviderType.ExternalWallet,
-                        )}
-                        variant={
-                          showAccountPanel ? "management" : "firstConnection"
-                        }
-                        onClick={() =>
-                          setSelectedSource(WalletProviderType.ExternalWallet)
-                        }
-                        onDisconnect={() =>
-                          disconnect(WalletProviderType.ExternalWallet)
-                        }
-                      />
-                    )}
-
-                    {hasConnectedWalletState && (
-                      <WalletSourceButton
-                        title={t("provider.logOutAll")}
-                        icon={LogOut}
-                        variant={
-                          showAccountPanel ? "management" : "firstConnection"
-                        }
-                        onClick={() => disconnect()}
-                      />
-                    )}
-                  </SSourceList>
+                      {hasConnectedWalletState && (
+                        <WalletSourceButton
+                          title={t("provider.logOutAll")}
+                          icon={LogOut}
+                          variant={
+                            showAccountPanel ? "management" : "firstConnection"
+                          }
+                          onClick={() => disconnect()}
+                        />
+                      )}
+                    </SSourceList>
+                  )}
 
                   {visibleOtherWalletGroups.length > 0 && (
                     <SSourceList>
@@ -613,12 +585,30 @@ export const WalletManagementContent = () => {
                           ? t("provider.otherWallets")
                           : t("provider.otherWalletsFirstConnection")}
                       </SSourceOtherSectionLabel>
-                      {showAccountPanel ? (
-                        <SMoreWalletsDropdown>
-                          <WalletSourceButton
-                            title={t("provider.moreWallets")}
-                            onClick={() => setIsMoreOpen((open) => !open)}
-                            action={
+                      {visibleOtherWallets.map(renderWalletGroup)}
+                      {hasMoreOtherWallets && (
+                        <WalletSourceButton
+                          title={
+                            isMoreWalletsListOpen
+                              ? t("provider.hide")
+                              : showAccountPanel
+                                ? t("provider.moreWallets")
+                                : t("provider.showMore")
+                          }
+                          icon={
+                            showAccountPanel
+                              ? undefined
+                              : isMoreWalletsListOpen
+                                ? ChevronUp
+                                : ChevronDown
+                          }
+                          variant={
+                            showAccountPanel
+                              ? undefined
+                              : "firstConnectionPlain"
+                          }
+                          action={
+                            showAccountPanel ? (
                               <Icon
                                 size="xs"
                                 component={
@@ -627,103 +617,10 @@ export const WalletManagementContent = () => {
                                     : ChevronDown
                                 }
                               />
-                            }
-                          />
-                          {isMoreWalletsListOpen && (
-                            <Flex direction="column" pt="xs">
-                              {visibleOtherWalletGroups.map((group) =>
-                                group.wallets.length === 1 ? (
-                                  <WalletProviderSourceButton
-                                    key={group.id}
-                                    wallet={group.wallets[0]}
-                                    active={
-                                      selectedSource ===
-                                      group.wallets[0].provider
-                                    }
-                                    status={getStatus(
-                                      group.wallets[0].provider,
-                                    )}
-                                    pending={pendingProviderTypes.includes(
-                                      group.wallets[0].provider,
-                                    )}
-                                    onClick={() =>
-                                      handleWalletClick(group.wallets[0])
-                                    }
-                                    onDisconnect={() =>
-                                      disconnect(group.wallets[0].provider)
-                                    }
-                                  />
-                                ) : (
-                                  <WalletGroupSourceButton
-                                    key={group.id}
-                                    group={group}
-                                    active={selectedSource === group.id}
-                                    connected={false}
-                                    pending={group.providers.some((provider) =>
-                                      pendingProviderTypes.includes(provider),
-                                    )}
-                                    onClick={() =>
-                                      handleWalletGroupSelect(group)
-                                    }
-                                  />
-                                ),
-                              )}
-                            </Flex>
-                          )}
-                        </SMoreWalletsDropdown>
-                      ) : (
-                        <>
-                          {visibleOtherWalletPreview.map((group) =>
-                            group.wallets.length === 1 ? (
-                              <WalletProviderSourceButton
-                                key={group.id}
-                                wallet={group.wallets[0]}
-                                active={
-                                  selectedSource === group.wallets[0].provider
-                                }
-                                status={getStatus(group.wallets[0].provider)}
-                                pending={pendingProviderTypes.includes(
-                                  group.wallets[0].provider,
-                                )}
-                                variant="firstConnection"
-                                onClick={() =>
-                                  handleWalletClick(group.wallets[0])
-                                }
-                                onDisconnect={() =>
-                                  disconnect(group.wallets[0].provider)
-                                }
-                              />
-                            ) : (
-                              <WalletGroupSourceButton
-                                key={group.id}
-                                group={group}
-                                active={selectedSource === group.id}
-                                connected={false}
-                                pending={group.providers.some((provider) =>
-                                  pendingProviderTypes.includes(provider),
-                                )}
-                                variant="firstConnection"
-                                onClick={() => handleWalletGroupSelect(group)}
-                              />
-                            ),
-                          )}
-                          {(hasHiddenOtherWallets ||
-                            (shouldFoldOtherWallets &&
-                              isMoreWalletsListOpen)) && (
-                            <WalletSourceButton
-                              title={
-                                isMoreWalletsListOpen
-                                  ? t("provider.hide")
-                                  : t("provider.showMore")
-                              }
-                              icon={
-                                isMoreWalletsListOpen ? ChevronUp : ChevronDown
-                              }
-                              variant="firstConnectionPlain"
-                              onClick={() => setIsMoreOpen((open) => !open)}
-                            />
-                          )}
-                        </>
+                            ) : undefined
+                          }
+                          onClick={() => setIsMoreOpen((open) => !open)}
+                        />
                       )}
                     </SSourceList>
                   )}

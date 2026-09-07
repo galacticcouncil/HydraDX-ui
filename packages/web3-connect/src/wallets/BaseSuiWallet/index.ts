@@ -9,7 +9,7 @@ import { Wallet as StandardWallet } from "@mysten/wallet-standard"
 import { WalletProviderType } from "@/config/providers"
 import { SuiSigner } from "@/signers/SuiSigner"
 import { SubscriptionFn, Wallet, WalletAccount } from "@/types/wallet"
-import { AuthError, NotInstalledError } from "@/utils/errors"
+import { AuthError, BaseWalletError, NotInstalledError } from "@/utils/errors"
 
 const getSuiStandardWallet = (name: string): StandardWallet | undefined =>
   getWallets()
@@ -104,6 +104,9 @@ export class BaseSuiWallet implements Wallet {
         },
       ])
     } catch (err: unknown) {
+      if (err instanceof BaseWalletError) {
+        throw err
+      }
       throw this.transformError(err as Error)
     }
   }

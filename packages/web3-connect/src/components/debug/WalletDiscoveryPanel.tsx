@@ -101,6 +101,13 @@ const Yes = ({ value }: { value: boolean }) => (
   </span>
 )
 
+const Icon = ({ src }: { src?: string }) =>
+  src ? (
+    <img src={src} alt="" width={20} height={20} />
+  ) : (
+    <span style={{ opacity: 0.5 }}>—</span>
+  )
+
 const Section = ({
   title,
   count,
@@ -192,7 +199,7 @@ export const WalletDiscoveryPanel = () => {
                 <td style={cell}>{info.name}</td>
                 <td style={cell}>{info.uuid}</td>
                 <td style={cell}>
-                  <Yes value={!!info.icon} />
+                  <Icon src={info.icon} />
                 </td>
                 <td style={cell}>
                   {matched.length ? (
@@ -228,7 +235,7 @@ export const WalletDiscoveryPanel = () => {
                 <td style={cell}>{wallet.chains.join(", ")}</td>
                 <td style={cell}>{Object.keys(wallet.features).join(", ")}</td>
                 <td style={cell}>
-                  <Yes value={!!wallet.icon} />
+                  <Icon src={wallet.icon} />
                 </td>
                 <td style={cell}>
                   {matched.length ? (

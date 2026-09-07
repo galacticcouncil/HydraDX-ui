@@ -1,21 +1,15 @@
+import { Theme } from "@emotion/react"
 import { Box, Flex, Image } from "@galacticcouncil/ui/components"
 import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
 
-/** Styles for the rows of the wallet-source column. */
-/** A round, contained image mark. Sizes are named by role at each use site. */
-const roundMark = (size: number) => css`
-  width: ${pxToRem(size)};
-  height: ${pxToRem(size)};
-  border-radius: 9999px;
+const roundMark = (theme: Theme, size: string) => css`
+  width: ${size};
+  height: ${size};
+  border-radius: ${theme.radii.full};
   flex-shrink: 0;
   object-fit: contain;
 `
 
-/**
- * One row in the wallet-source column. The three variants are driven by
- * `data-variant` so the button stays a plain element with no variant prop
- * threaded through it.
- */
 export const SSourceButton = styled.button(
   ({ theme }) => css`
     width: 100%;
@@ -24,9 +18,10 @@ export const SSourceButton = styled.button(
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: ${pxToRem(4)};
+    gap: ${theme.space.s};
 
     padding: ${theme.space.base};
+    padding-right: ${theme.space.s};
 
     border: 1px solid transparent;
     border-radius: ${theme.radii.m};
@@ -87,15 +82,15 @@ export const SSourceButtonContent = styled(Flex)(
 export const SSourceButtonEnd = styled(Flex)(
   ({ theme }) => css`
     align-items: center;
-    gap: ${theme.space.s};
+    gap: ${theme.space.xs};
     flex-shrink: 0;
   `,
 )
 
 export const SSourceIcon = styled(Box)(
   ({ theme }) => css`
-    width: ${pxToRem(20)};
-    height: ${pxToRem(20)};
+    width: ${theme.sizes.l};
+    height: ${theme.sizes.l};
     border-radius: ${theme.radii.full};
 
     background: ${theme.buttons.secondary.outline.fill};
@@ -108,43 +103,42 @@ export const SSourceIcon = styled(Box)(
   `,
 )
 
-/** A source row's own logo. Square-ish brand marks stay unrounded. */
-export const SSourceLogo = styled(Image)`
-  width: ${pxToRem(20)};
-  height: ${pxToRem(20)};
-  flex-shrink: 0;
-  object-fit: contain;
-`
+export const SSourceLogo = styled(Image)(
+  ({ theme }) => css`
+    width: ${theme.sizes.l};
+    height: ${theme.sizes.l};
+    flex-shrink: 0;
+    object-fit: contain;
+  `,
+)
 
 export const SStackedSourceLogos = styled(Flex)`
   flex-shrink: 0;
 `
 
-/** Group logos stack with a 4px overlap when a brand has several wallets. */
-export const SStackedSourceLogo = styled(Image)`
-  ${roundMark(14)}
+export const SStackedSourceLogo = styled(Image)(
+  ({ theme }) => css`
+    ${roundMark(theme, theme.sizes.s)}
 
-  & + & {
-    margin-left: ${pxToRem(-4)};
-  }
-`
+    & + & {
+      margin-left: -${theme.space.s};
+    }
+  `,
+)
 
 export const SSourceChainBadges = styled(Flex)`
   align-items: center;
   flex-shrink: 0;
 `
 
-/**
- * Badges overlap by 5px. The offset is a sibling rule rather than an index
- * prop, so the render does not have to count.
- */
 export const SSourceChainBadge = styled(Box)(
   ({ theme }) => css`
-    width: ${pxToRem(18)};
-    height: ${pxToRem(18)};
+    width: ${theme.sizes["m"]};
+    height: ${theme.sizes["m"]};
     border-radius: ${theme.radii.full};
 
     background: ${theme.surfaces.containers.high.primary};
+    border: 1px solid ${theme.surfaces.containers.high.primary};
 
     display: flex;
     align-items: center;
@@ -157,15 +151,17 @@ export const SSourceChainBadge = styled(Box)(
   `,
 )
 
-export const SChainBadgeImage = styled(Image)`
-  ${roundMark(12)}
-`
+export const SChainBadgeImage = styled(Image)(
+  ({ theme }) => css`
+    ${roundMark(theme, theme.sizes.xs)}
+  `,
+)
 
 export const SSourceAction = styled(Box)(
   ({ theme }) => css`
-    width: ${pxToRem(24)};
-    height: ${pxToRem(24)};
-    border-radius: ${pxToRem(4)};
+    width: ${theme.sizes.l};
+    height: ${theme.sizes.l};
+    border-radius: ${theme.radii.base};
 
     color: ${theme.text.medium};
     cursor: pointer;
@@ -181,8 +177,27 @@ export const SSourceAction = styled(Box)(
   `,
 )
 
-/** Shrink-wrapped text columns: the guard against a flex child refusing to truncate. */
 export const STruncatingColumn = styled(Flex)`
   flex-direction: column;
   min-width: 0;
 `
+
+export const SConnectedSubtitle = styled(Flex)(
+  ({ theme }) => css`
+    align-items: center;
+    gap: ${theme.space.xs};
+    min-width: 0;
+  `,
+)
+
+export const SConnectedDot = styled(Box)(
+  ({ theme }) => css`
+    width: ${theme.sizes["3xs"]};
+    height: ${theme.sizes["3xs"]};
+    border: 1px solid ${theme.accents.success.emphasis};
+    background: ${theme.accents.success.emphasis};
+    border-radius: ${theme.radii.full};
+    box-sizing: content-box;
+    flex-shrink: 0;
+  `,
+)

@@ -5,7 +5,7 @@ import { WalletProviderType } from "@/config/providers"
 import { SolanaSigner } from "@/signers/SolanaSigner"
 import { SolanaInjectedWindowProvider } from "@/types/solana"
 import { Wallet, WalletAccount } from "@/types/wallet"
-import { AuthError, NotInstalledError } from "@/utils/errors"
+import { AuthError, BaseWalletError, NotInstalledError } from "@/utils/errors"
 import {
   getSolanaStandardWallet,
   SolanaWalletStandardProvider,
@@ -101,7 +101,10 @@ export class BaseSolanaWallet implements Wallet {
       ])
 
       //this.subscribeAccounts()
-    } catch {
+    } catch (err: unknown) {
+      if (err instanceof BaseWalletError) {
+        throw err
+      }
       throw this.transformError()
     }
   }
