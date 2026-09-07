@@ -33,22 +33,17 @@ export async function requestNetworkSwitch(
     options.chain ?? HYDRATION_CHAIN_KEY,
     options.priorityRpcUrl,
   )
+  const switchChainParams = [{ chainId: params.chainId }] as [
+    { chainId: string },
+  ]
 
   try {
-    if (options.chain === HYDRATION_CHAIN_KEY) {
-      // request to add chain first, wallet will skip this if the chain and rpc combination already exists
-      await provider.request({
-        method: "wallet_addEthereumChain",
-        params: [params],
-      })
-    }
-
-    await provider
-      .request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: params.chainId }],
-      })
-      .then(options?.onSwitch)
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: switchChainParams,
+    })
+    options?.onSwitch?.()
+    return
   } catch (error: unknown) {
     /**
      * MetaMask v12.14.2 introduced bug with switching networks.
@@ -65,37 +60,48 @@ export async function requestNetworkSwitch(
 
     const errorType = normalizeChainSwitchError(provider, error)
 
-    if (errorType === "CHAIN_NOT_FOUND") {
-      try {
-        await Promise.race([
-          provider.request({
-            method: "wallet_addEthereumChain",
-            params: [params],
-          }),
-          new Promise((resolve) => {
-            const id = setInterval(async () => {
-              const chainId = await provider.request({ method: "eth_chainId" })
-              if (chainId === params.chainId) {
-                resolve(true)
-                clearInterval(id)
-              } else {
-                await provider.request({
-                  method: "wallet_switchEthereumChain",
-                  params: [params],
-                })
-              }
-            }, 5000)
-          }),
-        ])
-
-        options?.onSwitch?.()
-      } catch {
-        console.error("Failed to switch network")
-      }
-    } else {
+    if (errorType !== "CHAIN_NOT_FOUND") {
       if (error instanceof Error) throw error
+      throw error
     }
   }
+
+  await provider.request({
+    method: "wallet_addEthereumChain",
+    params: [params],
+  })
+
+  const walletChainId = (await provider.request({
+    method: "eth_chainId",
+  })) as string
+
+  if (walletChainId.toLowerCase() === params.chainId.toLowerCase()) {
+    options?.onSwitch?.()
+    return
+  }
+
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: switchChainParams,
+    })
+  } catch (switchAfterAddError) {
+    const chainIdAfterFailedSwitch = (await provider.request({
+      method: "eth_chainId",
+    })) as string
+
+    if (
+      chainIdAfterFailedSwitch.toLowerCase() === params.chainId.toLowerCase()
+    ) {
+      options?.onSwitch?.()
+      return
+    }
+
+    if (switchAfterAddError instanceof Error) throw switchAfterAddError
+    throw switchAfterAddError
+  }
+
+  options?.onSwitch?.()
 }
 
 export type AddEvmChainParams = {
@@ -129,16 +135,18 @@ const getAddEvmChainParams = (
       )
     : [...chainProps.rpcUrls.default.http]
 
-  return {
+  const addParams = {
     chainId: "0x" + Number(chainProps.id).toString(16),
     chainName: chainProps.name,
-    rpcUrls: rpcUrls,
-    iconUrls: [],
+    // Wallets expect a single RPC URL when adding a network (see wagmi coinbaseWallet connector)
+    rpcUrls: [rpcUrls[0] ?? ""],
     nativeCurrency: chainProps.nativeCurrency,
     blockExplorerUrls: chainProps.blockExplorers?.default
       ? [chainProps.blockExplorers.default.url]
       : [],
-  } satisfies AddEvmChainParams
+  } satisfies Omit<AddEvmChainParams, "iconUrls">
+
+  return addParams as AddEvmChainParams
 }
 
 function normalizeChainSwitchError(provider: EIP1193Provider, error: any) {
