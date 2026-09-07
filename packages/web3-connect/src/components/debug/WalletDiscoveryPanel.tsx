@@ -74,6 +74,27 @@ const groupOf = (provider: WalletProviderType) => {
   )
 }
 
+/** `isX` flags often live as non-enumerable prototype getters, so own
+ * enumerable properties alone under-report them. */
+const injectedFlags = (provider: object) => {
+  const flags: string[] = []
+  for (
+    let o: object | null = provider;
+    o && o !== Object.prototype;
+    o = Object.getPrototypeOf(o)
+  ) {
+    for (const key of Object.getOwnPropertyNames(o)) {
+      if (!key.startsWith("is") || flags.includes(key)) continue
+      try {
+        if ((provider as Record<string, unknown>)[key] === true) flags.push(key)
+      } catch {
+        // a getter that throws is not a flag we can read
+      }
+    }
+  }
+  return flags
+}
+
 const Yes = ({ value }: { value: boolean }) => (
   <span style={{ color: value ? "#3fb950" : "#f85149" }}>
     {value ? "yes" : "no"}
@@ -121,8 +142,19 @@ export const WalletDiscoveryPanel = () => {
       (w) => w.accessor === rdns || `${w.accessor}.mobile` === rdns,
     )
 
-  const matchStandard = (name: string) =>
-    configured.filter((w) => w.accessor === name)
+  // a name alone is ambiguous — Phantom and Nightly each register several
+  // chain flavors under one name — so apply the same chain filter the
+  // production lookups use: `sui:mainnet` exactly for BaseSuiWallet
+  // (Slush/index.ts:24), any `solana:` chain for getSolanaStandardWallet
+  const matchStandard = (wallet: StandardWallet) =>
+    configured.filter((w) => {
+      if (w.accessor !== wallet.name) return false
+      const group = groupOf(w.provider)
+      if (group.includes("Sui")) return wallet.chains.includes("sui:mainnet")
+      if (group.includes("Solana"))
+        return wallet.chains.some((c) => c.startsWith("solana:"))
+      return true
+    })
 
   return (
     <div
@@ -187,9 +219,9 @@ export const WalletDiscoveryPanel = () => {
         </thead>
         <tbody>
           {standard.map((wallet) => {
-            const matched = matchStandard(wallet.name)
+            const matched = matchStandard(wallet)
             return (
-              <tr key={wallet.name}>
+              <tr key={`${wallet.name}-${wallet.chains.join()}`}>
                 <td style={cell}>
                   <strong>{wallet.name}</strong>
                 </td>
@@ -233,12 +265,7 @@ export const WalletDiscoveryPanel = () => {
                 <Yes value={!!provider} />
               </td>
               <td style={cell}>
-                {provider
-                  ? Object.entries(provider)
-                      .filter(([k, v]) => k.startsWith("is") && v === true)
-                      .map(([k]) => k)
-                      .join(", ") || "—"
-                  : "—"}
+                {provider ? injectedFlags(provider).join(", ") || "—" : "—"}
               </td>
             </tr>
           ))}
