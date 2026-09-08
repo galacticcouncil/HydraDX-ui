@@ -260,7 +260,6 @@ export const useWeb3Connect = create<WalletProviderStore>()(
             accounts: remainingAccounts,
             providers: remainingProviders,
             recentProvider: null,
-            // ...initialState would wipe this on disconnect and "log out all".
             recentlyUsedProviders: state.recentlyUsedProviders,
             mode: state.mode,
             open: state.open,

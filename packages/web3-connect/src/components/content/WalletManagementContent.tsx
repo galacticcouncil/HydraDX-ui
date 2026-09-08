@@ -1,5 +1,12 @@
 import { Search, WalletIcon } from "@galacticcouncil/ui/assets/icons"
-import { Flex, Icon, ScrollArea, Text } from "@galacticcouncil/ui/components"
+import {
+  Box,
+  Flex,
+  Icon,
+  Input,
+  ScrollArea,
+  Text,
+} from "@galacticcouncil/ui/components"
 import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
 import { ChevronDown, ChevronUp, LogOut } from "lucide-react"
 import {
@@ -23,24 +30,17 @@ import {
 } from "@/components/content/WalletManagementAccounts"
 import {
   SAccountFilterButton,
-  SAccountScrollFrame,
-  SEmptyState,
   SLayoutGrid,
   SModalBody,
   SModalHeader,
   SRightColumn,
-  SRightColumnBody,
   SRightPanelFrame,
   SScrollAreaContent,
-  SSearchInput,
   SSourceColumn,
   SSourceFooter,
   SSourceFooterAction,
   SSourceFooterGradient,
-  SSourceList,
-  SSourceOtherSectionLabel,
   SSourceScrollFrame,
-  SSourceSectionLabel,
   SWalletManagementShell,
 } from "@/components/content/WalletManagementContent.styled"
 import {
@@ -474,13 +474,15 @@ export const WalletManagementContent = () => {
       />
       <SModalBody noPadding scrollable={false}>
         <SLayoutGrid showAccountPanel={showAccountPanel}>
-          <SSourceColumn showAccountPanel={showAccountPanel}>
-            <SSearchInput
+          <SSourceColumn>
+            <Input
               value={walletSearchValue}
               onChange={(event) => setWalletSearchValue(event.target.value)}
               customSize="large"
               iconStart={Search}
               placeholder={t("provider.searchWallets")}
+              width="100%"
+              sx={{ flexShrink: 0 }}
             />
 
             <SSourceScrollFrame hasFooter={hasConnectedWalletState}>
@@ -493,7 +495,7 @@ export const WalletManagementContent = () => {
                   }}
                 >
                   {showAccountPanel && connectedAccountsCount > 0 && (
-                    <SSourceList>
+                    <Flex direction="column" gap="s">
                       <WalletSourceButton
                         active={selectedSource === "all"}
                         title={t("provider.allAccountsAndWallets")}
@@ -503,33 +505,35 @@ export const WalletManagementContent = () => {
                         icon={WalletIcon}
                         onClick={() => setSelectedSource("all")}
                       />
-                    </SSourceList>
+                    </Flex>
                   )}
 
                   {visibleRecentWalletGroups.length > 0 && (
-                    <SSourceList>
-                      <SSourceSectionLabel
+                    <Flex direction="column" gap="s">
+                      <Text
                         fs="p5"
                         fw={500}
+                        lh={1.25}
                         color={getToken("text.low")}
                       >
                         {t("provider.recentlyUsed")}
-                      </SSourceSectionLabel>
+                      </Text>
                       {visibleRecentWalletGroups.map(renderWalletGroup)}
-                    </SSourceList>
+                    </Flex>
                   )}
 
                   {(visibleInstalledWalletGroups.length > 0 ||
                     showExternalWallet) && (
-                    <SSourceList>
+                    <Flex direction="column" gap="s">
                       {visibleInstalledWalletGroups.length > 0 && (
-                        <SSourceSectionLabel
+                        <Text
                           fs="p5"
                           fw={500}
+                          lh={1.25}
                           color={getToken("text.low")}
                         >
                           {t("provider.installed")}
-                        </SSourceSectionLabel>
+                        </Text>
                       )}
 
                       {visibleInstalledWalletGroups.map(renderWalletGroup)}
@@ -555,21 +559,22 @@ export const WalletManagementContent = () => {
                           }
                         />
                       )}
-                    </SSourceList>
+                    </Flex>
                   )}
 
                   {visibleOtherWalletGroups.length > 0 && (
-                    <SSourceList>
-                      <SSourceOtherSectionLabel
+                    <Flex direction="column" gap="s">
+                      <Text
                         fs="p5"
                         fw={500}
+                        lh={1.25}
                         color={getToken("text.low")}
-                        showAccountPanel={showAccountPanel}
+                        pt={showAccountPanel ? undefined : "l"}
                       >
                         {showAccountPanel
                           ? t("provider.otherWallets")
                           : t("provider.otherWalletsFirstConnection")}
-                      </SSourceOtherSectionLabel>
+                      </Text>
                       {visibleOtherWallets.map(renderWalletGroup)}
                       {hasMoreOtherWallets && (
                         <WalletSourceButton
@@ -607,7 +612,7 @@ export const WalletManagementContent = () => {
                           onClick={() => setIsMoreOpen((open) => !open)}
                         />
                       )}
-                    </SSourceList>
+                    </Flex>
                   )}
                 </SScrollAreaContent>
               </ScrollArea>
@@ -636,14 +641,14 @@ export const WalletManagementContent = () => {
             {selectedSource === WalletProviderType.ExternalWallet &&
             showExternalWallet ? (
               <SRightColumn>
-                <SRightColumnBody>
+                <Box flex={1} sx={{ minHeight: 0, overflowY: "auto" }}>
                   <FormProvider {...externalWalletForm}>
                     <ExternalWalletForm
                       onAddressBookOpen={() => setIsAddressBookOpen(true)}
                       hideSubmitAction
                     />
                   </FormProvider>
-                </SRightColumnBody>
+                </Box>
               </SRightColumn>
             ) : showErrorState ? (
               <WalletErrorState
@@ -679,7 +684,7 @@ export const WalletManagementContent = () => {
               />
             ) : (
               <SRightColumn>
-                <SSearchInput
+                <Input
                   value={accountSearchValue}
                   onChange={(event) =>
                     setAccountSearchValue(event.target.value)
@@ -687,6 +692,8 @@ export const WalletManagementContent = () => {
                   customSize="large"
                   iconStart={Search}
                   placeholder={t("account.searchAccounts")}
+                  width="100%"
+                  sx={{ flexShrink: 0 }}
                 />
 
                 {chipModes.length > 0 && (
@@ -709,7 +716,12 @@ export const WalletManagementContent = () => {
                   </Flex>
                 )}
 
-                <SAccountScrollFrame>
+                <Box
+                  flex={1}
+                  height="100%"
+                  overflow="hidden"
+                  sx={{ minHeight: 0 }}
+                >
                   <ScrollArea>
                     <SScrollAreaContent
                       sx={{
@@ -748,15 +760,21 @@ export const WalletManagementContent = () => {
                           ))
                         )
                       ) : (
-                        <SEmptyState>
+                        <Flex
+                          align="center"
+                          justify="center"
+                          borderRadius="m"
+                          bg={getToken("surfaces.containers.dim.dimOnBg")}
+                          sx={{ minHeight: pxToRem(260) }}
+                        >
                           <Text fs="p4" color={getToken("text.medium")}>
                             {t("account.noResults")}
                           </Text>
-                        </SEmptyState>
+                        </Flex>
                       )}
                     </SScrollAreaContent>
                   </ScrollArea>
-                </SAccountScrollFrame>
+                </Box>
               </SRightColumn>
             )}
           </SRightPanelFrame>

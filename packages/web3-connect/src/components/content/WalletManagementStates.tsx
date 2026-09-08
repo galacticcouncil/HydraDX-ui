@@ -1,13 +1,10 @@
 import { HydrationLogo, WalletIcon } from "@galacticcouncil/ui/assets/icons"
-import { Flex, Icon, Spinner, Text } from "@galacticcouncil/ui/components"
+import { Box, Flex, Icon, Spinner, Text } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
 import { ChevronRight, CircleAlert, Download } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import {
-  SRightColumn,
-  SRightColumnBody,
-} from "@/components/content/WalletManagementContent.styled"
+import { SRightColumn } from "@/components/content/WalletManagementContent.styled"
 import {
   WalletSourceButton,
   WalletSourceGroup,
@@ -110,7 +107,7 @@ export const WalletChainSelectState: React.FC<{
         </Text>
       </SChainSelectHeader>
 
-      <SRightColumnBody>
+      <Box flex={1} sx={{ minHeight: 0, overflowY: "auto" }}>
         <Flex direction="column" gap="s">
           {selectableWallets.map((wallet) => {
             const status = getStatus(wallet.provider)
@@ -162,7 +159,7 @@ export const WalletChainSelectState: React.FC<{
             )
           })}
         </Flex>
-      </SRightColumnBody>
+      </Box>
     </SRightColumn>
   )
 }

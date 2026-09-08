@@ -3,10 +3,8 @@ import {
   Button,
   Flex,
   Grid,
-  Input,
   ModalBody,
   ModalHeader,
-  Text,
 } from "@galacticcouncil/ui/components"
 import { mq } from "@galacticcouncil/ui/theme"
 import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
@@ -97,14 +95,7 @@ export const SLayoutGrid = styled(Grid, { shouldForwardProp })<PanelProps>(
   `,
 )
 
-export const SSearchInput = styled(Input)(
-  () => css`
-    flex-shrink: 0;
-    width: 100%;
-  `,
-)
-
-export const SSourceColumn = styled(Flex, { shouldForwardProp })<PanelProps>(
+export const SSourceColumn = styled(Flex)(
   ({ theme }) => css`
     flex-direction: column;
     gap: ${theme.space.base};
@@ -118,19 +109,6 @@ export const SSourceColumn = styled(Flex, { shouldForwardProp })<PanelProps>(
     ${mq("md")} {
       max-height: 100%;
     }
-  `,
-)
-
-export const SSourceSectionLabel = styled(Text)`
-  line-height: ${pxToRem(15)};
-`
-
-export const SSourceOtherSectionLabel = styled(Text, {
-  shouldForwardProp,
-})<PanelProps>(
-  ({ theme, showAccountPanel }) => css`
-    line-height: ${pxToRem(15)};
-    padding-top: ${showAccountPanel ? 0 : theme.space.l};
   `,
 )
 
@@ -154,14 +132,19 @@ export const SSourceScrollFrame = styled(Box, {
   `,
 )
 
-export const SSourceFooter = styled(Box)`
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
+export const SSourceFooter = styled(Box)(
+  ({ theme }) => css`
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: ${theme.space.base};
 
-  display: flex;
-  flex-direction: column;
-`
+    display: flex;
+    flex-direction: column;
+
+    background: ${theme.surfaces.themeBasePalette.surfaceHigh};
+  `,
+)
 
 export const SSourceFooterGradient = styled(Box)(
   ({ theme }) => css`
@@ -169,7 +152,7 @@ export const SSourceFooterGradient = styled(Box)(
     background: linear-gradient(
       to bottom,
       transparent,
-      ${theme.controls.dim.base}
+      ${theme.surfaces.themeBasePalette.surfaceHigh}
     );
     pointer-events: none;
   `,
@@ -178,14 +161,7 @@ export const SSourceFooterGradient = styled(Box)(
 export const SSourceFooterAction = styled(Box)(
   ({ theme }) => css`
     min-height: ${SOURCE_FOOTER_BUTTON_HEIGHT};
-    background: ${theme.controls.dim.base};
-  `,
-)
-
-export const SSourceList = styled(Flex)(
-  ({ theme }) => css`
-    flex-direction: column;
-    gap: ${theme.space.s};
+    background: ${theme.surfaces.themeBasePalette.surfaceHigh};
   `,
 )
 
@@ -231,41 +207,9 @@ export const SRightColumn = styled(Flex)(
   `,
 )
 
-export const SRightColumnBody = styled(Box)(
-  () => css`
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  `,
-)
-
 export const SAccountFilterButton = styled(Button)(
   ({ theme }) => css`
     min-width: ${pxToRem(80)};
     padding-block: ${theme.space.s};
-  `,
-)
-
-export const SAccountScrollFrame = styled(Box)`
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-  overflow: hidden;
-`
-
-export const SMoreWalletsDropdown = styled(Box)(
-  ({ theme }) => css`
-    border-radius: ${theme.radii.m};
-    overflow: hidden;
-  `,
-)
-
-export const SEmptyState = styled(Flex)(
-  ({ theme }) => css`
-    align-items: center;
-    justify-content: center;
-    min-height: ${pxToRem(260)};
-    border-radius: ${theme.radii.m};
-    background: ${theme.surfaces.containers.dim.dimOnBg};
   `,
 )
