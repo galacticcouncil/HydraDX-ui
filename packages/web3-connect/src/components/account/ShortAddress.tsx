@@ -14,7 +14,11 @@ export const ShortAddress: React.FC<Props> = ({ address, length }) => {
   return (
     <>
       {value.slice(0, -3)}
-      <Text as="span" color={getToken("text.high")}>
+      <Text
+        as="span"
+        color={getToken("text.high")}
+        sx={{ fontFamily: "inherit" }}
+      >
         {value.slice(-3)}
       </Text>
     </>

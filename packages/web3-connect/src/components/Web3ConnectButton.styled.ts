@@ -30,11 +30,6 @@ export const SConnectedButton = styled(Button)(
     &:not(:disabled):hover,
     &:not(:disabled):active {
       background: ${theme.buttons.outlineDark.hover};
-
-      ${SProviderBadge} {
-        border-color: ${theme.buttons.outlineDark.hover};
-        background: ${theme.buttons.outlineDark.hover};
-      }
     }
   `,
 )
