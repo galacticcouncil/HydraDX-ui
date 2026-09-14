@@ -1,3 +1,4 @@
+import { METADATA_CDN_URL } from "@galacticcouncil/utils"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Search } from "lucide-react"
 import React from "react"
@@ -113,7 +114,9 @@ const WithCustomHeaderTemplate = (
                 align="center"
               >
                 <Flex align="center" gap="base">
-                  <AssetLogo src="https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/polkadot/2034/assets/0/icon.svg" />
+                  <AssetLogo
+                    src={`${METADATA_CDN_URL}/v2/polkadot/2034/assets/0/icon.svg`}
+                  />
                   <Text fw={600}>HDX</Text>
                 </Flex>
                 <Text fs="p6" color={getToken("text.medium")}>

@@ -1,8 +1,13 @@
-import { Box, Button, Flex, Image } from "@galacticcouncil/ui/components"
+import {
+  Box,
+  Flex,
+  Image,
+  LoadingButton,
+  Spinner,
+} from "@galacticcouncil/ui/components"
 import { mq } from "@galacticcouncil/ui/theme"
 import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
 
-/** Styles for the three states the right panel shows instead of accounts. */
 export const SChainSelectHeader = styled(Flex)(
   ({ theme }) => css`
     flex-direction: column;
@@ -12,21 +17,22 @@ export const SChainSelectHeader = styled(Flex)(
     padding: ${theme.space.base} ${theme.space.base} ${theme.space.s};
 
     ${mq("md")} {
-      padding: ${theme.space.xl} ${pxToRem(30)} ${theme.space.s};
+      padding: ${theme.space.xl} ${theme.space.xxxl} ${theme.space.s};
     }
   `,
 )
 
-/** The large mark in the connect and chain-select states. */
-export const SWalletMark = styled(Image)`
-  width: ${pxToRem(52)};
-  height: ${pxToRem(52)};
-  border-radius: 9999px;
-  flex-shrink: 0;
-  object-fit: contain;
-`
+export const SWalletMark = styled(Image)(
+  ({ theme }) => css`
+    width: calc(${theme.sizes["2xl"]} + ${theme.space.l});
+    height: calc(${theme.sizes["2xl"]} + ${theme.space.l});
+    border-radius: ${theme.radii.full};
+    flex-shrink: 0;
+    object-fit: contain;
+  `,
+)
 
-export const SWalletErrorState = styled(Flex)(
+export const SWalletConnectionState = styled(Flex)(
   ({ theme }) => css`
     align-items: center;
     justify-content: center;
@@ -34,29 +40,50 @@ export const SWalletErrorState = styled(Flex)(
     border-radius: ${theme.radii.m};
     background: ${theme.surfaces.containers.dim.dimOnBg};
 
-    min-height: ${pxToRem(260)};
+    min-height: ${theme.sizes["4xl"]};
     height: 100%;
     padding: ${theme.space.xl};
 
     ${mq("md")} {
-      padding: ${pxToRem(30)};
+      padding: ${theme.space.xxxl};
     }
   `,
 )
 
-export const SWalletErrorBody = styled(Flex)(
+export const SWalletConnectionBody = styled(Flex)(
   ({ theme }) => css`
     flex-direction: column;
     align-items: center;
     gap: ${theme.space.base};
     max-width: ${pxToRem(340)};
+    width: 100%;
   `,
 )
 
-export const SWalletErrorIcon = styled(Box)(
+export const SWalletConnectionVisual = styled(Box)(
   ({ theme }) => css`
-    width: ${pxToRem(40)};
-    height: ${pxToRem(40)};
+    width: calc(${theme.sizes["2xl"]} + ${theme.space.l});
+    height: calc(${theme.sizes["2xl"]} + ${theme.space.l});
+
+    display: grid;
+    place-items: center;
+
+    > * {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  `,
+)
+
+export const SWalletConnectionSpinner = styled(Spinner)`
+  width: 100%;
+  height: 100%;
+`
+
+export const SWalletConnectionStatusIcon = styled(Box)(
+  ({ theme }) => css`
+    width: calc(${theme.sizes["2xl"]} - ${theme.space.base});
+    height: calc(${theme.sizes["2xl"]} - ${theme.space.base});
     border-radius: ${theme.radii.full};
 
     background: ${theme.accents.danger.dimBg};
@@ -68,47 +95,41 @@ export const SWalletErrorIcon = styled(Box)(
   `,
 )
 
-export const SCenteredTextGroup = styled(Flex)`
-  flex-direction: column;
-  align-items: center;
-  gap: ${pxToRem(6)};
-`
-
-export const SWalletErrorRetryButton = styled(Button)(
+export const SWalletConnectionErrorRing = styled(Box)(
   ({ theme }) => css`
-    margin-top: ${theme.space.s};
+    width: 100%;
+    height: 100%;
+    border: ${theme.sizes["3xs"]} solid ${theme.accents.danger.secondary};
+    border-radius: ${theme.radii.full};
   `,
 )
 
-export const SWalletConnectState = styled(Flex)(
+export const SWalletConnectionLogo = styled(Image)(
   ({ theme }) => css`
-    align-items: center;
-    justify-content: center;
+    width: ${theme.sizes["2xl"]};
+    height: ${theme.sizes["2xl"]};
+    border-radius: ${theme.radii.full};
+    flex-shrink: 0;
+    object-fit: contain;
 
-    width: 100%;
-    height: 100%;
-    min-height: ${pxToRem(260)};
-    padding: ${theme.space.xl} ${theme.space.base};
-
-    ${mq("md")} {
-      padding: ${pxToRem(46)} ${pxToRem(30)};
+    &[data-framed="true"] {
+      width: calc(${theme.sizes["2xl"]} - ${theme.space.base});
+      height: calc(${theme.sizes["2xl"]} - ${theme.space.base});
     }
   `,
 )
 
-export const SWalletConnectBody = styled(Flex)(
+export const SCenteredTextGroup = styled(Flex)(
   ({ theme }) => css`
     flex-direction: column;
     align-items: center;
     gap: ${theme.space.base};
-    width: 100%;
   `,
 )
 
-export const SWalletConnectButton = styled(Button)(
+export const SWalletConnectionAction = styled(LoadingButton)(
   ({ theme }) => css`
     margin-top: ${theme.space.s};
     gap: ${theme.space.xs};
-    color: ${theme.buttons.primary.medium.onButton};
   `,
 )

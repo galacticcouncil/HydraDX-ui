@@ -8,7 +8,13 @@ import {
   Text,
 } from "@galacticcouncil/ui/components"
 import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
-import { ChevronDown, ChevronUp, LogOut } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronUp,
+  CircleAlert,
+  Download,
+  LogOut,
+} from "lucide-react"
 import {
   useCallback,
   useEffect,
@@ -51,15 +57,13 @@ import {
 } from "@/components/content/WalletManagementSource"
 import {
   WalletChainSelectState,
-  WalletConnectState,
-  WalletErrorState,
+  WalletConnectionState,
 } from "@/components/content/WalletManagementStates"
 import {
   ExternalWalletForm,
   useExternalWalletConnection,
 } from "@/components/external/ExternalWalletForm"
 import { useExternalWalletForm } from "@/components/external/ExternalWalletForm.form"
-import { ProviderLoader } from "@/components/provider/ProviderLoader"
 import { WalletProviderType } from "@/config/providers"
 import {
   chipModesForAccounts,
@@ -189,6 +193,9 @@ export const WalletManagementContent = () => {
   )
 
   const isProvidersConnecting = pendingProviderTypes.length > 0
+  const pendingProvider = pendingProviderTypes[0]
+  const pendingWallet = pendingProvider ? getWallet(pendingProvider) : undefined
+  const errorWallet = recentProvider ? getWallet(recentProvider) : undefined
   const hasConnectedWalletState =
     connectedProviderTypes.length > 0 || accounts.length > 0
   const connectedAccountsCount = useMemo(
@@ -230,10 +237,6 @@ export const WalletManagementContent = () => {
     : null
   const isExternalWalletSelected =
     selectedSource === WalletProviderType.ExternalWallet && showExternalWallet
-  const isSelectedWalletConnecting =
-    !!selectedWallet &&
-    selectedWallet.installed &&
-    selectedWalletStatus === WalletProviderStatus.Pending
   const showSelectedWalletConnectState =
     !!selectedWallet &&
     selectedWallet.provider !== WalletProviderType.ExternalWallet &&
@@ -246,7 +249,7 @@ export const WalletManagementContent = () => {
   const showAccountPanel =
     hasConnectedWalletState ||
     isExternalWalletSelected ||
-    isSelectedWalletConnecting ||
+    isProvidersConnecting ||
     showSelectedWalletConnectState ||
     showWalletGroupChainSelectState ||
     showErrorState
@@ -651,11 +654,21 @@ export const WalletManagementContent = () => {
                 </Box>
               </SRightColumn>
             ) : showErrorState ? (
-              <WalletErrorState
-                error={error}
-                onRetry={
+              <WalletConnectionState
+                title={t("error.title")}
+                description={error || t("error.unknown")}
+                visual={
+                  errorWallet
+                    ? { type: "error", wallet: errorWallet }
+                    : { type: "icon", icon: CircleAlert }
+                }
+                action={
                   recentProvider
-                    ? () => enableWithDisconnectOnError(recentProvider)
+                    ? {
+                        label: t("error.retry"),
+                        onClick: () =>
+                          enableWithDisconnectOnError(recentProvider),
+                      }
                     : undefined
                 }
               />
@@ -675,12 +688,56 @@ export const WalletManagementContent = () => {
                 onSelect={handleWalletClick}
               />
             ) : showSelectedWalletConnectState && selectedWallet ? (
-              <WalletConnectState
-                wallet={selectedWallet}
-                isConnecting={
+              <WalletConnectionState
+                title={selectedWallet.title}
+                description={
                   selectedWalletStatus === WalletProviderStatus.Pending
+                    ? t("provider.connectingWalletDescription")
+                    : t("provider.walletNotInstalledDescription", {
+                        wallet: selectedWallet.title,
+                      })
                 }
-                onConnect={() => enable(selectedWallet.provider)}
+                visual={{
+                  type:
+                    selectedWalletStatus === WalletProviderStatus.Pending
+                      ? "loading"
+                      : "wallet",
+                  wallet: selectedWallet,
+                }}
+                action={
+                  selectedWalletStatus === WalletProviderStatus.Pending
+                    ? {
+                        label: t("provider.connectingWallet"),
+                      }
+                    : {
+                        label: t("provider.installWallet", {
+                          wallet: selectedWallet.title,
+                        }),
+                        icon: Download,
+                        disabled: !selectedWallet.installUrl,
+                        onClick: () => {
+                          if (selectedWallet.installUrl) {
+                            window.open(
+                              selectedWallet.installUrl,
+                              "_blank",
+                              "noopener,noreferrer",
+                            )
+                          }
+                        },
+                      }
+                }
+              />
+            ) : isProvidersConnecting && pendingWallet ? (
+              <WalletConnectionState
+                title={t("provider.waitingForAuth")}
+                description={t("provider.authorizeDescription")}
+                visual={{
+                  type: "loading",
+                  wallet: pendingWallet,
+                }}
+                action={{
+                  label: t("provider.connectingWallet"),
+                }}
               />
             ) : (
               <SRightColumn>
@@ -730,9 +787,7 @@ export const WalletManagementContent = () => {
                         gap: "base",
                       }}
                     >
-                      {isProvidersConnecting ? (
-                        <ProviderLoader providers={pendingProviderTypes} />
-                      ) : accountsWithBalances.length > 0 ? (
+                      {accountsWithBalances.length > 0 ? (
                         selectedSource === "all" ? (
                           groupedAccounts.map((group) => (
                             <WalletAccountSection

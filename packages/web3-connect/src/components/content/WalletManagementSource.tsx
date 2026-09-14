@@ -216,7 +216,7 @@ export const WalletProviderSourceButton: React.FC<{
     ? t("provider.connected")
     : wallet.installed
       ? t("provider.connect")
-      : t("provider.install")
+      : t("provider.notInstalled")
 
   return (
     <WalletSourceButton
@@ -273,7 +273,7 @@ export const WalletGroupSourceButton: React.FC<{
     ? t("provider.connected")
     : isInstalled
       ? t("provider.connect")
-      : t("provider.install")
+      : t("provider.notInstalled")
 
   return (
     <WalletSourceButton

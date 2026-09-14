@@ -1,3 +1,4 @@
+import { METADATA_CDN_URL } from "@galacticcouncil/utils"
 import { Provider as TooltipProvider } from "@radix-ui/react-tooltip"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import React from "react"
@@ -12,14 +13,10 @@ export default {
   component: AssetLogo,
 } satisfies Meta<typeof AssetLogo>
 
-const ETH_SRC =
-  "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/ethereum/1/icon.svg"
-const AAVE_SRC =
-  "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/ethereum/1/assets/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9/icon.svg"
-const HDX_SRC =
-  "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/polkadot/2034/assets/0/icon.svg"
-const USDT_SRC =
-  "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/polkadot/2034/assets/10/icon.svg"
+const ETH_SRC = `${METADATA_CDN_URL}/v2/ethereum/1/icon.svg`
+const AAVE_SRC = `${METADATA_CDN_URL}/v2/ethereum/1/assets/0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9/icon.svg`
+const HDX_SRC = `${METADATA_CDN_URL}/v2/polkadot/2034/assets/0/icon.svg`
+const USDT_SRC = `${METADATA_CDN_URL}/v2/polkadot/2034/assets/10/icon.svg`
 
 const Template = (args: React.ComponentPropsWithoutRef<typeof AssetLogo>) => (
   <TooltipProvider>

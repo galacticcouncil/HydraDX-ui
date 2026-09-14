@@ -1,3 +1,5 @@
+import { METADATA_CDN_URL } from "@galacticcouncil/utils"
+
 import {
   EVM_PROVIDERS,
   SOLANA_PROVIDERS,
@@ -55,9 +57,6 @@ export type WalletAccountFilterOption =
  * neither - the union is discriminated on `chain` so reading `.icon` off a
  * composite entry is a type error.
  *
- * This module imports only `@/config/providers`, which is itself a zero-import
- * leaf. That is load-bearing: leaf modules can import the registry without
- * dragging in wallet.ts's heavy SDK/ui/wasm top-level imports.
  */
 
 type ChainModeEntry = {
@@ -95,43 +94,43 @@ export const WALLET_MODES: Record<
   [WalletMode.Substrate]: {
     chain: true,
     name: "Polkadot",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/polkadot/2034/assets/5/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/polkadot/2034/assets/5/icon.svg`,
     providers: SUBSTRATE_PROVIDERS,
   },
   [WalletMode.SubstrateH160]: {
     chain: true,
     name: "Substrate H160",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/polkadot/2034/assets/5/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/polkadot/2034/assets/5/icon.svg`,
     providers: SUBSTRATE_H160_PROVIDERS,
   },
   [WalletMode.EVM]: {
     chain: true,
     name: "EVM",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/ethereum/1/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/ethereum/1/icon.svg`,
     providers: EVM_PROVIDERS,
   },
   [WalletMode.Solana]: {
     chain: true,
     name: "Solana",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/solana/101/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/solana/101/icon.svg`,
     providers: SOLANA_PROVIDERS,
   },
   [WalletMode.Sui]: {
     chain: true,
     name: "Sui",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/polkadot/2034/assets/1000753/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/polkadot/2034/assets/1000753/icon.svg`,
     providers: SUI_PROVIDERS,
   },
   [WalletMode.Near]: {
     chain: true,
     name: "NEAR",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/near/near/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/near/near/icon.svg`,
     providers: [],
   },
   [WalletMode.Zcash]: {
     chain: true,
     name: "Zcash",
-    icon: "https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@latest/v2/zcash/zec/icon.svg",
+    icon: `${METADATA_CDN_URL}/v2/zcash/zec/icon.svg`,
     providers: [],
   },
 }

@@ -19,7 +19,7 @@
   "provider.disconnect": "Disconnect",
   "provider.connect": "Connect",
   "provider.connected": "Connected",
-  "provider.install": "Install",
+  "provider.notInstalled": "Not installed",
   "provider.logOutAll": "Log out all",
   "provider.connectWallet": "Connect wallet",
   "provider.selectSourceWallet": "Your wallets & accounts",
