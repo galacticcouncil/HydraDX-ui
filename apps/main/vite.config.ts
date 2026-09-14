@@ -9,6 +9,7 @@ import react from "@vitejs/plugin-react"
 import remarkGfm from "remark-gfm"
 import { defineConfig, loadEnv, type Plugin } from "vite"
 import { createHtmlPlugin } from "vite-plugin-html"
+import { VitePWA } from "vite-plugin-pwa"
 import svgr from "vite-plugin-svgr"
 import wasm from "vite-plugin-wasm"
 
@@ -141,6 +142,21 @@ export default defineConfig(({ mode }) => {
         },
       }),
       fontPreload(),
+      VitePWA({
+        strategies: "injectManifest",
+        registerType: "autoUpdate",
+        srcDir: "src",
+        filename: "sw.ts",
+        injectRegister: null,
+        manifest: false,
+        injectManifest: {
+          globPatterns: ["**/*.js"],
+          maximumFileSizeToCacheInBytes: 100 * 1024 * 1024,
+        },
+        devOptions: {
+          enabled: false,
+        },
+      }),
     ],
   }
 })

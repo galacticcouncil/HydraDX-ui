@@ -1,16 +1,18 @@
 import { Box } from "@galacticcouncil/ui/components"
 import { useFormContext } from "react-hook-form"
 
-import { MarketTradeOptions } from "@/modules/trade/swap/sections/Market/MarketTradeOptions"
-import { MarketWarnings } from "@/modules/trade/swap/sections/Market/MarketWarnings"
+import { TradeErrors } from "@/modules/trade/swap/sections/XcSwap/components/TradeErrors"
+import { TradeModeOptions } from "@/modules/trade/swap/sections/XcSwap/components/TradeModeOptions"
+import { TradeWarnings } from "@/modules/trade/swap/sections/XcSwap/components/TradeWarnings"
+import { useOnChainTradeAssets } from "@/modules/trade/swap/sections/XcSwap/hooks/useOnChainTradeAssets"
 import { XcSwapFormValues } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapForm"
 import { isXcSwapTradeEnabled } from "@/modules/trade/swap/sections/XcSwap/lib/isXcSwapTradeEnabled"
-import { XcSwapErrors } from "@/modules/trade/swap/sections/XcSwap/XcSwapErrors"
 import { useXcSwap } from "@/modules/trade/swap/sections/XcSwap/XcSwapProvider"
 
 export const XcSwapOptions = () => {
   const { quote, isQuoteLoading, isTwapLoading, isCrossChain } = useXcSwap()
   const form = useFormContext<XcSwapFormValues>()
+  const { sellAsset, buyAsset } = useOnChainTradeAssets()
 
   const isSingleTrade = form.watch("isSingleTrade")
   const onChainQuote = quote?.kind === "oc" ? quote : null
@@ -23,15 +25,17 @@ export const XcSwapOptions = () => {
   }
 
   return (
-    <Box pt="base" pb="m">
-      <MarketTradeOptions
+    <Box py="l">
+      <TradeModeOptions
+        sellAsset={sellAsset}
+        buyAsset={buyAsset}
         swap={onChainQuote?.swap}
         twap={onChainQuote?.twap}
         isSwapLoading={isQuoteLoading}
         isTwapLoading={isTwapLoading}
       />
       {onChainQuote && (
-        <MarketWarnings
+        <TradeWarnings
           isFormValid={isFormValid}
           isSingleTrade={isSingleTrade}
           swap={onChainQuote.swap}
@@ -41,7 +45,7 @@ export const XcSwapOptions = () => {
           setHealthFactorRiskAccepted={() => {}}
         />
       )}
-      <XcSwapErrors />
+      {onChainQuote && <TradeErrors swap={onChainQuote.swap} />}
     </Box>
   )
 }

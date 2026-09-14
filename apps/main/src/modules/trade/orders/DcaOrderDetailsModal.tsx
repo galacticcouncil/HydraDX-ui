@@ -2,6 +2,7 @@ import { SquareArrowOutUpRight, Trash } from "@galacticcouncil/ui/assets/icons"
 import {
   Amount,
   Button,
+  Chip,
   ExternalLink,
   Flex,
   Grid,
@@ -12,6 +13,7 @@ import {
   Separator,
   Text,
 } from "@galacticcouncil/ui/components"
+import { getToken } from "@galacticcouncil/ui/utils"
 import { neckwork } from "@galacticcouncil/utils"
 import Big from "big.js"
 import { ReactNode } from "react"
@@ -25,19 +27,29 @@ import {
   getDcaTradeProgress,
   useDcaFundingBalance,
 } from "@/modules/trade/orders/lib/dcaProgress"
-import { DcaScheduleStatus, OrderData } from "@/modules/trade/orders/lib/types"
+import {
+  DcaOrderData,
+  IntentDcaOrderData,
+  isDcaScheduleOrder,
+  OrderStatus,
+} from "@/modules/trade/orders/lib/orderData"
+import { useLimitFillStatus } from "@/modules/trade/orders/lib/useLimitFillStatus"
 import { DcaOrderProgress } from "@/modules/trade/orders/PastExecutions/DcaOrderProgress"
 
 type Props = {
-  readonly details: OrderData
+  readonly details: DcaOrderData | IntentDcaOrderData
   readonly onTerminate: (() => void) | null
   readonly pastExecutions: ReactNode
+  readonly isSpentLoading?: boolean
+  readonly isReceivedLoading?: boolean
 }
 
 export const DcaOrderDetailsModal = ({
   details,
   onTerminate,
   pastExecutions,
+  isSpentLoading = false,
+  isReceivedLoading = false,
 }: Props) => {
   const { data: blockTimeMs } = useBlockTime()
   const { t } = useTranslation(["common", "trade"])
@@ -48,29 +60,41 @@ export const DcaOrderDetailsModal = ({
 
   const blocksPeriod = details.blocksPeriod ? Big(details.blocksPeriod) : null
 
+  const { orderRate, marketRate, distancePct, fillable } = useLimitFillStatus({
+    from: details.from,
+    to: details.to,
+    sellAmount: details.limitPrice ? details.singleTradeSize : null,
+    receiveAmount: details.limitPrice ? details.toAmountExecuted : null,
+  })
+
   const spentOrBudgetLabel = details.isOpenBudget
     ? t("spent")
     : `${t("remaining")} / ${t("budget")}`
 
   const spentOrBudgetValue = details.isOpenBudget
-    ? `${t("number", {
-        value: details.fromAmountExecuted,
-      })} ${details.from.symbol}`
-    : `${t("number", {
-        value:
-          details.status === DcaScheduleStatus.Completed
+    ? details.fromAmountExecuted
+      ? t("currency", {
+          value: details.fromAmountExecuted,
+          symbol: details.from.symbol,
+        })
+      : details.from.symbol
+    : t("trade:trade.orders.dcaDetail.remainingBudget", {
+        remaining:
+          details.status === OrderStatus.Completed
             ? "0"
             : (details.fromAmountRemaining ?? details.fromAmountBudget),
-      })}/${t("number", {
-        value: details.fromAmountBudget,
-      })} ${details.from.symbol}`
+        budget: details.fromAmountBudget,
+        symbol: details.from.symbol,
+      })
 
-  const receivedValue = t("currency", {
-    value: details.toAmountExecuted ?? "0",
-    symbol: details.to.symbol,
-  })
+  const receivedValue = details.toAmountExecuted
+    ? t("currency", {
+        value: details.toAmountExecuted,
+        symbol: details.to.symbol,
+      })
+    : details.to.symbol
 
-  const isActive = details.status === DcaScheduleStatus.Created
+  const isActive = details.status === OrderStatus.Created
   const progressPercent = isActive
     ? getDcaCompletionPercent({
         sold: details.fromAmountExecuted,
@@ -126,9 +150,17 @@ export const DcaOrderDetailsModal = ({
         </Flex>
         <ModalContentDivider />
         <Grid columnTemplate="1fr 1px 1fr" gap="xxl" py="xl">
-          <Amount label={spentOrBudgetLabel} value={spentOrBudgetValue} />
+          <Amount
+            label={spentOrBudgetLabel}
+            value={spentOrBudgetValue}
+            isLoading={isSpentLoading}
+          />
           <Separator orientation="vertical" />
-          <Amount label={t("received")} value={receivedValue} />
+          <Amount
+            label={t("received")}
+            value={receivedValue}
+            isLoading={isReceivedLoading}
+          />
         </Grid>
         <ModalContentDivider />
         <Grid columnTemplate="1fr 1px 1fr" gap="xxl" py="xl">
@@ -156,6 +188,64 @@ export const DcaOrderDetailsModal = ({
             })}
           />
         </Grid>
+        {details.limitPrice && (
+          <>
+            <ModalContentDivider />
+            <Grid columnTemplate="1fr 1px 1fr" gap="xxl" py="xl">
+              <Amount
+                label={t("trade:trade.orders.dcaDetail.limitPrice")}
+                value={
+                  orderRate
+                    ? t("trade:trade.orders.pricePair", {
+                        value: orderRate,
+                        leftSymbol: details.to.symbol,
+                        rightSymbol: details.from.symbol,
+                      })
+                    : "-"
+                }
+              />
+              <Separator orientation="vertical" />
+              <Amount
+                label={t("trade:trade.orders.limit.marketPrice")}
+                value={
+                  marketRate
+                    ? t("trade:trade.orders.pricePair", {
+                        value: marketRate,
+                        leftSymbol: details.to.symbol,
+                        rightSymbol: details.from.symbol,
+                      })
+                    : "-"
+                }
+              />
+            </Grid>
+            {orderRate && isActive && (
+              <>
+                <ModalContentDivider />
+                <Flex direction="column" gap="s" py="xl" align="flex-start">
+                  <Text fs="p5" color={getToken("text.high")}>
+                    {t("trade:trade.orders.limit.fillsWhen", {
+                      fromSymbol: details.from.symbol,
+                      rate: t("number", { value: orderRate }),
+                      toSymbol: details.to.symbol,
+                    })}
+                  </Text>
+                  {distancePct !== null &&
+                    (fillable ? (
+                      <Chip variant="green" size="small">
+                        {t("trade:trade.orders.limit.fillableNow")}
+                      </Chip>
+                    ) : (
+                      <Chip variant="secondary" size="small">
+                        {t("trade:trade.orders.limit.away", {
+                          pct: Math.abs(distancePct),
+                        })}
+                      </Chip>
+                    ))}
+                </Flex>
+              </>
+            )}
+          </>
+        )}
         {progressPercent !== null && (
           <>
             <ModalContentDivider />
@@ -169,28 +259,24 @@ export const DcaOrderDetailsModal = ({
         )}
         <ModalContentDivider />
         <Flex justify="space-between" gap="base" pt="l" pb="xl">
-          <Button variant="tertiary" outline asChild>
-            <ExternalLink href={neckwork.activityDca(details.scheduleId)}>
-              <Icon component={SquareArrowOutUpRight} size="xs" />
-              <Text fw={500} fs="p6" lh={1.4}>
-                {t("openInExplorer")}
-              </Text>
-            </ExternalLink>
-          </Button>
-          {details.status === DcaScheduleStatus.Created && onTerminate && (
+          {isDcaScheduleOrder(details) && (
+            <Button variant="tertiary" outline asChild>
+              <ExternalLink href={neckwork.activityDca(details.scheduleId)}>
+                <Icon component={SquareArrowOutUpRight} size="xs" />
+                <Text fw={500} fs="p6" lh={1.4}>
+                  {t("openInExplorer")}
+                </Text>
+              </ExternalLink>
+            </Button>
+          )}
+          {details.status === OrderStatus.Created && onTerminate && (
             <Button variant="danger" outline onClick={onTerminate}>
               <Icon component={Trash} size="s" />
               {t("trade:trade.cancelOrder.cta")}
             </Button>
           )}
         </Flex>
-        <Flex
-          direction="column"
-          sx={{ marginInline: "var(--modal-content-inset)" }}
-        >
-          {pastExecutions}
-        </Flex>
-        <ModalContentDivider />
+        {pastExecutions}
       </ModalBody>
     </>
   )

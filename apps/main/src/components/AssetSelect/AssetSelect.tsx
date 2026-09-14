@@ -1,5 +1,11 @@
-import { AssetInput, AssetInputProps } from "@galacticcouncil/ui/components"
+import {
+  AssetInput,
+  AssetInputBalance,
+  AssetInputProps,
+} from "@galacticcouncil/ui/components"
+import Big from "big.js"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { TAssetData } from "@/api/assets"
 import { useAccountBalances } from "@/api/balances"
@@ -17,86 +23,119 @@ export type TSelectedAsset = {
   iconId?: string | string[]
 }
 
-export type AssetSelectProps = AssetInputProps & {
+export type AssetSelectBalance = Omit<
+  Partial<AssetInputBalance>,
+  "value" | "onMax"
+> & {
+  /** Human amount; defaults to the account balance of the selected asset */
+  value?: string
+  /** Amount the max button sets; defaults to `value` */
+  max?: string
+  /** Called after max is applied; `null` hides the max button */
+  onMax?: (() => void) | null
+}
+
+export type AssetSelectProps = Omit<
+  AssetInputProps,
+  "asset" | "onAssetClick" | "balance"
+> & {
   assets: TAssetData[]
   sortedAssets?: TAssetWithBalance[]
   selectedAsset: TSelectedAsset | undefined | null
-  maxBalanceFallback?: string
   setSelectedAsset?: (asset: TAssetData) => void
+  balance?: AssetSelectBalance | false
+  onLockToggle?: () => void
 }
 
 export const AssetSelect = ({
   assets,
   sortedAssets,
   selectedAsset,
-  maxBalance: providedMaxBalance,
-  maxBalanceFallback,
   setSelectedAsset,
+  balance: balanceOverride,
+  onLockToggle,
   ...props
 }: AssetSelectProps) => {
-  const [openModal, setOpeModal] = useState(false)
+  const { t } = useTranslation()
+  const [openModal, setOpenModal] = useState(false)
 
-  const [displayValue_, { isLoading: displayValueLoading_ }] =
+  const hasDisplayValue = props.displayValue !== undefined
+  const [fetchedDisplayValue, { isLoading: isFetchedDisplayValueLoading }] =
     useDisplayAssetPrice(
-      props.ignoreDisplayValue || props.displayValue
-        ? ""
-        : (selectedAsset?.id ?? ""),
+      hasDisplayValue ? "" : (selectedAsset?.id ?? ""),
       props.value || "0",
     )
-
-  const displayValue = props.displayValue ?? displayValue_
-  const displayValueLoading = props.displayValueLoading ?? displayValueLoading_
 
   const { getTransferableBalance, getBalance, isBalanceLoading } =
     useAccountBalances()
 
-  const maxBalance = ((): string | undefined => {
-    if (providedMaxBalance) {
-      return providedMaxBalance
-    }
+  const override = balanceOverride || {}
+  const isMaxHidden = override.onMax === null
 
-    if (props.ignoreBalance || !selectedAsset) {
-      return maxBalanceFallback
-    }
+  const accountBalance = (() => {
+    if (!selectedAsset) return undefined
 
-    const balance = getBalance(selectedAsset.id)
-    const amount =
-      props.hideMaxBalanceAction && balance
-        ? balance.total
-        : getTransferableBalance(selectedAsset.id)
+    // without a max action, show the full balance rather than the transferable part
+    const amount = isMaxHidden
+      ? getBalance(selectedAsset.id)?.total
+      : getTransferableBalance(selectedAsset.id)
 
     return amount !== undefined
       ? scaleHuman(amount, selectedAsset.decimals)
-      : maxBalanceFallback
+      : undefined
   })()
 
-  const maxBalanceLoading = props.maxBalanceLoading ?? isBalanceLoading
+  const balanceValue = override.value || accountBalance || "0"
+  const max = override.max || balanceValue
+
+  const balance: AssetInputBalance | undefined =
+    balanceOverride === false
+      ? undefined
+      : {
+          label: override.label ?? t("balance"),
+          value: t("number", { value: balanceValue }),
+          isLoading: override.isLoading ?? isBalanceLoading,
+          onMax: isMaxHidden
+            ? null
+            : () => {
+                props.onChange?.(max)
+                override.onMax?.()
+              },
+          isMaxDisabled:
+            override.isMaxDisabled ?? (!props.onChange || Big(max).lte(0)),
+        }
 
   return (
     <>
       <AssetInput
         {...props}
-        selectedAssetIcon={
-          selectedAsset ? (
-            <AssetLogo id={selectedAsset.iconId ?? selectedAsset.id} />
-          ) : undefined
+        onLock={onLockToggle ?? props.onLock}
+        asset={
+          selectedAsset
+            ? {
+                symbol: selectedAsset.symbol,
+                icon: (
+                  <AssetLogo id={selectedAsset.iconId ?? selectedAsset.id} />
+                ),
+              }
+            : null
         }
-        symbol={selectedAsset?.symbol}
-        modalDisabled={!setSelectedAsset}
-        displayValue={displayValue}
-        displayValueLoading={displayValueLoading}
-        maxBalance={maxBalance}
-        maxBalanceLoading={maxBalanceLoading}
-        onAsssetBtnClick={
-          setSelectedAsset ? () => setOpeModal(true) : undefined
+        onAssetClick={setSelectedAsset ? () => setOpenModal(true) : undefined}
+        selectAssetLabel={props.selectAssetLabel ?? t("selectAsset")}
+        displayValue={
+          hasDisplayValue ? props.displayValue : fetchedDisplayValue
         }
+        isDisplayValueLoading={
+          props.isDisplayValueLoading ?? isFetchedDisplayValueLoading
+        }
+        balance={balance}
       />
 
       <AssetSelectModal
         open={openModal}
         assets={assets}
         sortedAssets={sortedAssets}
-        onOpenChange={setOpeModal}
+        onOpenChange={setOpenModal}
         onSelect={setSelectedAsset}
         emptyState={<AssetSelectEmptyState />}
         selectedAssetId={selectedAsset?.id}

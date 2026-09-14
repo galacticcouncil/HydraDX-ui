@@ -3,13 +3,12 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { secondsToMilliseconds } from "date-fns"
 import { useMemo } from "react"
 
-import { UnsafeDcaQuery } from "@/api/dcaStorage"
 import { usePapiEntries } from "@/hooks/usePapiEntries"
 import {
-  DcaScheduleStatus,
-  OrderData,
+  DcaOrderData,
   OrderKind,
-} from "@/modules/trade/orders/lib/types"
+  OrderStatus,
+} from "@/modules/trade/orders/lib/orderData"
 import { useAssets } from "@/providers/assetsProvider"
 import { useRpcProvider } from "@/providers/rpcProvider"
 import { scaleHuman } from "@/utils/formatting"
@@ -20,7 +19,6 @@ export const useChainScheduleIds = () => {
   const { account } = useAccount()
   const { isReady } = useRpcProvider()
 
-  // papi takes the account address as-is, no SS58 conversion
   const address = account?.address ?? ""
   const enabled = isReady && !!address
 
@@ -44,7 +42,7 @@ export const useChainScheduleIds = () => {
 }
 
 export const useChainOrdersData = () => {
-  const { papiClient } = useRpcProvider()
+  const { papi } = useRpcProvider()
   const { getAssetWithFallback } = useAssets()
 
   const { scheduleIds, isLoading: isEntriesLoading } = useChainScheduleIds()
@@ -52,12 +50,12 @@ export const useChainOrdersData = () => {
   const { data, isLoading: isSchedulesLoading } = useQuery({
     queryKey: ["trade", "orders", "chain", scheduleIds],
     queryFn: async () => {
-      const query = papiClient.getUnsafeApi().query as unknown as UnsafeDcaQuery
-      const keys = scheduleIds.map((id) => [id] as const)
+      const { DCA } = papi.query
+      const keys = scheduleIds.map((id): [number] => [id])
 
       const [schedules, remainingAmounts] = await Promise.all([
-        query.DCA.Schedules.getValues(keys, { at: "best" }),
-        query.DCA.RemainingAmounts.getValues(keys, { at: "best" }),
+        DCA.Schedules.getValues(keys, { at: "best" }),
+        DCA.RemainingAmounts.getValues(keys, { at: "best" }),
       ])
 
       return scheduleIds.map((scheduleId, index) => ({
@@ -74,48 +72,50 @@ export const useChainOrdersData = () => {
 
   const openScheduleIds = useMemo(() => new Set(scheduleIds), [scheduleIds])
 
-  const orders = useMemo<Array<OrderData>>(
+  const orders = useMemo<Array<DcaOrderData>>(
     () =>
-      (data ?? []).flatMap<OrderData>(({ scheduleId, schedule, remaining }) => {
-        if (!schedule || !openScheduleIds.has(scheduleId)) return []
+      (data ?? []).flatMap<DcaOrderData>(
+        ({ scheduleId, schedule, remaining }) => {
+          if (!schedule || !openScheduleIds.has(scheduleId)) return []
 
-        const { order } = schedule
-        const from = getAssetWithFallback(String(order.value.asset_in))
-        const to = getAssetWithFallback(String(order.value.asset_out))
+          const { order } = schedule
+          const from = getAssetWithFallback(String(order.value.asset_in))
+          const to = getAssetWithFallback(String(order.value.asset_out))
 
-        const singleTradeAmount =
-          order.type === "Sell"
-            ? order.value.amount_in
-            : order.value.max_amount_in
+          const singleTradeAmount =
+            order.type === "Sell"
+              ? order.value.amount_in
+              : order.value.max_amount_in
 
-        // a zero total budget means the schedule tops itself up indefinitely
-        const isOpenBudget = schedule.total_amount === 0n
-        const hasBudget = !isOpenBudget && remaining !== null
+          const isOpenBudget = schedule.total_amount === 0n
+          const hasBudget = !isOpenBudget && remaining !== null
 
-        return [
-          {
-            kind: isOpenBudget ? OrderKind.DcaRolling : OrderKind.Dca,
-            scheduleId,
-            from,
-            fromAmountBudget: isOpenBudget
-              ? null
-              : scaleHuman(schedule.total_amount, from.decimals),
-            fromAmountExecuted: hasBudget
-              ? scaleHuman(schedule.total_amount - remaining, from.decimals)
-              : null,
-            fromAmountRemaining: hasBudget
-              ? scaleHuman(remaining, from.decimals)
-              : null,
-            singleTradeSize: scaleHuman(singleTradeAmount, from.decimals),
-            to,
-            toAmountExecuted: null,
-            status: DcaScheduleStatus.Created,
-            date: null,
-            blocksPeriod: String(schedule.period),
-            isOpenBudget,
-          },
-        ]
-      }),
+          return [
+            {
+              kind: isOpenBudget ? OrderKind.DcaRolling : OrderKind.Dca,
+              scheduleId,
+              from,
+              fromAmountBudget: isOpenBudget
+                ? null
+                : scaleHuman(schedule.total_amount, from.decimals),
+              fromAmountExecuted: hasBudget
+                ? scaleHuman(schedule.total_amount - remaining, from.decimals)
+                : null,
+              fromAmountRemaining: hasBudget
+                ? scaleHuman(remaining, from.decimals)
+                : null,
+              singleTradeSize: scaleHuman(singleTradeAmount, from.decimals),
+              to,
+              toAmountExecuted: null,
+              status: OrderStatus.Created,
+              blocksPeriod: String(schedule.period),
+              isOpenBudget,
+              timestamp: null,
+              limitPrice: null,
+            },
+          ]
+        },
+      ),
     [data, openScheduleIds, getAssetWithFallback],
   )
 

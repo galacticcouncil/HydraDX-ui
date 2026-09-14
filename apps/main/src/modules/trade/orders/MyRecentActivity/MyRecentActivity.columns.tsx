@@ -26,6 +26,7 @@ import {
   SwapStatus,
 } from "@/modules/trade/orders/columns/SwapStatus"
 import { SwapType } from "@/modules/trade/orders/columns/SwapType"
+import { toOrderStatusFromSchedule } from "@/modules/trade/orders/lib/orderData"
 import { OrderKind, RoutedTradeData } from "@/modules/trade/orders/lib/types"
 
 const columnHelper = createColumnHelper<RoutedTradeData>()
@@ -111,7 +112,12 @@ export const useMyRecentActivityColumns = () => {
 
         return status.kind === OrderKind.Dca ||
           status.kind === OrderKind.DcaRolling ? (
-          status.status && <DcaOrderStatus status={status.status} isDcaSwap />
+          status.status && (
+            <DcaOrderStatus
+              status={toOrderStatusFromSchedule(status.status)}
+              isDcaSwap
+            />
+          )
         ) : (
           <SwapStatus />
         )

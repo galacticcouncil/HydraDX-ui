@@ -4,9 +4,11 @@ import { FC, useState } from "react"
 import { PaginationProps } from "@/hooks/useDataTableUrlPagination"
 import { DcaOrderDetailsModal } from "@/modules/trade/orders/DcaOrderDetailsModal"
 import {
-  DCA_HISTORY_ORDER_STATUSES,
+  DcaOrderData,
+  isDcaScheduleOrder,
   OrderData,
-} from "@/modules/trade/orders/lib/types"
+} from "@/modules/trade/orders/lib/orderData"
+import { DCA_HISTORY_ORDER_STATUSES } from "@/modules/trade/orders/lib/types"
 import { useOrderHistoryColumns } from "@/modules/trade/orders/OrderHistory/OrderHistory.columns"
 import { OrdersEmptyState } from "@/modules/trade/orders/OrdersEmptyState"
 import { useHistoryData } from "@/modules/trade/orders/TradeOrders/lib/useHistoryData"
@@ -18,7 +20,7 @@ type Props = {
 }
 
 export const OrderHistory: FC<Props> = ({ paginationProps, assetIds }) => {
-  const [isDetailOpen, setIsDetailOpen] = useState<OrderData | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState<DcaOrderData | null>(null)
 
   const { orders, totalCount, isLoading } = useHistoryData(
     DCA_HISTORY_ORDER_STATUSES,
@@ -31,14 +33,16 @@ export const OrderHistory: FC<Props> = ({ paginationProps, assetIds }) => {
 
   return (
     <>
-      <DataTable
+      <DataTable<OrderData>
         data={orders}
         columns={columns}
         isLoading={isLoading}
         paginated
         {...paginationProps}
         rowCount={totalCount}
-        onRowClick={setIsDetailOpen}
+        onRowClick={(order) =>
+          isDcaScheduleOrder(order) && setIsDetailOpen(order)
+        }
         emptyState={<OrdersEmptyState />}
       />
       <Modal open={!!isDetailOpen} onOpenChange={() => setIsDetailOpen(null)}>

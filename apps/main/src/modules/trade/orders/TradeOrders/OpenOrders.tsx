@@ -1,14 +1,24 @@
 import { DataTable, Modal } from "@galacticcouncil/ui/components"
-import { FC, useState } from "react"
+import { FC, useMemo, useState } from "react"
 
 import { PaginationProps } from "@/hooks/useDataTableUrlPagination"
 import { DcaOrderDetailsModal } from "@/modules/trade/orders/DcaOrderDetailsModal"
-import { OrderData } from "@/modules/trade/orders/lib/types"
+import {
+  DcaOrderData,
+  isDcaScheduleOrder,
+  OrderData,
+  orderKey,
+  OrderKind,
+} from "@/modules/trade/orders/lib/orderData"
+import { useIntentOrdersData } from "@/modules/trade/orders/lib/useIntentOrdersData"
+import { useRemoveIntent } from "@/modules/trade/orders/lib/useRemoveIntent"
+import { LimitOrderDetailsModal } from "@/modules/trade/orders/LimitOrderDetailsModal"
 import { useOpenOrdersColumns } from "@/modules/trade/orders/OpenOrders/OpenOrders.columns"
 import { OrdersEmptyState } from "@/modules/trade/orders/OrdersEmptyState"
 import { TerminateDcaScheduleModalContent } from "@/modules/trade/orders/TerminateDcaScheduleModalContent"
 import { useDcaEnrichment } from "@/modules/trade/orders/TradeOrders/lib/useDcaEnrichment"
 import { PastExecutions } from "@/modules/trade/orders/TradeOrders/PastExecutions"
+import { useNeckworkTradeQueriesEnabled } from "@/modules/trade/swap/tradeDataSource"
 
 type Props = {
   readonly paginationProps: PaginationProps
@@ -19,35 +29,48 @@ type Props = {
 export const OpenOrders: FC<Props> = ({
   paginationProps,
   orders,
-  isLoading,
+  isLoading: isOrdersLoading,
 }) => {
-  const [detailId, setDetailId] = useState<number | null>(null)
-  const [terminating, setTerminating] = useState<OrderData | null>(null)
+  const [detailKey, setDetailKey] = useState<string | null>(null)
+  const [terminating, setTerminating] = useState<DcaOrderData | null>(null)
+  const removeIntent = useRemoveIntent()
 
-  const { orders: enrichedOrders, refetch } = useDcaEnrichment(orders)
+  const neckworkEnabled = useNeckworkTradeQueriesEnabled()
+  const { orders: intentOrders, isLoading: isIntentsLoading } =
+    useIntentOrdersData()
+  const scheduleOrders = useMemo(
+    () => orders.filter(isDcaScheduleOrder),
+    [orders],
+  )
+  const { orders: enrichedOrders, refetch } = useDcaEnrichment(scheduleOrders)
+
+  const allOrders = useMemo<Array<OrderData>>(
+    () => [...intentOrders, ...enrichedOrders],
+    [intentOrders, enrichedOrders],
+  )
 
   const columns = useOpenOrdersColumns()
 
-  const detail = enrichedOrders.find(
-    ({ scheduleId }) => scheduleId === detailId,
-  )
+  const detail = allOrders.find((order) => orderKey(order) === detailKey)
 
   const close = () => {
-    setDetailId(null)
+    setDetailKey(null)
     setTerminating(null)
   }
+
+  const isLoading = isOrdersLoading || isIntentsLoading
 
   return (
     <>
       <DataTable
-        data={enrichedOrders}
+        data={allOrders}
         columns={columns}
         isLoading={isLoading}
         paginated
         {...paginationProps}
-        onRowClick={({ scheduleId }) => {
-          void refetch()
-          setDetailId(scheduleId)
+        onRowClick={(order) => {
+          if (neckworkEnabled) void refetch()
+          setDetailKey(orderKey(order))
         }}
         emptyState={<OrdersEmptyState />}
       />
@@ -62,13 +85,27 @@ export const OpenOrders: FC<Props> = ({
             onClose={() => setTerminating(null)}
           />
         ) : (
-          detail && (
+          detail &&
+          (detail.kind === OrderKind.Limit ? (
+            <LimitOrderDetailsModal details={detail} onCancel={close} />
+          ) : (
             <DcaOrderDetailsModal
               details={detail}
-              pastExecutions={<PastExecutions scheduleId={detail.scheduleId} />}
-              onTerminate={() => setTerminating(detail)}
+              pastExecutions={
+                isDcaScheduleOrder(detail) ? (
+                  <PastExecutions scheduleId={detail.scheduleId} />
+                ) : null
+              }
+              onTerminate={() => {
+                if (isDcaScheduleOrder(detail)) {
+                  setTerminating(detail)
+                  return
+                }
+
+                removeIntent.mutate(detail.intentId, { onSuccess: close })
+              }}
             />
-          )
+          ))
         )}
       </Modal>
     </>

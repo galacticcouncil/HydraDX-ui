@@ -145,10 +145,11 @@ const RemoveMoneyMarketLiquidityForm = (
               assetFieldName="asset"
               amountFieldName="amount"
               label={t("common:amount")}
-              maxBalance={maxBalanceWithFee}
-              maxBalanceLoading={isLoadingMaxBalance}
+              balance={{
+                value: maxBalanceWithFee,
+                isLoading: isLoadingMaxBalance,
+              }}
               assets={[]}
-              sx={{ py: 0 }}
               disabledAssetSelector
             />
 
@@ -178,12 +179,10 @@ const RemoveMoneyMarketLiquidityForm = (
                 label={t("common:get")}
                 assetFieldName="receiveAsset"
                 amountFieldName="receiveAmount"
-                maxBalance={maxBalanceWithFee}
                 assets={[]}
                 sortedAssets={receiveAssets}
-                ignoreBalance
-                disabledInput
-                sx={{ p: 0 }}
+                balance={false}
+                isReadOnly
               />
             ) : (
               <Flex direction="column" gap="s">

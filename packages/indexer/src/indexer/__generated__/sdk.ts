@@ -87,6 +87,7 @@ export const ScheduledOrdersDocument = gql`
     block {
       height
       hash
+      timestamp
     }
   }
 }
@@ -94,7 +95,7 @@ export const ScheduledOrdersDocument = gql`
 export const OrdersStatusDocument = gql`
     query OrdersStatus($who: String!) {
   events(
-    where: {args_jsonContains: {who: $who}, AND: {name_in: ["DCA.Terminated", "DCA.Completed"]}}
+    where: {args_jsonContains: {who: $who}, AND: {name_in: ["DCA.Terminated", "DCA.Completed", "DCA.MigrationCancelled"]}}
     orderBy: [block_height_DESC]
     limit: 100
   ) {
@@ -103,12 +104,29 @@ export const OrdersStatusDocument = gql`
   }
 }
     `;
+export const MigratedOrdersDocument = gql`
+    query MigratedOrders($who: String!) {
+  events(
+    where: {args_jsonContains: {who: $who}, AND: {name_eq: "DCA.Migrated"}}
+    orderBy: [block_height_DESC]
+    limit: 100
+  ) {
+    name
+    args
+    block {
+      height
+      hash
+      timestamp
+    }
+  }
+}
+    `;
 export const OrderTradesDocument = gql`
     query OrderTrades($id: Int!) {
   events(
     where: {args_jsonContains: {id: $id}, AND: {name_in: ["DCA.TradeExecuted", "DCA.TradeFailed"]}}
     orderBy: [block_height_DESC]
-    limit: 10
+    limit: 100
   ) {
     name
     args
@@ -119,15 +137,38 @@ export const OrderTradesDocument = gql`
   }
 }
     `;
-export const OrderPlannedExecutionDocument = gql`
-    query OrderPlannedExecution($id: Int!) {
+export const IntentsSubmittedDocument = gql`
+    query IntentsSubmitted($owner: String!, $limit: Int!, $offset: Int!) {
   events(
-    where: {args_jsonContains: {id: $id}, AND: {name_eq: "DCA.ExecutionPlanned"}}
+    where: {args_jsonContains: {owner: $owner}, AND: {name_eq: "Intent.IntentSubmitted"}}
     orderBy: [block_height_DESC]
-    limit: 1
+    limit: $limit
+    offset: $offset
   ) {
     name
     args
+    block {
+      height
+      hash
+      timestamp
+    }
+  }
+}
+    `;
+export const IntentEventsDocument = gql`
+    query IntentEvents($idFilters: [EventWhereInput!]!) {
+  events(
+    where: {AND: [{name_in: ["Intent.IntentResolved", "Intent.IntentResovedPartially", "Intent.IntentCanceled", "Intent.IntentExpired", "Intent.DcaTradeExecuted", "Intent.DcaCompleted"]}, {OR: $idFilters}]}
+    orderBy: [block_height_DESC]
+    limit: 1000
+  ) {
+    name
+    args
+    block {
+      height
+      hash
+      timestamp
+    }
   }
 }
     `;
@@ -163,11 +204,17 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
     OrdersStatus(variables: Types.OrdersStatusQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Types.OrdersStatusQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<Types.OrdersStatusQuery>({ document: OrdersStatusDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'OrdersStatus', 'query', variables);
     },
+    MigratedOrders(variables: Types.MigratedOrdersQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Types.MigratedOrdersQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Types.MigratedOrdersQuery>({ document: MigratedOrdersDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'MigratedOrders', 'query', variables);
+    },
     OrderTrades(variables: Types.OrderTradesQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Types.OrderTradesQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<Types.OrderTradesQuery>({ document: OrderTradesDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'OrderTrades', 'query', variables);
     },
-    OrderPlannedExecution(variables: Types.OrderPlannedExecutionQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Types.OrderPlannedExecutionQuery> {
-      return withWrapper((wrappedRequestHeaders) => client.request<Types.OrderPlannedExecutionQuery>({ document: OrderPlannedExecutionDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'OrderPlannedExecution', 'query', variables);
+    IntentsSubmitted(variables: Types.IntentsSubmittedQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Types.IntentsSubmittedQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Types.IntentsSubmittedQuery>({ document: IntentsSubmittedDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'IntentsSubmitted', 'query', variables);
+    },
+    IntentEvents(variables: Types.IntentEventsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders, signal?: RequestInit['signal']): Promise<Types.IntentEventsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Types.IntentEventsQuery>({ document: IntentEventsDocument, variables, requestHeaders: { ...requestHeaders, ...wrappedRequestHeaders }, signal }), 'IntentEvents', 'query', variables);
     }
   };
 }

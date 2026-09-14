@@ -1,4 +1,4 @@
-import { Button, Grid, Separator } from "@galacticcouncil/ui/components"
+import { Box, Button, Grid, Separator } from "@galacticcouncil/ui/components"
 import { FC } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -38,15 +38,16 @@ export const UnstakeForm: FC<Props> = ({
 
   return (
     <>
-      <AssetSelect
-        sx={{ px: "xl" }}
-        label={t("staking:stake.unstake.amount")}
-        assets={[]}
-        selectedAsset={native}
-        disabled
-        value={staked}
-        ignoreBalance
-      />
+      <Box px="xl" py="l" width="100%">
+        <AssetSelect
+          label={t("staking:stake.unstake.amount")}
+          assets={[]}
+          selectedAsset={native}
+          isDisabled
+          value={staked}
+          balance={false}
+        />
+      </Box>
       <Separator />
       {
         <Grid px="xl" py="xl">

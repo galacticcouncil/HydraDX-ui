@@ -25,6 +25,7 @@ export const isDcaScheduleStatus = (
 export enum OrderKind {
   Dca = "dca",
   DcaRolling = "dcaRolling",
+  Limit = "limit",
 }
 
 export type OrderData = {

@@ -113,32 +113,33 @@ export const StableBondsDeposit: React.FC<StableBondsDepositProps> = ({
       >
         <Paper px="xl" position="relative">
           <Box>
-            <AssetSelectFormField<StableBondsFormValues>
-              label={t("strategies:bonds.deposit.yourDeposit")}
-              assetFieldName="depositAsset"
-              amountFieldName="depositAmount"
-              assets={depositAssets}
-              disabled={!isSelectedOrderFillable}
-              maxButtonBalance={assetInMax}
-              maxBalance={depositAssetBalance}
-            />
+            <Box py="l" width="100%">
+              <AssetSelectFormField<StableBondsFormValues>
+                label={t("strategies:bonds.deposit.yourDeposit")}
+                assetFieldName="depositAsset"
+                amountFieldName="depositAmount"
+                assets={depositAssets}
+                isDisabled={!isSelectedOrderFillable}
+                balance={{ value: depositAssetBalance, max: assetInMax }}
+              />
+            </Box>
 
             <StableBondsExchangeRate order={selectedOrder} />
 
-            <AssetInput
-              label={t("strategies:bonds.deposit.receiveAtMaturity")}
-              symbol={underlyingAsset.symbol}
-              selectedAssetIcon={
-                <AssetLogo id={underlyingAsset.id} size="medium" />
-              }
-              modalDisabled
-              disabledInput
-              ignoreBalance
-              value={receiveAmount}
-              displayValue={t("currency", {
-                value: receiveAmount,
-              })}
-            />
+            <Box py="l" width="100%">
+              <AssetInput
+                label={t("strategies:bonds.deposit.receiveAtMaturity")}
+                asset={{
+                  symbol: underlyingAsset.symbol,
+                  icon: <AssetLogo id={underlyingAsset.id} size="medium" />,
+                }}
+                isReadOnly
+                value={receiveAmount}
+                displayValue={t("currency", {
+                  value: receiveAmount,
+                })}
+              />
+            </Box>
           </Box>
 
           <Separator mx="-xl" />

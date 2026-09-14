@@ -50,6 +50,7 @@ export const XcmHistoryPanel: React.FC<XcmHistoryPanelProps> = ({
       {shouldRenderFilter && (
         <ToggleGroup<TabView>
           type="single"
+          fullWidth
           size="medium"
           value={filter}
           onValueChange={(value) => value && setFilter(value)}

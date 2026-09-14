@@ -265,22 +265,33 @@ const DepositTransferForm: React.FC<DepositTransferProps> = ({
             control={form.control}
             render={({ field, fieldState }) => (
               <AssetInput
-                sx={{ p: 0 }}
                 label={t("common:asset")}
                 value={field.value}
-                symbol={assetMeta?.symbol ?? ""}
-                selectedAssetIcon={<AssetLogo id={asset?.assetId ?? ""} />}
+                asset={
+                  assetMeta
+                    ? {
+                        symbol: assetMeta.symbol,
+                        icon: <AssetLogo id={asset?.assetId ?? ""} />,
+                      }
+                    : null
+                }
                 amountError={fieldState.error?.message}
                 onChange={field.onChange}
-                loading={isLoadingTransfer}
-                maxButtonBalance={toDecimal(
-                  transferData.max,
-                  transferData.decimals,
-                )}
-                maxBalance={toDecimal(
-                  transferData.balance,
-                  transferData.decimals,
-                )}
+                isLoading={isLoadingTransfer}
+                balance={{
+                  label: t("common:balance"),
+                  value: t("common:number", {
+                    value: toDecimal(
+                      transferData.balance,
+                      transferData.decimals,
+                    ),
+                  }),
+                  onMax: () =>
+                    field.onChange(
+                      toDecimal(transferData.max, transferData.decimals),
+                    ),
+                  isMaxDisabled: !(Number(transferData.max) > 0),
+                }}
               />
             )}
           />

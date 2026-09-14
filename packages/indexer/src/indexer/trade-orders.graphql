@@ -15,6 +15,7 @@ query ScheduledOrders($who: String!) {
     block {
       height
       hash
+      timestamp
     }
   }
 }
@@ -23,13 +24,34 @@ query OrdersStatus($who: String!) {
   events(
     where: {
       args_jsonContains: { who: $who }
-      AND: { name_in: ["DCA.Terminated", "DCA.Completed"] }
+      AND: {
+        name_in: ["DCA.Terminated", "DCA.Completed", "DCA.MigrationCancelled"]
+      }
     }
     orderBy: [block_height_DESC]
     limit: 100
   ) {
     name
     args
+  }
+}
+
+query MigratedOrders($who: String!) {
+  events(
+    where: {
+      args_jsonContains: { who: $who }
+      AND: { name_eq: "DCA.Migrated" }
+    }
+    orderBy: [block_height_DESC]
+    limit: 100
+  ) {
+    name
+    args
+    block {
+      height
+      hash
+      timestamp
+    }
   }
 }
 
@@ -40,7 +62,7 @@ query OrderTrades($id: Int!) {
       AND: { name_in: ["DCA.TradeExecuted", "DCA.TradeFailed"] }
     }
     orderBy: [block_height_DESC]
-    limit: 10
+    limit: 100
   ) {
     name
     args
@@ -51,16 +73,52 @@ query OrderTrades($id: Int!) {
   }
 }
 
-query OrderPlannedExecution($id: Int!) {
+query IntentsSubmitted($owner: String!, $limit: Int!, $offset: Int!) {
   events(
     where: {
-      args_jsonContains: { id: $id }
-      AND: { name_eq: "DCA.ExecutionPlanned" }
+      args_jsonContains: { owner: $owner }
+      AND: { name_eq: "Intent.IntentSubmitted" }
     }
     orderBy: [block_height_DESC]
-    limit: 1
+    limit: $limit
+    offset: $offset
   ) {
     name
     args
+    block {
+      height
+      hash
+      timestamp
+    }
+  }
+}
+
+query IntentEvents($idFilters: [EventWhereInput!]!) {
+  events(
+    where: {
+      AND: [
+        {
+          name_in: [
+            "Intent.IntentResolved"
+            "Intent.IntentResovedPartially"
+            "Intent.IntentCanceled"
+            "Intent.IntentExpired"
+            "Intent.DcaTradeExecuted"
+            "Intent.DcaCompleted"
+          ]
+        }
+        { OR: $idFilters }
+      ]
+    }
+    orderBy: [block_height_DESC]
+    limit: 1000
+  ) {
+    name
+    args
+    block {
+      height
+      hash
+      timestamp
+    }
   }
 }

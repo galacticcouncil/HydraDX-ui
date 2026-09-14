@@ -26,7 +26,13 @@ import { SwapAmount } from "@/modules/trade/orders/columns/SwapAmount"
 import { SwapMobile } from "@/modules/trade/orders/columns/SwapMobile"
 import { SwapPrice } from "@/modules/trade/orders/columns/SwapPrice"
 import { SwapType } from "@/modules/trade/orders/columns/SwapType"
-import { OrderData } from "@/modules/trade/orders/lib/types"
+import {
+  isDcaScheduleOrder,
+  isIntentOrder,
+  OrderData,
+  OrderKind,
+} from "@/modules/trade/orders/lib/orderData"
+import { useRemoveIntent } from "@/modules/trade/orders/lib/useRemoveIntent"
 import { TerminateDcaScheduleModalContent } from "@/modules/trade/orders/TerminateDcaScheduleModalContent"
 
 const columnHelper = createColumnHelper<OrderData>()
@@ -39,16 +45,28 @@ export const useOpenOrdersColumns = () => {
     const fromToColumn = columnHelper.display({
       header: t("trade:trade.orders.openOrders.inOut"),
       cell: ({ row }) => {
+        const order = row.original
+
+        const fromAmount =
+          order.kind === OrderKind.Limit
+            ? order.fromAmountBudget
+            : order.isOpenBudget
+              ? order.fromAmountExecuted
+              : order.fromAmountBudget
+
+        const toAmount =
+          order.kind === OrderKind.Limit
+            ? order.toAmountBudget
+            : order.isOpenBudget
+              ? order.toAmountExecuted
+              : undefined
+
         return (
           <SwapAmount
-            fromAmount={
-              row.original.isOpenBudget
-                ? row.original.fromAmountExecuted
-                : row.original.fromAmountBudget
-            }
-            toAmount={row.original.toAmountExecuted}
-            from={row.original.from}
-            to={row.original.to}
+            fromAmount={fromAmount}
+            toAmount={toAmount}
+            from={order.from}
+            to={order.to}
             showLogo
           />
         )
@@ -91,7 +109,12 @@ export const useOpenOrdersColumns = () => {
       cell: ({ row }) => {
         return (
           <Flex justify="center">
-            <SwapType type={row.original.kind} />
+            <SwapType
+              type={row.original.kind}
+              isLimit={
+                "limitPrice" in row.original && !!row.original.limitPrice
+              }
+            />
           </Flex>
         )
       },
@@ -109,7 +132,9 @@ export const useOpenOrdersColumns = () => {
               status={row.original.status}
               sold={row.original.fromAmountExecuted}
               total={row.original.fromAmountBudget}
-              isOpenBudget={row.original.isOpenBudget}
+              isOpenBudget={
+                "isOpenBudget" in row.original && row.original.isOpenBudget
+              }
               from={row.original.from}
             />
           )
@@ -121,26 +146,36 @@ export const useOpenOrdersColumns = () => {
       id: "actions",
       cell: function Cell({ row }) {
         const [modal, setModal] = useState<"confirmation" | "none">("none")
+        const removeIntent = useRemoveIntent()
+        const order = row.original
+
+        const isIntent = isIntentOrder(order)
+        const isDcaSchedule = isDcaScheduleOrder(order)
 
         return (
-          <Flex align="center" justify="end" gap="base">
-            <Tooltip text={t("openInExplorer")} size="small" asChild side="top">
-              <Button
-                sx={{ p: "base" }}
-                variant="muted"
-                outline
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
+          <Flex align="center" gap="base" justify="flex-end">
+            {isDcaSchedule && (
+              <Tooltip
+                text={t("openInExplorer")}
+                size="small"
                 asChild
+                side="top"
               >
-                <ExternalLink
-                  href={neckwork.activityDca(row.original.scheduleId)}
+                <Button
+                  sx={{ p: "base" }}
+                  variant="muted"
+                  outline
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
+                  asChild
                 >
-                  <Icon component={SquareArrowOutUpRight} size="s" />
-                </ExternalLink>
-              </Button>
-            </Tooltip>
+                  <ExternalLink href={neckwork.activityDca(order.scheduleId)}>
+                    <Icon component={SquareArrowOutUpRight} size="s" />
+                  </ExternalLink>
+                </Button>
+              </Tooltip>
+            )}
             <Tooltip
               text={t("trade:trade.cancelOrder.cta")}
               size="small"
@@ -153,26 +188,32 @@ export const useOpenOrdersColumns = () => {
                 sx={{ p: "base" }}
                 onClick={(e) => {
                   e.stopPropagation()
-                  setModal("confirmation")
+                  if (isIntent) {
+                    removeIntent.mutate(order.intentId)
+                  } else {
+                    setModal("confirmation")
+                  }
                 }}
               >
                 <Icon component={Trash} size="s" />
               </Button>
             </Tooltip>
-
-            <Modal
-              open={modal === "confirmation"}
-              onOpenChange={() => setModal("none")}
-            >
-              <TerminateDcaScheduleModalContent
-                scheduleId={row.original.scheduleId}
-                sold={row.original.fromAmountExecuted}
-                total={row.original.fromAmountBudget}
-                symbol={row.original.from.symbol}
-                openBudget={row.original.isOpenBudget}
-                onClose={() => setModal("none")}
-              />
-            </Modal>
+            <TableRowDetailsExpand />
+            {isDcaSchedule && (
+              <Modal
+                open={modal === "confirmation"}
+                onOpenChange={() => setModal("none")}
+              >
+                <TerminateDcaScheduleModalContent
+                  scheduleId={order.scheduleId}
+                  sold={order.fromAmountExecuted}
+                  total={order.fromAmountBudget}
+                  symbol={order.from.symbol}
+                  openBudget={order.isOpenBudget}
+                  onClose={() => setModal("none")}
+                />
+              </Modal>
+            )}
           </Flex>
         )
       },
@@ -197,7 +238,9 @@ export const useOpenOrdersColumns = () => {
             from={row.original.from}
             status={row.original.status}
             total={row.original.fromAmountBudget}
-            isOpenBudget={row.original.isOpenBudget}
+            isOpenBudget={
+              "isOpenBudget" in row.original && row.original.isOpenBudget
+            }
           />
         </TableRowDetailsExpand>
       ),

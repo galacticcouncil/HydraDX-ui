@@ -1,99 +1,76 @@
+import { Paper, PaperProps, Separator } from "@galacticcouncil/ui/components"
+import { useAccount } from "@galacticcouncil/web3-connect"
+import { useNavigate, useSearch } from "@tanstack/react-router"
+import { FC, useEffect } from "react"
+
+import { useAccountIntents } from "@/api/intents"
+import { useDataTableUrlPagination } from "@/hooks/useDataTableUrlPagination"
+import { useInvalidateOrdersOnExecution } from "@/modules/trade/orders/lib/useInvalidateOrdersOnExecution"
+import { OpenOrdersLegacy } from "@/modules/trade/orders/OpenOrdersLegacy"
+import { OrderHistoryLegacy } from "@/modules/trade/orders/OrderHistoryLegacy"
+import { useChainScheduleIds } from "@/modules/trade/orders/TradeOrders/lib/useChainOrdersData"
 import {
-  Button,
-  DataTable,
-  Flex,
-  Modal,
-  Paper,
-  PaperProps,
-  Separator,
-  TableContainer,
-} from "@galacticcouncil/ui/components"
-import { FC, useMemo, useState } from "react"
-import { useTranslation } from "react-i18next"
+  TradeOrdersHeader,
+  TradeOrderTab,
+} from "@/modules/trade/orders/TradeOrders/TradeOrdersHeader"
 
-import { TabMenuBadge } from "@/components/TabMenu/TabMenuBadge"
-import { TradeOrderHistoryItem } from "@/modules/trade/orders/lib/tradeOrdersHistory.types"
-import { useTradeOrdersHistoryData } from "@/modules/trade/orders/lib/useTradeOrdersHistoryData"
-import { OrdersEmptyState } from "@/modules/trade/orders/OrdersEmptyState"
-import { TradeOrderHistoryDetailsModal } from "@/modules/trade/orders/TradeOrderHistoryDetailsModal"
-import { useTradeOrdersHistoryColumns } from "@/modules/trade/orders/TradeOrdersHistory.columns"
+const TABS = [
+  "openOrders",
+  "orderHistory",
+] as const satisfies ReadonlyArray<TradeOrderTab>
 
-type Filter = "all" | "open" | "history"
-
-const filterLabelKeys = {
-  all: "trade.orders.history.all",
-  open: "trade.orders.history.open",
-  history: "trade.orders.history.finished",
-} as const satisfies Record<Filter, string>
-
-const filters = Object.keys(filterLabelKeys) as ReadonlyArray<Filter>
+type Tab = (typeof TABS)[number]
 
 export const TradeOrdersHistory: FC<PaperProps> = (props) => {
-  const { t } = useTranslation("trade")
+  const { tab } = useSearch({
+    from: "/trade/_history",
+  })
+  const navigate = useNavigate()
+  const { account } = useAccount()
 
-  const [filter, setFilter] = useState<Filter>("all")
-  const [selected, setSelected] = useState<TradeOrderHistoryItem | null>(null)
+  const paginationProps = useDataTableUrlPagination(
+    "/trade/_history",
+    "page",
+    10,
+  )
 
-  const { orders, isLoading } = useTradeOrdersHistoryData()
-  const columns = useTradeOrdersHistoryColumns()
+  const isSupportedTab = (TABS as ReadonlyArray<string>).includes(tab)
+  const resolvedTab: Tab = isSupportedTab ? (tab as Tab) : "openOrders"
 
-  const openOrders = useMemo(() => {
-    return orders.filter((order) => order.status === null)
-  }, [orders])
+  const { scheduleIds } = useChainScheduleIds()
+  const { data: intents } = useAccountIntents(account?.address ?? "")
 
-  const historyOrders = useMemo(() => {
-    return orders.filter((order) => order.status !== null)
-  }, [orders])
+  useInvalidateOrdersOnExecution()
 
-  const filteredOrders = (() => {
-    switch (filter) {
-      case "all":
-        return orders
-      case "open":
-        return openOrders
-      case "history":
-        return historyOrders
-    }
-  })()
+  useEffect(() => {
+    if (isSupportedTab) return
+
+    void navigate({
+      to: ".",
+      search: (search) => ({
+        ...search,
+        tab: "openOrders",
+      }),
+      replace: true,
+      resetScroll: false,
+    })
+  }, [isSupportedTab, navigate])
 
   return (
-    <Paper {...props}>
-      <Flex gap="base" align="center" my="l" px="xl">
-        {filters.map((value) => (
-          <Button
-            key={value}
-            size="small"
-            variant={filter === value ? "secondary" : "muted"}
-            sx={{ minWidth: "2xl", flexShrink: 0 }}
-            onClick={() => setFilter(value)}
-          >
-            {t(filterLabelKeys[value])}
-            {value === "open" && openOrders.length > 0 && (
-              <TabMenuBadge>{openOrders.length}</TabMenuBadge>
-            )}
-          </Button>
-        ))}
-      </Flex>
+    <Paper sx={{ overflow: "hidden" }} {...props}>
+      <TradeOrdersHeader
+        tabs={TABS}
+        paginationProps={paginationProps}
+        openOrdersCount={scheduleIds.length + (intents?.length ?? 0)}
+      />
       <Separator />
-      <TableContainer borderRadius="xl">
-        <DataTable
-          data={filteredOrders}
-          columns={columns}
-          isLoading={isLoading}
-          emptyState={<OrdersEmptyState />}
-          onRowClick={(item) => setSelected(item)}
-          paginated
-          pageSize={10}
-        />
-      </TableContainer>
-      <Modal open={!!selected} onOpenChange={() => setSelected(null)}>
-        {selected && (
-          <TradeOrderHistoryDetailsModal
-            details={selected}
-            onClose={() => setSelected(null)}
-          />
+      <div sx={{ overflowX: "auto" }}>
+        {resolvedTab === "openOrders" ? (
+          <OpenOrdersLegacy paginationProps={paginationProps} />
+        ) : (
+          <OrderHistoryLegacy paginationProps={paginationProps} />
         )}
-      </Modal>
+      </div>
     </Paper>
   )
 }

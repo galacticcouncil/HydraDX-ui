@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router"
 import { FC } from "react"
 import { useTranslation } from "react-i18next"
 
+import { swapTabLink } from "@/config/navigation"
 import { SAssetDetailMobileActions } from "@/modules/portfolio/overview/MyAssets/AssetDetailMobileActions.styled"
 import {
   canDepositToHydration,
@@ -52,7 +53,7 @@ export const AssetDetailMobileActions: FC<Props> = ({
         disabled={!asset.isTradable}
         onClick={() =>
           navigate({
-            to: "/trade/swap/market",
+            ...swapTabLink("market"),
             search: { assetOut: asset.id },
           })
         }

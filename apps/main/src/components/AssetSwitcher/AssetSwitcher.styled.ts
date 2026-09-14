@@ -21,7 +21,7 @@ export const SSwitchContainer = styled(ButtonTransparent)(({ theme }) => [
   buttonStyles,
   css`
     border-radius: ${theme.radii.full};
-    padding: 8px;
+    padding: ${theme.space.base};
 
     transition: ${theme.transitions.transform};
 
@@ -38,26 +38,31 @@ export const SPriceContainer = styled(ButtonTransparent)(({ theme }) => [
 
     transition: ${theme.transitions.colors};
 
-    padding: 2px 14px;
-
-    height: 28px;
+    padding: ${theme.space.s} ${theme.space.base};
 
     flex: 1 0 auto;
   `,
 ])
 
-export const SAssetSwitcher = styled(Flex)`
-  & > div:first-of-type {
-    flex-shrink: 0;
-    width: 32px;
-  }
+export const SAssetSwitcher = styled(Flex)(
+  ({ theme }) => css`
+    & > div:first-of-type {
+      flex-shrink: 0;
+      width: ${theme.sizes.xl};
+    }
 
-  & > div:nth-of-type(2) {
-    width: 100%;
-  }
+    & > div:nth-of-type(2) {
+      width: 100%;
+    }
 
-  & > div:last-of-type {
-    flex-shrink: 0;
-    width: 32px;
-  }
-`
+    & > div:last-of-type {
+      flex-shrink: 0;
+      width: ${theme.sizes.xl};
+    }
+
+    & > div:nth-of-type(2):last-of-type {
+      flex-shrink: 1;
+      width: 100%;
+    }
+  `,
+)

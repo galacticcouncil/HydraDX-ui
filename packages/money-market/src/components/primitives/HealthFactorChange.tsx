@@ -27,8 +27,9 @@ export const HealthFactorChange: React.FC<HealthFactorChangeProps> = ({
   fontSize,
   ...props
 }) => {
+  const { isUserConsentRequired: _isUserConsentRequired, ...flexProps } = props
   return (
-    <Flex direction="column" align="flex-end" {...props}>
+    <Flex direction="column" align="flex-end" {...flexProps}>
       <Flex gap="s" direction="row" align="center" justify="flex-end">
         {loading ? (
           <Skeleton height="1em" width={80} />

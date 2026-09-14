@@ -9,11 +9,9 @@ import {
 } from "lucide-react"
 import { useState } from "react"
 
-import { Flex } from "@/components/Flex"
-import { pxToRem } from "@/utils"
-
 import {
   ToggleGroup,
+  ToggleGroupIcon,
   ToggleGroupItem,
   ToggleGroupRootProps,
 } from "./ToggleGroup"
@@ -23,8 +21,7 @@ type Story = StoryObj<typeof ToggleGroup>
 export default {
   component: ToggleGroup,
 } satisfies Meta<typeof ToggleGroup>
-
-const SingleSelectTemplate = (
+const SingleSelectIconOnlyTemplate = (
   args: Omit<
     ToggleGroupRootProps<string>,
     "type" | "value" | "onValueChange" | "defaultValue"
@@ -34,13 +31,19 @@ const SingleSelectTemplate = (
   return (
     <ToggleGroup type="single" value={value} onValueChange={setValue} {...args}>
       <ToggleGroupItem value="option1">
-        <SunIcon />
+        <ToggleGroupIcon>
+          <SunIcon />
+        </ToggleGroupIcon>
       </ToggleGroupItem>
       <ToggleGroupItem value="option2">
-        <MoonIcon />
+        <ToggleGroupIcon>
+          <MoonIcon />
+        </ToggleGroupIcon>
       </ToggleGroupItem>
       <ToggleGroupItem value="option3">
-        <MonitorIcon />
+        <ToggleGroupIcon>
+          <MonitorIcon />
+        </ToggleGroupIcon>
       </ToggleGroupItem>
     </ToggleGroup>
   )
@@ -52,7 +55,7 @@ const MultipleSelectTemplate = (
     "type" | "value" | "onValueChange" | "defaultValue"
   >,
 ) => {
-  const [value, setValue] = useState<string[]>([])
+  const [value, setValue] = useState<string[]>(["option1"])
   return (
     <ToggleGroup
       type="multiple"
@@ -61,14 +64,39 @@ const MultipleSelectTemplate = (
       {...args}
     >
       <ToggleGroupItem value="option1">
-        <ThumbsUpIcon /> Like
+        <ToggleGroupIcon>
+          <ThumbsUpIcon />
+        </ToggleGroupIcon>
+        Like
       </ToggleGroupItem>
       <ToggleGroupItem value="option2">
-        <BellIcon /> Subscribe
+        <ToggleGroupIcon>
+          <BellIcon />
+        </ToggleGroupIcon>
+        Subscribe
       </ToggleGroupItem>
       <ToggleGroupItem value="option3">
-        <BookmarkIcon /> Bookmark
+        <ToggleGroupIcon>
+          <BookmarkIcon />
+        </ToggleGroupIcon>
+        Bookmark
       </ToggleGroupItem>
+    </ToggleGroup>
+  )
+}
+
+const SingleSelectTemplate = (
+  args: Omit<
+    ToggleGroupRootProps<string>,
+    "type" | "value" | "onValueChange" | "defaultValue"
+  >,
+) => {
+  const [value, setValue] = useState<string>("all")
+  return (
+    <ToggleGroup type="single" value={value} onValueChange={setValue} {...args}>
+      <ToggleGroupItem value="all">All</ToggleGroupItem>
+      <ToggleGroupItem value="claimable">Claimable</ToggleGroupItem>
+      <ToggleGroupItem value="attention">Needs attention</ToggleGroupItem>
     </ToggleGroup>
   )
 }
@@ -77,15 +105,29 @@ export const Default: Story = {
   render: SingleSelectTemplate,
 }
 
-export const Multiple: Story = {
-  render: MultipleSelectTemplate,
-}
-
-export const Disabled: Story = {
+export const Small: Story = {
   render: SingleSelectTemplate,
   args: {
-    disabled: true,
+    size: "small",
   },
+}
+
+export const Medium: Story = {
+  render: SingleSelectTemplate,
+  args: {
+    size: "medium",
+  },
+}
+
+export const Large: Story = {
+  render: SingleSelectTemplate,
+  args: {
+    size: "large",
+  },
+}
+
+export const Multiple: Story = {
+  render: MultipleSelectTemplate,
 }
 
 export const FullWidth: Story = {
@@ -93,11 +135,22 @@ export const FullWidth: Story = {
   args: {
     fullWidth: true,
   },
-  decorators: [
-    (Story) => (
-      <Flex width={pxToRem(320)}>
-        <Story />
-      </Flex>
-    ),
-  ],
+}
+
+export const IconsOnly: Story = {
+  render: SingleSelectIconOnlyTemplate,
+}
+
+export const SingleDisabled: Story = {
+  render: SingleSelectTemplate,
+  args: {
+    disabled: true,
+  },
+}
+
+export const MultipleDisabled: Story = {
+  render: MultipleSelectTemplate,
+  args: {
+    disabled: true,
+  },
 }

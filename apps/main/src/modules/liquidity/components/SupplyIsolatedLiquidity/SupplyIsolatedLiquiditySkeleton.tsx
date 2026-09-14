@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ModalBody,
   ModalContentDivider,
@@ -22,13 +23,15 @@ export const SupplyIsolatedLiquiditySkeleton = () => {
     <>
       <ModalHeader title={t("borrow:supply")} closable />
       <ModalBody sx={{ py: 0 }}>
-        <AssetSelect
-          label={t("amount")}
-          disabled
-          loading
-          assets={[]}
-          selectedAsset={undefined}
-        />
+        <Box py="l" width="100%">
+          <AssetSelect
+            label={t("amount")}
+            isDisabled
+            isLoading
+            assets={[]}
+            selectedAsset={undefined}
+          />
+        </Box>
 
         <ModalContentDivider />
 

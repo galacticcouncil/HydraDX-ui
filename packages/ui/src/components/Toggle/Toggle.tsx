@@ -40,8 +40,8 @@ export const Toggle: FC<ToggleProps & { ref?: Ref<HTMLButtonElement> }> = ({
 )
 
 export const ToggleLabel: FC<
-  TextProps & { ref?: Ref<HTMLParagraphElement> }
-> = ({ ref, ...props }) => {
+  TextProps & { ref?: Ref<HTMLParagraphElement>; htmlFor?: string }
+> = ({ ref, htmlFor, ...props }) => {
   return (
     <Text
       ref={ref}
@@ -50,6 +50,8 @@ export const ToggleLabel: FC<
       lh={1}
       color={getToken("text.high")}
       whiteSpace="nowrap"
+      as="label"
+      {...(htmlFor ? { htmlFor } : {})}
       {...props}
     />
   )

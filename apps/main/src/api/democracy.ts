@@ -91,22 +91,13 @@ export const getConvictionBlocks = (
   return LOCK_PERIODS_BY_CONVICTION[index] * voteLockingPeriodBlocks
 }
 
-type UnsafeVoteLockingPeriodConstants = {
-  ConvictionVoting: { VoteLockingPeriod: () => Promise<number> }
-}
-
 export const voteLockingPeriodQuery = (rpc: TProviderContext) =>
   queryOptions({
     queryKey: ["voteLockingPeriod"],
     enabled: rpc.isReady,
     staleTime: Infinity,
-    queryFn: async () => {
-      // Unsafe api — `ConvictionVoting` constants are not part of the
-      // generated descriptor set.
-      const constants = rpc.papiClient.getUnsafeApi()
-        .constants as unknown as UnsafeVoteLockingPeriodConstants
-      return Number(await constants.ConvictionVoting.VoteLockingPeriod())
-    },
+    queryFn: async () =>
+      Number(await rpc.papi.constants.ConvictionVoting.VoteLockingPeriod()),
   })
 
 export const decodeStandardVote = (packedVote: number) => {

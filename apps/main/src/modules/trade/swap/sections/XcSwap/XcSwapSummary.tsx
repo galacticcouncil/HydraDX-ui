@@ -14,10 +14,11 @@ import { useTranslation } from "react-i18next"
 import { Trade, TradeOrder } from "@/api/trade"
 import { useDisplayAssetPrice } from "@/components/AssetPrice"
 import { SwapSummaryRow } from "@/modules/trade/swap/components/SwapSummaryRow"
-import { CalculatedAmountSummaryRow } from "@/modules/trade/swap/sections/Market/Summary/CalculatedAmountSummaryRow"
-import { MarketSummarySwap } from "@/modules/trade/swap/sections/Market/Summary/MarketSummarySwap"
-import { MarketSummaryTwap } from "@/modules/trade/swap/sections/Market/Summary/MarketSummaryTwap"
-import { PriceImpactSummaryRow } from "@/modules/trade/swap/sections/Market/Summary/PriceImpactSummaryRow"
+import { CalculatedAmountSummaryRow } from "@/modules/trade/swap/sections/XcSwap/components/Summary/CalculatedAmountSummaryRow"
+import { PriceImpactSummaryRow } from "@/modules/trade/swap/sections/XcSwap/components/Summary/PriceImpactSummaryRow"
+import { SwapSummary } from "@/modules/trade/swap/sections/XcSwap/components/Summary/SwapSummary"
+import { TwapSummary } from "@/modules/trade/swap/sections/XcSwap/components/Summary/TwapSummary"
+import { useOnChainTradeAssets } from "@/modules/trade/swap/sections/XcSwap/hooks/useOnChainTradeAssets"
 import { XcSwapFormValues } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapForm"
 import { useXcSwap } from "@/modules/trade/swap/sections/XcSwap/XcSwapProvider"
 import { SwapSectionSeparator } from "@/modules/trade/swap/SwapPage.styled"
@@ -28,21 +29,11 @@ export const XcSwapSummary = () => {
   const { quote } = useXcSwap()
 
   if (quote?.kind === "oc") {
-    return (
-      <>
-        <SwapSectionSeparator />
-        <OnChainSummary swap={quote.swap} twap={quote.twap} />
-      </>
-    )
+    return <OnChainSummary swap={quote.swap} twap={quote.twap} />
   }
 
   if (quote?.kind === "xc") {
-    return (
-      <>
-        <SwapSectionSeparator />
-        <CrossChainSummary swap={quote.swap} />
-      </>
-    )
+    return <CrossChainSummary swap={quote.swap} />
   }
 
   return null
@@ -57,12 +48,19 @@ const OnChainSummary = ({
 }) => {
   const { healthFactor } = useXcSwap()
   const { watch, formState } = useFormContext<XcSwapFormValues>()
+  const { sellAsset, buyAsset } = useOnChainTradeAssets()
 
   const isSingleTrade = watch("isSingleTrade")
 
   if (!isSingleTrade && twap) {
     return (
-      <MarketSummaryTwap swap={swap} twap={twap} healthFactor={healthFactor} />
+      <TwapSummary
+        swap={swap}
+        twap={twap}
+        healthFactor={healthFactor}
+        sellAsset={sellAsset}
+        buyAsset={buyAsset}
+      />
     )
   }
 
@@ -70,9 +68,11 @@ const OnChainSummary = ({
     formState.errors.sellAmount?.message !== maxBalanceError
 
   return (
-    <MarketSummarySwap
+    <SwapSummary
       swap={swap}
       healthFactor={isHealthFactorShown ? healthFactor : undefined}
+      sellAsset={sellAsset}
+      buyAsset={buyAsset}
     />
   )
 }

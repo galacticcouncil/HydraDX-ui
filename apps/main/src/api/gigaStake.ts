@@ -46,20 +46,13 @@ export const gigaStakeConstantsQuery = (rpc: TProviderContext) =>
 
 const U32_MAX = 4_294_967_295
 
-type UnsafeTwoSecBlocksSinceQuery = {
-  Parameters: {
-    TwoSecBlocksSince: { getValue: () => Promise<number | undefined> }
-  }
-}
-
 /**
  * `Parameters.TwoSecBlocksSince` — block height of the 6s→2s switch,
  * set once by the `SetTwoSecBlocksSince` runtime migration (`u32::MAX`
  * sentinel until it happens). Canonical anchor consumed by both
  * pallet-staking and pallet-gigahdx via `TwoSecBlocksSinceProvider`.
- * Read via the unsafe api: the pallet is newer than the generated
- * descriptors. Resolves `null` on runtimes that don't expose it
- * (pre-2s), which callers treat as "no switch — plain arithmetic".
+ * Resolves `null` on runtimes that don't expose it (pre-2s), which
+ * callers treat as "no switch — plain arithmetic".
  */
 export const gigaTwoSecBlocksSinceQuery = (rpc: TProviderContext) =>
   queryOptions({
@@ -69,9 +62,8 @@ export const gigaTwoSecBlocksSinceQuery = (rpc: TProviderContext) =>
     gcTime: GC_TIME,
     queryFn: async (): Promise<number | null> => {
       try {
-        const query = rpc.papiClient.getUnsafeApi()
-          .query as unknown as UnsafeTwoSecBlocksSinceQuery
-        const value = await query.Parameters.TwoSecBlocksSince.getValue()
+        const value =
+          await rpc.papi.query.Parameters.TwoSecBlocksSince.getValue()
         return value === undefined ? null : Number(value)
       } catch {
         return null

@@ -18,7 +18,8 @@ const shouldForwardProp = (prop: string) =>
   prop !== "animationDurationMs" &&
   prop !== "hasTopContent" &&
   prop !== "noPadding" &&
-  prop !== "isBlurred"
+  prop !== "isBlurred" &&
+  prop !== "centered"
 
 export const SModalOverlay = styled(Overlay, {
   shouldForwardProp,
@@ -55,6 +56,7 @@ export const SModalOverlay = styled(Overlay, {
 
 export const SModalWrapper = styled(Overlay, { shouldForwardProp })<{
   animationDurationMs?: number
+  centered?: boolean
 }>`
   --modal-block-offset: 10vh;
   --modal-animation-duration: ${({
@@ -63,11 +65,13 @@ export const SModalWrapper = styled(Overlay, { shouldForwardProp })<{
 
   position: fixed;
   inset: 0;
-  padding-block: var(--modal-block-offset);
+  padding-block: ${({ centered, theme }) =>
+    centered ? theme.space.xl : "var(--modal-block-offset)"};
 
   display: grid;
   gap: ${({ theme }) => theme.space.s};
   justify-items: center;
+  align-items: ${({ centered }) => (centered ? "center" : "start")};
 
   overflow-y: auto;
 
@@ -83,8 +87,9 @@ export const SModalContent = styled(Content, {
   shouldForwardProp,
 })<{
   hasTopContent?: boolean
+  centered?: boolean
 }>(
-  ({ theme, hasTopContent }) => css`
+  ({ theme, hasTopContent, centered }) => css`
     --modal-content-padding: ${theme.space.xl};
     --modal-content-inset: calc(var(--modal-content-padding) * -1);
     --modal-top-content-height: ${hasTopContent ? theme.sizes["2xl"] : "0px"};
@@ -119,12 +124,16 @@ export const SModalContent = styled(Content, {
       height: auto;
 
       &[data-state="open"] {
-        animation: ${theme.animations.scaleInTop};
+        animation: ${centered
+          ? theme.animations.scaleInCenter
+          : theme.animations.scaleInTop};
         animation-duration: var(--modal-animation-duration);
       }
 
       &[data-state="closed"] {
-        animation: ${theme.animations.scaleOutTop};
+        animation: ${centered
+          ? theme.animations.scaleOutCenter
+          : theme.animations.scaleOutTop};
         animation-duration: var(--modal-animation-duration);
       }
     }
@@ -175,7 +184,7 @@ export const SModalHeaderButton = styled(ButtonIcon)<{
 
   position: absolute;
   top: 0;
-  ${({ align }) => `${align}: 0`};
+  ${({ align, theme }) => `${align}: -${theme.space.base}`};
 `
 
 export const SModalTitleContainer = styled(Flex)`
@@ -211,6 +220,7 @@ export const SModalFooter = styled(Flex)(
 
     ${mq("md")} {
       flex-direction: row;
+      gap: ${theme.space.xl};
     }
   `,
 )

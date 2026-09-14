@@ -16,6 +16,8 @@ import {
   SStackLayer,
   SStackRoot,
 } from "@/components/GigaNews/GigaNews.styled"
+import { gigaNewsToggleAction } from "@/components/GigaNews/GigaNews.utils"
+import { useIsOverlayOpen } from "@/hooks/useIsOverlayOpen"
 import { useStableBonds } from "@/modules/strategies/stable-bonds/hooks/useStableBonds"
 import { getBondApr } from "@/modules/strategies/stable-bonds/utils/apr"
 import { useBannersStore, useEnabledBanners } from "@/states/banners"
@@ -56,9 +58,15 @@ const BilBanner: React.FC<PromoteBannerProps> = ({ item }) => {
 export const GigaNews = ({ isHidden }: { isHidden: boolean }) => {
   const { t } = useTranslation("common")
   const [isCloseAll, setCloseAll] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isOverlayOpen = useIsOverlayOpen({ ignoreRef: containerRef })
 
-  const { openAllGigaNews, closeAllGigaNews, closedGigaNewsIds } =
-    useBannersStore()
+  const {
+    openAllGigaNews,
+    closeAllGigaNews,
+    closedGigaNewsIds,
+    gigaNewsDeferred,
+  } = useBannersStore()
   const enabledBanners = useEnabledBanners()
 
   const close = useBannersStore((state) => state.closeGigaNews)
@@ -71,7 +79,8 @@ export const GigaNews = ({ isHidden }: { isHidden: boolean }) => {
   const allClosed =
     enabledBanners.length > 0 &&
     enabledBanners.every((b) => closedGigaNewsIds.includes(b.id))
-  const [expanded, setExpanded] = useState(allClosed ? false : true)
+  const [expanded, setExpanded] = useState(!allClosed && !gigaNewsDeferred)
+
   const toggleLabel = expanded
     ? enabledBanners.length > 1
       ? t("closeAll")
@@ -92,6 +101,13 @@ export const GigaNews = ({ isHidden }: { isHidden: boolean }) => {
     openAllGigaNews()
   }, [openAllGigaNews, setExpanded])
 
+  const onToggle = useCallback(() => {
+    const action = gigaNewsToggleAction(expanded, allClosed)
+    if (action === "collapse") return onCloseAll()
+    if (action === "restore") return onOpenAll()
+    setExpanded(true)
+  }, [allClosed, expanded, onCloseAll, onOpenAll])
+
   useEffect(() => {
     if (!isCloseAll) return
     const id = setTimeout(() => {
@@ -107,11 +123,17 @@ export const GigaNews = ({ isHidden }: { isHidden: boolean }) => {
     }
   }, [allClosed, expanded, setExpanded])
 
-  if (!enabledBanners.length) return null
+  useEffect(() => {
+    if (gigaNewsDeferred) setExpanded(false)
+  }, [gigaNewsDeferred])
+
+  if (!enabledBanners.length || isOverlayOpen) return null
+
+  const stackVisible = expanded || isCloseAll
 
   return (
-    <SGigaNewsContainer isHidden={isHidden && allClosed}>
-      {visibleBanners.length > 0 && (
+    <SGigaNewsContainer ref={containerRef} isHidden={isHidden && !stackVisible}>
+      {stackVisible && visibleBanners.length > 0 && (
         <SStackRoot $closing={isCloseAll}>
           {visibleBanners.map((banner, depth) => {
             const onClose = () => {
@@ -150,7 +172,7 @@ export const GigaNews = ({ isHidden }: { isHidden: boolean }) => {
         size="small"
         outline
         blur
-        onClick={allClosed ? onOpenAll : onCloseAll}
+        onClick={onToggle}
       >
         <Icon size={expanded ? 14 : 16} component={expanded ? Close : Flame} />
         <MorphLabel text={toggleLabel} />

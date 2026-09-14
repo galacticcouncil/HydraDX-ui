@@ -4,7 +4,9 @@ import { useState } from "react"
 import { getToken } from "@/utils"
 
 import { Box } from "../Box"
-import { AssetInput } from "./AssetInput"
+import { Logo } from "../Logo"
+import { Stack } from "../Stack"
+import { AssetInput, AssetInputProps } from "./AssetInput"
 
 type Story = StoryObj<typeof AssetInput>
 
@@ -12,66 +14,103 @@ export default {
   component: AssetInput,
 } satisfies Meta<typeof AssetInput>
 
-const SPOT_PRICE = "0.1234"
+const SPOT_PRICE = 0.1234
 const MAX_BALANCE = "12345"
 
-const Template = (args: React.ComponentPropsWithoutRef<typeof AssetInput>) => {
-  const [value, setValue] = useState<string>()
+const HDX = {
+  symbol: "HDX",
+  icon: (
+    <Logo src="https://cdn.jsdelivr.net/gh/galacticcouncil/intergalactic-asset-metadata@master/v2/polkadot/2034/assets/0/icon.svg" />
+  ),
+}
 
-  const displayValue =
-    value !== undefined ? Number(SPOT_PRICE) * Number(value) : undefined
+const Field = (args: AssetInputProps) => {
+  const [value, setValue] = useState("")
 
   return (
-    <Box
-      width={500}
-      bg={getToken("surfaces.themeBasePalette.surfaceHigh")}
-      height={500}
-      p="xxl"
-    >
-      <AssetInput
-        {...args}
-        value={args.value ?? value}
-        maxBalance={args.maxBalance ?? MAX_BALANCE}
-        displayValue={args.displayValue ?? displayValue?.toString()}
-        onChange={setValue}
-        label="Sell"
-      />
-    </Box>
+    <AssetInput
+      label="Sell"
+      asset={HDX}
+      onAssetClick={() => {}}
+      value={value}
+      onChange={setValue}
+      displayValue={value ? `$${(Number(value) * SPOT_PRICE).toFixed(2)}` : ""}
+      balance={{
+        label: "Balance",
+        value: MAX_BALANCE,
+        onMax: () => setValue(MAX_BALANCE),
+      }}
+      {...args}
+    />
   )
 }
 
-export const Default: Story = {
-  render: (args) => <Template {...args} />,
-  args: {
-    symbol: "HDX",
-  },
+const Frame = ({ children }: { children: React.ReactNode }) => (
+  <Box
+    width={500}
+    bg={getToken("surfaces.themeBasePalette.surfaceHigh")}
+    p="xxl"
+  >
+    {children}
+  </Box>
+)
+
+const render = (args: AssetInputProps) => (
+  <Frame>
+    <Field {...args} />
+  </Frame>
+)
+
+export const Default: Story = { render }
+
+export const Empty: Story = { render, args: { asset: null } }
+
+export const AmountError: Story = {
+  render,
+  args: { value: "1234", amountError: "Not enough balance" },
 }
 
-export const EmptyAssetSelector: Story = {
-  render: (args) => <Template {...args} />,
+export const AssetError: Story = {
+  render,
+  args: { asset: null, assetError: "Select an asset" },
 }
 
-export const ErrorAssetSelector: Story = {
-  render: (args) => <Template {...args} />,
-  args: {
-    symbol: "HDX",
-    value: "1234",
-    displayValue: "123",
-    amountError: "Not enough balance",
-  },
+export const Loading: Story = { render, args: { isLoading: true } }
+
+export const ValueLoading: Story = {
+  render,
+  args: { value: "12", isValueLoading: true, isDisplayValueLoading: true },
 }
 
-export const AssetSelectorWithNoMaxBalance: Story = {
-  render: (args) => <Template {...args} />,
-  args: {
-    symbol: "HDX",
-    maxBalance: "0",
-  },
+export const BalanceLoading: Story = {
+  render,
+  args: { balance: { label: "Balance", value: "", isLoading: true } },
 }
 
-export const AssetSelectorLoading: Story = {
-  render: (args) => <Template {...args} />,
-  args: {
-    loading: true,
-  },
+export const ReadOnly: Story = {
+  render,
+  args: { value: "42", isReadOnly: true },
+}
+
+export const Disabled: Story = { render, args: { isDisabled: true } }
+
+export const AmountHidden: Story = {
+  render,
+  args: { label: "Buy", balance: undefined, isAmountHidden: true },
+}
+
+export const AllStates: Story = {
+  render: () => (
+    <Frame>
+      <Stack gap="xl">
+        <Field />
+        <Field isLoading />
+        <Field asset={null} />
+        <Field value="1234" amountError="Not enough balance" />
+        <Field asset={null} assetError="Select an asset" />
+        <Field value="12" isValueLoading isDisplayValueLoading />
+        <Field isDisabled />
+      </Stack>
+    </Frame>
+  ),
 }

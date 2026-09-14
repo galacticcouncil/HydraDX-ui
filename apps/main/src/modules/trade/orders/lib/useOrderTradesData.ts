@@ -1,7 +1,4 @@
-import {
-  orderPlannedExecutionQuery,
-  orderTradesQuery,
-} from "@galacticcouncil/indexer/indexer"
+import { orderTradesQuery } from "@galacticcouncil/indexer/indexer"
 import { neckwork } from "@galacticcouncil/utils"
 import { useQuery } from "@tanstack/react-query"
 import { useMemo } from "react"
@@ -19,11 +16,6 @@ type TradeEventArgs = {
   readonly error?: string
 }
 
-type PlannedEventArgs = {
-  readonly id: number
-  readonly block: number
-}
-
 export const useOrderTradesData = (
   scheduleId: number,
   from: TAsset,
@@ -33,9 +25,6 @@ export const useOrderTradesData = (
 
   const { data: tradesData, isLoading: isTradesLoading } = useQuery(
     orderTradesQuery(indexerSdk, scheduleId),
-  )
-  const { data: plannedData, isLoading: isPlannedLoading } = useQuery(
-    orderPlannedExecutionQuery(indexerSdk, scheduleId),
   )
 
   const executions = useMemo<ReadonlyArray<PastExecutionData>>(() => {
@@ -74,14 +63,8 @@ export const useOrderTradesData = (
     )
   }, [tradesData, from.decimals, to.decimals, scheduleId])
 
-  const nextExecutionBlock = useMemo<number | null>(() => {
-    const args = plannedData?.events.at(0)?.args as PlannedEventArgs | null
-    return args?.block ?? null
-  }, [plannedData])
-
   return {
     executions,
-    nextExecutionBlock,
-    isLoading: isTradesLoading || isPlannedLoading,
+    isLoading: isTradesLoading,
   }
 }

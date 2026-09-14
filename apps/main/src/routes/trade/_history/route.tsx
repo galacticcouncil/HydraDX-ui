@@ -9,6 +9,7 @@ import * as z from "zod/v4"
 
 import { tradeOrderTabs } from "@/modules/trade/orders/TradeOrders/TradeOrdersHeader"
 import { NATIVE_ASSET_ID } from "@/utils/consts"
+import { isHydrationAssetId } from "@/utils/trade"
 
 export const DEFAULT_TRADE_ASSET_IN_ID = HOLLAR_ASSET_ID
 export const DEFAULT_TRADE_ASSET_OUT_ID = NATIVE_ASSET_ID
@@ -46,6 +47,17 @@ const searchSchema = z
         ...search,
         assetIn: DEFAULT_TRADE_ASSET_IN_ID,
         assetOut: DEFAULT_TRADE_ASSET_OUT_ID,
+        destPlatform: HYDRATION_CHAIN_KEY,
+      }
+    }
+
+    if (
+      isHydrationAssetId(search.assetOut) &&
+      search.destPlatform !== HYDRATION_CHAIN_KEY
+    ) {
+      return {
+        ...search,
+        destPlatform: HYDRATION_CHAIN_KEY,
       }
     }
 
@@ -53,6 +65,45 @@ const searchSchema = z
   })
 
 export type TradeHistorySearchParams = z.infer<typeof searchSchema>
+
+export const isCrossChainSwapSearch = ({
+  assetIn,
+  assetOut,
+  destPlatform,
+}: Pick<TradeHistorySearchParams, "assetIn" | "assetOut" | "destPlatform">) =>
+  destPlatform !== HYDRATION_CHAIN_KEY ||
+  !isHydrationAssetId(assetIn) ||
+  !isHydrationAssetId(assetOut)
+
+export const normalizeSearchForOnChainSwapTab = (
+  search: TradeHistorySearchParams,
+): TradeHistorySearchParams => {
+  if (!isCrossChainSwapSearch(search)) {
+    return search
+  }
+
+  let assetIn = isHydrationAssetId(search.assetIn)
+    ? search.assetIn
+    : DEFAULT_TRADE_ASSET_IN_ID
+  let assetOut = isHydrationAssetId(search.assetOut)
+    ? search.assetOut
+    : DEFAULT_TRADE_ASSET_OUT_ID
+
+  if (assetIn === assetOut) {
+    if (assetIn === DEFAULT_TRADE_ASSET_IN_ID) {
+      assetOut = DEFAULT_TRADE_ASSET_OUT_ID
+    } else {
+      assetIn = DEFAULT_TRADE_ASSET_IN_ID
+    }
+  }
+
+  return {
+    ...search,
+    assetIn,
+    assetOut,
+    destPlatform: HYDRATION_CHAIN_KEY,
+  }
+}
 
 export const Route = createFileRoute("/trade/_history")({
   validateSearch: searchSchema,

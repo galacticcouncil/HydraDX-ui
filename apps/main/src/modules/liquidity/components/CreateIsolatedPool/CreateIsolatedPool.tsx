@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ModalBody,
   ModalContentDivider,
@@ -95,15 +96,17 @@ export const CreateIsolatedPool: FC<Props> = ({
       />
       <ModalBody scrollable={false}>
         <form autoComplete="off" onSubmit={form.handleSubmit(onSubmit)}>
-          <AssetSelectFormField<CreateIsolatedPoolFormData>
-            assetFieldName="assetA"
-            amountFieldName="amountA"
-            label={t("liquidity.createPool.modal.assetA")}
-            assets={allowedAssetsA}
-            maxBalance={getMaxBalance(assetA)}
-            disabled={!assetA}
-            onAssetChange={() => form.trigger()}
-          />
+          <Box py="l" width="100%">
+            <AssetSelectFormField<CreateIsolatedPoolFormData>
+              assetFieldName="assetA"
+              amountFieldName="amountA"
+              label={t("liquidity.createPool.modal.assetA")}
+              assets={allowedAssetsA}
+              balance={{ value: getMaxBalance(assetA) }}
+              isDisabled={!assetA}
+              onAssetChange={() => form.trigger()}
+            />
+          </Box>
 
           <AssetSwitcher
             defaultView="reversed"
@@ -114,15 +117,17 @@ export const CreateIsolatedPool: FC<Props> = ({
             onSwitchAssets={onSwitchAssets}
           />
 
-          <AssetSelectFormField<CreateIsolatedPoolFormData>
-            assetFieldName="assetB"
-            amountFieldName="amountB"
-            label={t("liquidity.createPool.modal.assetB")}
-            assets={allowedAssetsB}
-            maxBalance={getMaxBalance(assetB)}
-            disabled={!assetB}
-            onAssetChange={() => form.trigger()}
-          />
+          <Box py="l" width="100%">
+            <AssetSelectFormField<CreateIsolatedPoolFormData>
+              assetFieldName="assetB"
+              amountFieldName="amountB"
+              label={t("liquidity.createPool.modal.assetB")}
+              assets={allowedAssetsB}
+              balance={{ value: getMaxBalance(assetB) }}
+              isDisabled={!assetB}
+              onAssetChange={() => form.trigger()}
+            />
+          </Box>
 
           <ModalContentDivider />
 

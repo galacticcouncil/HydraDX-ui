@@ -72,7 +72,7 @@
   "myAssets.expandedNative.lockedInStaking": "Locked in Staking",
   "myAssets.expandedNative.lockedInDemocracy": "Locked in Democracy",
   "myAssets.expandedNative.unlockable": "Unlockable",
-  "myAssets.expandedNative.lockedInDCA": "Locked in DCA",
+  "myAssets.expandedNative.lockedInDCA": "Locked in TWAP",
   "myAssets.expandedNative.lockedInIdentity": "Locked in Identity",
   "myAssets.expandedNative.lockedInOTC": "Locked in OTC",
   "myAssets.expandedNative.lockedInXCM": "Locked in Cross-chain",

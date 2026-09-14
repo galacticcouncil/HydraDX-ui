@@ -1,6 +1,7 @@
 import { HealthFactorChange } from "@galacticcouncil/money-market/components"
 import {
   Amount,
+  Box,
   Button,
   Modal,
   ModalBody,
@@ -54,17 +55,21 @@ const GigaHDXRepayForm = ({ onClose }: GigaHDXRepayModalProps) => {
       <ModalHeader title={t("borrow:repay")} />
       <form onSubmit={onSubmit} autoComplete="off">
         <ModalBody sx={{ pt: 0 }}>
-          <AssetSelectFormField<GigaHDXRepayFormValues>
-            assetFieldName="asset"
-            amountFieldName="amount"
-            label={t("amount")}
-            assets={[]}
-            disabledAssetSelector
-            maxBalance={walletBalance}
-            maxButtonBalance={maxRepayAmountString}
-            onAmountChange={() => form.setValue("isMaxSelected", false)}
-            onMaxButtonClick={() => form.setValue("isMaxSelected", true)}
-          />
+          <Box py="l" width="100%">
+            <AssetSelectFormField<GigaHDXRepayFormValues>
+              assetFieldName="asset"
+              amountFieldName="amount"
+              label={t("amount")}
+              assets={[]}
+              disabledAssetSelector
+              balance={{
+                value: walletBalance,
+                max: maxRepayAmountString,
+                onMax: () => form.setValue("isMaxSelected", true),
+              }}
+              onAmountChange={() => form.setValue("isMaxSelected", false)}
+            />
+          </Box>
 
           <ModalContentDivider />
           <Summary

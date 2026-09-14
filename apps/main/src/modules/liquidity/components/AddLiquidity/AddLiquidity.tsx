@@ -2,6 +2,7 @@ import { HealthFactorChange } from "@galacticcouncil/money-market/components"
 import { HealthFactorResult } from "@galacticcouncil/money-market/utils"
 import {
   Alert,
+  Box,
   Button,
   ModalBody,
   ModalContentDivider,
@@ -71,15 +72,18 @@ export const AddLiquidity: FC<AddLiquidityProps> = ({
       />
       <form onSubmit={handleSubmit(onSubmit)} autoComplete="off">
         <ModalBody>
-          <AssetSelectFormField<TAddLiquidityFormValues>
-            label={t("liquidity.add.modal.selectAsset")}
-            assetFieldName="asset"
-            amountFieldName="amount"
-            assets={underlyingAssetMeta ? [underlyingAssetMeta, poolMeta] : []}
-            maxBalance={getMaxBalance(watch("asset"))}
-            sx={{ pt: 0 }}
-            disabledAssetSelector={!underlyingAssetMeta}
-          />
+          <Box py={0} pb="l" width="100%">
+            <AssetSelectFormField<TAddLiquidityFormValues>
+              label={t("liquidity.add.modal.selectAsset")}
+              assetFieldName="asset"
+              amountFieldName="amount"
+              assets={
+                underlyingAssetMeta ? [underlyingAssetMeta, poolMeta] : []
+              }
+              balance={{ value: getMaxBalance(watch("asset")) }}
+              disabledAssetSelector={!underlyingAssetMeta}
+            />
+          </Box>
 
           <ModalContentDivider />
 

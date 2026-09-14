@@ -59,6 +59,7 @@ type ModalContentProps = React.ComponentPropsWithoutRef<
   ref?: Ref<React.ElementRef<typeof DialogPrimitive.Content>>
   topContent?: ReactNode
   animationDurationMs?: number
+  centered?: boolean
 }
 
 const ModalContent: FC<ModalContentProps> = ({
@@ -67,6 +68,7 @@ const ModalContent: FC<ModalContentProps> = ({
   topContent,
   forceMount,
   animationDurationMs,
+  centered = false,
   ...props
 }) => (
   <ModalPortal forceMount={forceMount}>
@@ -77,8 +79,14 @@ const ModalContent: FC<ModalContentProps> = ({
     <SModalWrapper
       onClick={(e) => e.stopPropagation()}
       animationDurationMs={animationDurationMs}
+      centered={centered}
     >
-      <SModalContent ref={ref} {...props} hasTopContent={!!topContent}>
+      <SModalContent
+        ref={ref}
+        {...props}
+        hasTopContent={!!topContent}
+        centered={centered}
+      >
         {topContent && <SModalTopContent>{topContent}</SModalTopContent>}
         <SModalPaper>{children}</SModalPaper>
       </SModalContent>
@@ -251,6 +259,7 @@ export type ModalProps = React.ComponentProps<typeof ModalRoot> & {
   disableAutoFocus?: boolean
   topContent?: ReactNode
   animationDurationMs?: number
+  centered?: boolean
   ref?: Ref<React.ElementRef<typeof DialogPrimitive.Content>>
 }
 
@@ -261,6 +270,7 @@ const Modal = ({
   disableAutoFocus = false,
   topContent,
   animationDurationMs,
+  centered = false,
   ref,
   ...props
 }: ModalProps) => {
@@ -291,6 +301,7 @@ const Modal = ({
       <ModalRoot {...props}>
         <ModalContent
           animationDurationMs={animationDurationMs}
+          centered={centered}
           onClick={(e) => e.stopPropagation()}
           topContent={topContent}
           onInteractOutside={

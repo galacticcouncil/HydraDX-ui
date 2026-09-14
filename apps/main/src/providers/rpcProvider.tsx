@@ -1,17 +1,27 @@
 import { DryRunErrorDecoder, logger } from "@galacticcouncil/utils"
 import {
   QueryClient,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query"
 import { StatusChange, WsEvent } from "polkadot-api/ws"
 import { createContext, ReactNode, useContext, useEffect, useMemo } from "react"
 
-import { rpcProviderQuery, switchRpc, TProviderData } from "@/api/rpcClient"
+import { chainSpecDataQueryOptions, isHydrationFork } from "@/api/chainSpec"
+import {
+  Papi,
+  PapiNext,
+  rpcProviderQuery,
+  switchRpc,
+  TProviderData,
+} from "@/api/rpcClient"
 import { getProviderDataEnv } from "@/api/rpcConfig"
 import { TDataEnv } from "@/config/rpc"
 import { useAssetRegistryStore } from "@/states/assetRegistry"
 import { useProviderRpcUrlStore } from "@/states/provider"
+
+export type { Papi, PapiNext } from "@/api/rpcClient"
 
 export type TProviderContext = TProviderData & {
   /** The endpoint is connected and not mid-switch. */
@@ -20,6 +30,7 @@ export type TProviderContext = TProviderData & {
   isReady: boolean
   dataEnv: TDataEnv
   endpoint: string
+  isFork: boolean
 }
 
 /**
@@ -39,8 +50,8 @@ export type TProviderContext = TProviderData & {
 const defaultData: TProviderContext = {
   queryClient: {} as QueryClient,
   rpcUrlList: [],
-  papi: {} as TProviderData["papi"],
-  papiNext: {} as TProviderData["papiNext"],
+  papi: {} as Papi,
+  papiNext: {} as PapiNext,
   sdk: {} as TProviderData["sdk"],
   papiClient: {} as TProviderData["papiClient"],
   genesisHash: "",
@@ -48,12 +59,14 @@ const defaultData: TProviderContext = {
   featureFlags: {
     hollarBondsEnabled: true,
     bilEnabled: false,
+    isIceEnabled: false,
   },
   dryRunErrorDecoder: {} as DryRunErrorDecoder,
   isEndpointSettled: false,
   isReady: false,
   dataEnv: "mainnet",
   endpoint: "",
+  isFork: false,
 }
 
 const ProviderContext = createContext<TProviderContext>(defaultData)
@@ -134,6 +147,17 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
 
   const dataEnv = getProviderDataEnv(rpcUrl)
 
+  const { data: chainSpec } = useQuery(
+    chainSpecDataQueryOptions(
+      connectedRpcUrl,
+      data.papiClient,
+      data.papi,
+      isReady,
+    ),
+  )
+
+  const isFork = isHydrationFork(chainSpec?.chainSpecData.genesisHash)
+
   const value = useMemo<TProviderContext>(
     () => ({
       ...data,
@@ -141,8 +165,9 @@ export const RpcProvider = ({ children }: { children: ReactNode }) => {
       isReady,
       endpoint: rpcUrl,
       dataEnv,
+      isFork,
     }),
-    [data, dataEnv, isEndpointSettled, isReady, rpcUrl],
+    [data, dataEnv, isEndpointSettled, isReady, isFork, rpcUrl],
   )
 
   return (

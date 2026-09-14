@@ -16,6 +16,13 @@ export const ordersStatusQuery = (indexerSdk: IndexerSdk, who: string) =>
     enabled: !!who,
   })
 
+export const migratedOrdersQuery = (indexerSdk: IndexerSdk, who: string) =>
+  queryOptions({
+    queryKey: ["trade", "orders", "MigratedOrders", who],
+    queryFn: () => indexerSdk.MigratedOrders({ who }),
+    enabled: !!who,
+  })
+
 export const orderTradesQuery = (indexerSdk: IndexerSdk, id: number) =>
   queryOptions({
     queryKey: ["trade", "orders", "OrderTrades", id],
@@ -23,12 +30,23 @@ export const orderTradesQuery = (indexerSdk: IndexerSdk, id: number) =>
     enabled: !!id,
   })
 
-export const orderPlannedExecutionQuery = (
+export const intentsSubmittedQuery = (
   indexerSdk: IndexerSdk,
-  id: number,
+  owner: string,
+  { limit = 100, offset = 0 }: { limit?: number; offset?: number } = {},
 ) =>
   queryOptions({
-    queryKey: ["trade", "orders", "OrderPlannedExecution", id],
-    queryFn: () => indexerSdk.OrderPlannedExecution({ id }),
-    enabled: !!id,
+    queryKey: ["trade", "orders", "IntentsSubmitted", owner, limit, offset],
+    queryFn: () => indexerSdk.IntentsSubmitted({ owner, limit, offset }),
+    enabled: !!owner,
+  })
+
+export const intentEventsQuery = (indexerSdk: IndexerSdk, ids: string[]) =>
+  queryOptions({
+    queryKey: ["trade", "orders", "IntentEvents", ids],
+    queryFn: () =>
+      indexerSdk.IntentEvents({
+        idFilters: ids.map((id) => ({ args_jsonContains: { id } })),
+      }),
+    enabled: ids.length > 0,
   })

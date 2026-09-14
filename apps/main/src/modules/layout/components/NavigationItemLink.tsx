@@ -45,6 +45,7 @@ export const NavigationItemLink: FC<NavigationItemLinkProps> = ({
   return (
     <Link
       to={linkTo}
+      params={item.params}
       search={item.search}
       sx={{ textDecoration: "none" }}
       {...props}

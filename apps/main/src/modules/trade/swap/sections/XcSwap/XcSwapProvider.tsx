@@ -8,7 +8,7 @@ import { createContext, useContext, useMemo } from "react"
 import { FormProvider } from "react-hook-form"
 
 import { useKrakenSpotPrice } from "@/api/external/kraken"
-import { useMaxSellAmount } from "@/modules/trade/swap/sections/Market/lib/useMaxSellAmount"
+import { useMaxSellAmount } from "@/modules/trade/swap/sections/XcSwap/hooks/useMaxSellAmount"
 import { useXcDestBalance } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcDestBalance"
 import { useXcSwapAssetPairs } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapAssetPairs"
 import { useXcSwapClient } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapClient"
@@ -184,8 +184,6 @@ export const XcSwapProvider: React.FC<XcSwapProviderProps> = ({
   const { data: destSpotPrice, isLoading: isDestSpotPriceLoading } =
     useKrakenSpotPrice(destChain?.platform)
 
-  // the balance is form-derived, so it is merged here rather than inside
-  // useXcSwapAssetPairs, which stays form-free
   const destChainAssetPairsWithBalance = useMemo<XcChainAssetPair[]>(() => {
     if (!destBalance || !destChain) return destChainAssetPairs
 

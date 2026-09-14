@@ -63,7 +63,6 @@ export const AssetSelectFormField = <TFormValues extends FieldValues>({
       }}
       assetError={assetFieldState.error?.message}
       amountError={amountFieldState.error?.message}
-      maxBalanceFallback="0"
     />
   )
 }

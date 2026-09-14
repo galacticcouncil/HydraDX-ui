@@ -138,7 +138,6 @@ const RemoveStablepoolLiquidityJSX = ({
                 amountFieldName="amount"
                 label={t("common:amount")}
                 assets={[]}
-                sx={{ py: 0 }}
                 disabledAssetSelector
               />
             )}
@@ -169,12 +168,10 @@ const RemoveStablepoolLiquidityJSX = ({
                 label={t("common:minimumReceived")}
                 assetFieldName="receiveAsset"
                 amountFieldName="receiveAmount"
-                maxBalance={balance}
                 assets={[]}
                 sortedAssets={receiveAssets}
-                ignoreBalance
-                disabledInput
-                sx={{ p: 0 }}
+                balance={false}
+                isReadOnly
               />
             ) : (
               <Flex direction="column" gap="s">

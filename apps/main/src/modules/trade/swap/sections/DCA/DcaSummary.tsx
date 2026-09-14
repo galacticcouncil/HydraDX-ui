@@ -1,16 +1,9 @@
 import { getTimeFrameMillis } from "@galacticcouncil/main/src/components/TimeFrame/TimeFrame.utils"
 import { TradeDcaOrder } from "@galacticcouncil/sdk-next/sor"
 import {
-  ExclamationMark,
-  TriangleAlert,
-} from "@galacticcouncil/ui/assets/icons"
-import {
-  Box,
   Flex,
-  Icon,
   Summary,
   SummaryRowLabel,
-  SummaryRowValue,
   Text,
 } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
@@ -19,6 +12,7 @@ import { useFormContext } from "react-hook-form"
 import { Trans, useTranslation } from "react-i18next"
 
 import { SwapSummaryRow } from "@/modules/trade/swap/components/SwapSummaryRow"
+import { QuotedPriceBinding } from "@/modules/trade/swap/lib/quotedPrice.hook"
 import { DcaSummarySkeleton } from "@/modules/trade/swap/sections/DCA/DcaSummarySkeleton"
 import {
   DcaFormValues,
@@ -26,34 +20,29 @@ import {
 } from "@/modules/trade/swap/sections/DCA/useDcaForm"
 import { SwapSectionSeparator } from "@/modules/trade/swap/SwapPage.styled"
 import { useAssets } from "@/providers/assetsProvider"
-import { useTradeSettings } from "@/states/tradeSettings"
 import { scaleHuman } from "@/utils/formatting"
 
 type Props = {
   readonly order: TradeDcaOrder | undefined | null
-  readonly priceImpactLevel: "error" | "warning" | undefined
   readonly isLoading: boolean
+  readonly quotedPrice: QuotedPriceBinding
 }
 
-export const DcaSummary: FC<Props> = ({
-  order,
-  priceImpactLevel,
-  isLoading,
-}) => {
+export const DcaSummary: FC<Props> = ({ order, isLoading, quotedPrice }) => {
   const { t } = useTranslation(["common", "trade"])
   const { watch } = useFormContext<DcaFormValues>()
   const { getAsset } = useAssets()
-
-  const {
-    dca: { slippage },
-  } = useTradeSettings()
 
   const buyAsset = order ? getAsset(order.assetOut) : undefined
   const sellAsset = order ? getAsset(order.assetIn) : undefined
 
   const now = Date.now()
 
-  const [durationTimeFrame, type] = watch(["duration", "orders.type"])
+  const [durationTimeFrame, type, limitEnabled] = watch([
+    "duration",
+    "orders.type",
+    "limitEnabled",
+  ])
   const isOpenBudget = type === DcaOrdersMode.OpenBudget
   const duration = getTimeFrameMillis(durationTimeFrame)
   const frequency =
@@ -63,12 +52,7 @@ export const DcaSummary: FC<Props> = ({
   const endDateValid = !isNaN(endDate.valueOf())
 
   if (isLoading) {
-    return (
-      <>
-        <SwapSectionSeparator />
-        <DcaSummarySkeleton />
-      </>
-    )
+    return <DcaSummarySkeleton />
   }
 
   if (!order || !sellAsset || !buyAsset) {
@@ -78,85 +62,65 @@ export const DcaSummary: FC<Props> = ({
   const tradeAmountIn = scaleHuman(order.tradeAmountIn, sellAsset.decimals)
 
   return (
-    <>
-      <SwapSectionSeparator />
-      <div>
-        <Flex direction="column" gap="base" py="base">
-          <SummaryRowLabel>{t("summary")}</SummaryRowLabel>
-          <Text fw={500} fs="p2" lh="l" color={getToken("text.high")}>
+    <div>
+      <Flex direction="column" gap="base" py="base">
+        <SummaryRowLabel>{t("summary")}</SummaryRowLabel>
+        <Text fw={500} fs="p4" lh={1.4} color={getToken("text.high")}>
+          <Trans
+            t={t}
+            i18nKey={
+              isOpenBudget
+                ? "trade:dca.summary.openBudget.description"
+                : "trade:dca.summary.limitedBudget.description"
+            }
+            values={{
+              sellAmount: t("currency", {
+                value: tradeAmountIn,
+                symbol: sellAsset.symbol,
+              }),
+              buySymbol: buyAsset.symbol,
+              frequency: t("interval", { value: frequency }),
+              duration: t("interval", { value: duration }),
+            }}
+          >
+            <Text fw={600} as="span" color={getToken("text.tint.secondary")} />
+          </Trans>
+        </Text>
+        {limitEnabled && quotedPrice.view.display && (
+          <Text fw={500} fs="p4" lh={1.4} color={getToken("text.high")}>
             <Trans
               t={t}
               i18nKey={
-                isOpenBudget
-                  ? "trade:dca.summary.openBudget.description"
-                  : "trade:dca.summary.limitedBudget.description"
+                quotedPrice.view.inverted
+                  ? "trade:dca.summary.limitClause"
+                  : "trade:dca.summary.limitClauseAbove"
               }
               values={{
-                sellAmount: t("currency", {
-                  value: tradeAmountIn,
-                  symbol: sellAsset.symbol,
-                }),
                 buySymbol: buyAsset.symbol,
-                frequency: t("interval", { value: frequency }),
-                duration: t("interval", { value: duration }),
+                price: quotedPrice.view.display,
+                sellSymbol: sellAsset.symbol,
               }}
             >
-              <Box as="span" color={getToken("text.tint.secondary")} />
+              <Text
+                fw={600}
+                as="span"
+                color={getToken("text.tint.secondary")}
+              />
             </Trans>
           </Text>
-        </Flex>
-        <SwapSectionSeparator sx={{ mt: 9 }} />
-        <Summary separator={<SwapSectionSeparator />}>
-          {endDateValid && (
-            <SwapSummaryRow
-              label={t("trade:dca.summary.scheduleEnd")}
-              content={t("date.datetime.short", {
-                value: endDate,
-              })}
-            />
-          )}
+        )}
+      </Flex>
+      <SwapSectionSeparator sx={{ mt: "s" }} />
+      <Summary separator={<SwapSectionSeparator />}>
+        {endDateValid && (
           <SwapSummaryRow
-            label={t("trade:dca.summary.slippage")}
-            content={
-              <SummaryRowValue color={getToken("text.tint.quart")}>
-                {t("percent", { value: slippage })}
-              </SummaryRowValue>
-            }
+            label={t("trade:dca.summary.scheduleEnd")}
+            content={t("date.datetime.short", {
+              value: endDate,
+            })}
           />
-          <SwapSummaryRow
-            label={t("trade:dca.summary.priceImpact")}
-            content={
-              <SummaryRowValue
-                as="div"
-                color={(() => {
-                  switch (priceImpactLevel) {
-                    case "error":
-                      return getToken("accents.danger.secondary")
-                    case "warning":
-                      return getToken("accents.alertAlt.primary")
-                    default:
-                      return undefined
-                  }
-                })()}
-              >
-                <Flex align="center" gap="s">
-                  {t("percent", { value: order.tradeImpactPct })}
-                  {(() => {
-                    switch (priceImpactLevel) {
-                      case "error":
-                        return <Icon size="s" component={ExclamationMark} />
-                      case "warning":
-                        return <Icon size="s" component={TriangleAlert} />
-                      default:
-                        return null
-                    }
-                  })()}
-                </Flex>
-              </SummaryRowValue>
-            }
-          />
-        </Summary>
-      </div>
-    </>
+        )}
+      </Summary>
+    </div>
   )
 }

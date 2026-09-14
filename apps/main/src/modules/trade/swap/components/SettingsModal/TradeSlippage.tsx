@@ -64,7 +64,7 @@ export const TradeSlippage: FC<Props> = ({
           </ToggleGroup>
 
           <NumberInput
-            sx={{ width: 85 }}
+            sx={{ width: "3xl" }}
             value={slippage}
             unit="%"
             placeholder={t("custom")}

@@ -22,11 +22,6 @@ type DcaAmountsArgs = {
   readonly fundingBalance: string | null
 }
 
-/**
- * Resolves how much a schedule has bought (`filled`) and how much it still can
- * (`left`). A rolling schedule has no budget to count down, so what is left is
- * whatever the funding account can still cover.
- */
 const getDcaAmounts = ({
   sold,
   total,

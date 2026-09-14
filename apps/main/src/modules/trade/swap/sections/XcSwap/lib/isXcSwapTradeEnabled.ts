@@ -1,9 +1,5 @@
 import type { XcSwapQuote } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapQuote"
 
-/**
- * On-chain quotes carry router/scheduler errors that must block submit, the way
- * Market gates on them. Cross-chain errors surface through useXcSwapAlerts.
- */
 export const isXcSwapTradeEnabled = (
   quote: XcSwapQuote,
   isSingleTrade: boolean,

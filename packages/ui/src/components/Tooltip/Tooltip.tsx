@@ -173,10 +173,13 @@ export const Tooltip = ({
 
 export const TooltipIcon: FC<BoxProps> = (props) => (
   <Icon
-    sx={{ cursor: "pointer", display: "flex" }}
+    sx={{
+      cursor: "pointer",
+      display: "flex",
+      color: getToken("icons.onContainer"),
+    }}
     component={CircleInfo}
-    size="s"
-    color={getToken("icons.onContainer")}
+    size="0.75em"
     {...props}
   />
 )

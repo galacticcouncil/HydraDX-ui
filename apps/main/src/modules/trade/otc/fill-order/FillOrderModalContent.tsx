@@ -122,40 +122,42 @@ export const FillOrderModalContent: FC<Props> = ({
                 control={form.control}
                 name="sellAmount"
                 render={({ field, fieldState }) => (
-                  <AssetSelect
-                    label={t("common:pay")}
-                    value={field.value}
-                    onChange={(sellAmount) => {
-                      field.onChange(sellAmount)
+                  <Box py="l" width="100%">
+                    <AssetSelect
+                      label={t("common:pay")}
+                      value={field.value}
+                      onChange={(sellAmount) => {
+                        field.onChange(sellAmount)
 
-                      if (!sellAmount) {
-                        form.setValue("buyAmount", "", {
+                        if (!sellAmount) {
+                          form.setValue("buyAmount", "", {
+                            shouldValidate: true,
+                          })
+
+                          return
+                        }
+
+                        const newBuyAmount = getOtcBuyAmountFromSellAmount(
+                          otcOffer,
+                          sellAmount,
+                          feePct,
+                        )
+
+                        form.setValue("buyAmount", newBuyAmount, {
                           shouldValidate: true,
                         })
-
-                        return
-                      }
-
-                      const newBuyAmount = getOtcBuyAmountFromSellAmount(
-                        otcOffer,
-                        sellAmount,
-                        feePct,
-                      )
-
-                      form.setValue("buyAmount", newBuyAmount, {
-                        shouldValidate: true,
-                      })
-                    }}
-                    assets={[]}
-                    selectedAsset={otcOffer.assetIn}
-                    disabled={isUsersOffer || !otcOffer.isPartiallyFillable}
-                    modalDisabled
-                    maxButtonBalance={assetInMax}
-                    maxBalance={maxAccountBalance}
-                    maxBalanceFallback="0"
-                    hideMaxBalanceAction={!otcOffer.isPartiallyFillable}
-                    amountError={fieldState.error?.message}
-                  />
+                      }}
+                      assets={[]}
+                      selectedAsset={otcOffer.assetIn}
+                      isDisabled={isUsersOffer || !otcOffer.isPartiallyFillable}
+                      balance={{
+                        value: maxAccountBalance,
+                        max: assetInMax,
+                        onMax: otcOffer.isPartiallyFillable ? undefined : null,
+                      }}
+                      amountError={fieldState.error?.message}
+                    />
+                  </Box>
                 )}
               />
               <TokensConversion offer={otcOffer} />
@@ -163,38 +165,39 @@ export const FillOrderModalContent: FC<Props> = ({
                 control={form.control}
                 name="buyAmount"
                 render={({ field, fieldState }) => (
-                  <AssetSelect
-                    label={t("common:get")}
-                    value={field.value}
-                    onChange={(buyAmount) => {
-                      field.onChange(buyAmount)
+                  <Box py="l" width="100%">
+                    <AssetSelect
+                      label={t("common:get")}
+                      value={field.value}
+                      onChange={(buyAmount) => {
+                        field.onChange(buyAmount)
 
-                      if (!buyAmount) {
-                        form.setValue("sellAmount", "", {
+                        if (!buyAmount) {
+                          form.setValue("sellAmount", "", {
+                            shouldValidate: true,
+                          })
+
+                          return
+                        }
+
+                        const sellAmountBeforeFee =
+                          getOtcSellAmountFromBuyAmount(
+                            otcOffer,
+                            buyAmount,
+                            feePct,
+                          )
+
+                        form.setValue("sellAmount", sellAmountBeforeFee, {
                           shouldValidate: true,
                         })
-
-                        return
-                      }
-
-                      const sellAmountBeforeFee = getOtcSellAmountFromBuyAmount(
-                        otcOffer,
-                        buyAmount,
-                        feePct,
-                      )
-
-                      form.setValue("sellAmount", sellAmountBeforeFee, {
-                        shouldValidate: true,
-                      })
-                    }}
-                    assets={[]}
-                    selectedAsset={otcOffer.assetOut}
-                    disabled={isUsersOffer || !otcOffer.isPartiallyFillable}
-                    modalDisabled
-                    maxBalanceFallback="0"
-                    hideMaxBalanceAction
-                    amountError={fieldState.error?.message}
-                  />
+                      }}
+                      assets={[]}
+                      selectedAsset={otcOffer.assetOut}
+                      isDisabled={isUsersOffer || !otcOffer.isPartiallyFillable}
+                      balance={{ onMax: null }}
+                      amountError={fieldState.error?.message}
+                    />
+                  </Box>
                 )}
               />
             </Box>

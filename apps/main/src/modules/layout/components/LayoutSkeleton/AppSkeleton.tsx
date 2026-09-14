@@ -1,38 +1,22 @@
 import {
-  AssetButton,
+  AssetInput,
   Box,
   Flex,
   Paper,
   Separator,
   Skeleton,
-  Stack,
-  Text,
 } from "@galacticcouncil/ui/components"
 import { pxToRem } from "@galacticcouncil/ui/utils"
 
 const AssetSectionSkeleton = () => {
   return (
-    <Stack gap="m" py="l" px="xl">
-      <Flex justify="space-between">
-        <Text fs="p6">
-          <Skeleton width={100} />
-        </Text>
-        <Text fs="p6">
-          <Skeleton width={70} />
-        </Text>
+    <Box py="l" px="xl" width="100%">
+      <Flex justify="space-between" align="center" mb="m">
+        <Skeleton width={100} height={pxToRem(12)} />
+        <Skeleton width={70} height={pxToRem(12)} />
       </Flex>
-      <Flex justify="space-between" align="center">
-        <AssetButton loading error={false} />
-        <Flex gap="s" direction="column" align="end">
-          <div sx={{ height: pxToRem(26), lineHeight: 1 }}>
-            <Skeleton width={pxToRem(40)} height={pxToRem(26)} />
-          </div>
-          <div sx={{ height: pxToRem(12), lineHeight: 1 }}>
-            <Skeleton width={pxToRem(50)} height={pxToRem(12)} />
-          </div>
-        </Flex>
-      </Flex>
-    </Stack>
+      <AssetInput isLoading />
+    </Box>
   )
 }
 

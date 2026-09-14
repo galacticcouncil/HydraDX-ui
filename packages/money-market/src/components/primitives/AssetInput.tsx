@@ -1,6 +1,7 @@
 import {
   AssetInput as BaseAssetInput,
   AssetInputProps as BaseAssetInputProps,
+  Box,
   Flex,
   Modal,
   ModalBody,
@@ -9,7 +10,8 @@ import {
   Text,
 } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
-import { isValidBigSource } from "@galacticcouncil/utils"
+import { formatNumber, isValidBigSource } from "@galacticcouncil/utils"
+import Big from "big.js"
 import { useState } from "react"
 
 import { ReserveLogo } from "@/components/primitives/ReserveLogo"
@@ -25,67 +27,63 @@ export interface Asset {
   decimals?: number
 }
 
-export interface AssetInputOwnProps<T extends Asset = Asset> {
+export type AssetInputProps<T extends Asset = Asset> = Omit<
+  BaseAssetInputProps,
+  "asset" | "onAssetClick" | "balance" | "displayValue" | "label"
+> & {
   symbol: string
-  onChange?: (value: string) => void
-  onSelect?: (asset: T) => void
   assets: T[]
+  onSelect?: (asset: T) => void
+  displayValue?: string
+  maxButtonBalance?: string
+  balanceLabel?: string
 }
 
-export type AssetInputProps<T extends Asset = Asset> = AssetInputOwnProps<T> &
-  BaseAssetInputProps
-
 export const AssetInput = <T extends Asset = Asset>({
-  value,
   symbol,
-  onChange,
-  onSelect,
   assets,
-  maxButtonBalance,
-  loading = false,
-  className,
-  assetError,
-  amountError,
-  disabled,
-  balanceLabel,
+  onSelect,
   displayValue,
+  maxButtonBalance,
+  balanceLabel,
+  ...props
 }: AssetInputProps<T>) => {
   const { formatCurrency } = useAppFormatters()
   const [isAssetSelectOpen, setIsAssetSelectOpen] = useState(false)
   const asset =
     assets.length === 1
       ? assets[0]
-      : assets && (assets.find((asset) => asset.symbol === symbol) as T)
+      : assets.find((asset) => asset.symbol === symbol)
 
   const hasMultipleAssets = assets.length > 1
+  const max = maxButtonBalance || asset?.balance || "0"
 
   return (
     <>
-      <BaseAssetInput
-        sx={{ pt: 0 }}
-        className={className}
-        label="Amount"
-        symbol={symbol}
-        value={value}
-        displayValue={
-          isValidBigSource(displayValue)
-            ? formatCurrency(displayValue.toString())
-            : undefined
-        }
-        maxBalance={asset.balance}
-        maxButtonBalance={maxButtonBalance}
-        disabled={disabled}
-        balanceLabel={balanceLabel}
-        selectedAssetIcon={<ReserveLogo address={asset.address} />}
-        onAsssetBtnClick={
-          hasMultipleAssets ? () => setIsAssetSelectOpen(true) : undefined
-        }
-        modalDisabled={!hasMultipleAssets}
-        onChange={onChange}
-        loading={loading}
-        assetError={assetError}
-        amountError={amountError}
-      />
+      <Box py={0} pb="l" width="100%">
+        <BaseAssetInput
+          {...props}
+          label="Amount"
+          asset={{
+            symbol,
+            icon: asset && <ReserveLogo address={asset.address} />,
+          }}
+          onAssetClick={
+            hasMultipleAssets ? () => setIsAssetSelectOpen(true) : undefined
+          }
+          displayValue={
+            isValidBigSource(displayValue)
+              ? formatCurrency(displayValue.toString())
+              : undefined
+          }
+          balance={{
+            label: balanceLabel ?? "Balance",
+            value: asset?.balance ? formatNumber(asset.balance) : "",
+            onMax: () => props.onChange?.(max),
+            isMaxDisabled: !props.onChange || Big(max).lte(0),
+          }}
+        />
+      </Box>
       <Modal open={isAssetSelectOpen} onOpenChange={setIsAssetSelectOpen}>
         <ModalHeader title="Select asset" />
         <ModalBody sx={{ p: 0 }}>
@@ -100,7 +98,7 @@ export const AssetInput = <T extends Asset = Asset>({
                 sx={{ cursor: "pointer" }}
                 onClick={() => {
                   onSelect?.(asset)
-                  onChange?.("")
+                  props.onChange?.("")
                   setIsAssetSelectOpen(false)
                 }}
               >

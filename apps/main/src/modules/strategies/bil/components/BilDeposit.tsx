@@ -97,37 +97,43 @@ export const BilDeposit = () => {
               control={control}
               name="amount"
               render={({ field, fieldState }) => (
-                <AssetInput
-                  label={t("bil.deposit.your")}
-                  symbol={hollar.symbol}
-                  selectedAssetIcon={<AssetLogo id={hollar.id} />}
-                  modalDisabled
-                  value={field.value}
-                  onChange={field.onChange}
-                  displayValue={t("common:currency", {
-                    value: amount || "0",
-                  })}
-                  maxBalance={balance}
-                  maxButtonBalance={effectiveMax}
-                  amountError={fieldState.error?.message}
-                />
+                <Box py="l" width="100%">
+                  <AssetInput
+                    label={t("bil.deposit.your")}
+                    asset={{
+                      symbol: hollar.symbol,
+                      icon: <AssetLogo id={hollar.id} />,
+                    }}
+                    value={field.value}
+                    onChange={field.onChange}
+                    displayValue={t("common:currency", {
+                      value: amount || "0",
+                    })}
+                    balance={{
+                      label: t("common:balance"),
+                      value: t("common:number", { value: balance }),
+                      onMax: () => field.onChange(effectiveMax),
+                      isMaxDisabled: !(Number(effectiveMax) > 0),
+                    }}
+                    amountError={fieldState.error?.message}
+                  />
+                </Box>
               )}
             />
 
             <BilExchangeRate exchangeRate={vaultStats.exchangeRate} />
 
-            <AssetInput
-              label={t("bil.deposit.youReceive")}
-              symbol={bil.symbol}
-              selectedAssetIcon={<AssetLogo id={bil.id} />}
-              modalDisabled
-              disabledInput
-              ignoreBalance
-              value={outputBil}
-              displayValue={t("common:currency", {
-                value: outputHollar,
-              })}
-            />
+            <Box py="l" width="100%">
+              <AssetInput
+                label={t("bil.deposit.youReceive")}
+                asset={{ symbol: bil.symbol, icon: <AssetLogo id={bil.id} /> }}
+                isReadOnly
+                value={outputBil}
+                displayValue={t("common:currency", {
+                  value: outputHollar,
+                })}
+              />
+            </Box>
           </Box>
 
           <Separator mx="-xl" />

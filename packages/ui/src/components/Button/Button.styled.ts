@@ -465,7 +465,8 @@ export const SButtonIcon = styled(Box)(
 
 export type LoadingMode = "inline" | "replace"
 
-const LOADING_TRANSITION_MS = 250
+const LOADING_TRANSITION_MS = 500
+const LOADING_ENTER_DELAY_MS = 150
 const LOADING_ICON_EASING = "cubic-bezier(0.2, 0, 0, 1)"
 
 const loadingLabelStyles = createStyles(
@@ -488,15 +489,24 @@ const loadingLabelStyles = createStyles(
     [aria-busy="true"] > & > [data-loading-spinner] svg {
       animation-play-state: running;
     }
+
+    [aria-busy="true"] > &&,
+    [aria-busy="true"] > && > * {
+      transition-delay: ${LOADING_ENTER_DELAY_MS}ms;
+    }
   `,
 )
 
 const loadingLabelVariants = createVariants<LoadingMode>((theme) => ({
   inline: css`
+    --loading-spinner-space: calc(1em + ${theme.space.base});
+
     position: relative;
     display: inline-grid;
 
-    transition: transform ${LOADING_TRANSITION_MS}ms ${theme.easings.outExpo};
+    transition:
+      transform ${LOADING_TRANSITION_MS}ms ${theme.easings.outExpo},
+      margin ${LOADING_TRANSITION_MS}ms ${theme.easings.outExpo};
 
     & > [data-loading-spinner] {
       position: absolute;
@@ -521,13 +531,14 @@ const loadingLabelVariants = createVariants<LoadingMode>((theme) => ({
     }
 
     [aria-busy="true"] > & {
-      transform: translateX(calc((1em + ${theme.space.base}) / 2));
+      margin-inline: calc(var(--loading-spinner-space) / 2);
+      transform: translateX(calc(var(--loading-spinner-space) / 2));
     }
 
     [aria-busy="true"] > & > [data-loading-spinner] {
       opacity: 1;
       filter: blur(0);
-      transform: translate(calc(-100% - 0.35em), -50%) scale(1);
+      transform: translate(calc(-100% - 0.5em), -50%) scale(1);
     }
   `,
   replace: css`

@@ -1,5 +1,5 @@
 import { calculate_liquidity_in } from "@galacticcouncil/math-xyk"
-import { Alert, Button, Summary } from "@galacticcouncil/ui/components"
+import { Alert, Box, Button, Summary } from "@galacticcouncil/ui/components"
 import {
   ModalBody,
   ModalContentDivider,
@@ -121,37 +121,38 @@ export const AddIsolatedLiquidityForm = ({
       <FormProvider {...form}>
         <form autoComplete="off" onSubmit={form.handleSubmit(onSubmit)}>
           <ModalBody>
-            <AssetSelectFormField<TAddIsolatedLiquidityFormValues>
-              label={t("liquidity.createPool.modal.assetA")}
-              assetFieldName="assetA"
-              amountFieldName="amountA"
-              assets={[]}
-              maxBalance={getMaxBalance(assetAMeta)}
-              disabledAssetSelector
-              onAmountChange={(value) => {
-                form.setValue("lastUpdated", "assetA")
+            <Box py={0} pb="l" width="100%">
+              <AssetSelectFormField<TAddIsolatedLiquidityFormValues>
+                label={t("liquidity.createPool.modal.assetA")}
+                assetFieldName="assetA"
+                amountFieldName="amountA"
+                assets={[]}
+                balance={{ value: getMaxBalance(assetAMeta) }}
+                disabledAssetSelector
+                onAmountChange={(value) => {
+                  form.setValue("lastUpdated", "assetA")
 
-                const amountB = scaleHuman(
-                  calculate_liquidity_in(
-                    reserveA,
-                    reserveB,
-                    scale(value, assetAMeta.decimals),
-                  ),
-                  assetBMeta.decimals,
-                )
+                  const amountB = scaleHuman(
+                    calculate_liquidity_in(
+                      reserveA,
+                      reserveB,
+                      scale(value, assetAMeta.decimals),
+                    ),
+                    assetBMeta.decimals,
+                  )
 
-                form.setValue("amountB", amountB, {
-                  shouldValidate: true,
-                  shouldTouch: true,
-                })
+                  form.setValue("amountB", amountB, {
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  })
 
-                form.setValue("shares", getShares(value), {
-                  shouldValidate: true,
-                  shouldTouch: true,
-                })
-              }}
-              sx={{ pt: 0 }}
-            />
+                  form.setValue("shares", getShares(value), {
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  })
+                }}
+              />
+            </Box>
 
             <AssetSwitcher
               assetInId={assetAMeta.id}
@@ -160,36 +161,38 @@ export const AddIsolatedLiquidityForm = ({
               isFallbackPriceLoading={isPriceLoading}
             />
 
-            <AssetSelectFormField<TAddIsolatedLiquidityFormValues>
-              label={t("liquidity.createPool.modal.assetB")}
-              assetFieldName="assetB"
-              amountFieldName="amountB"
-              assets={[]}
-              maxBalance={getMaxBalance(assetBMeta)}
-              disabledAssetSelector
-              onAmountChange={(value) => {
-                form.setValue("lastUpdated", "assetB")
+            <Box py="l" width="100%">
+              <AssetSelectFormField<TAddIsolatedLiquidityFormValues>
+                label={t("liquidity.createPool.modal.assetB")}
+                assetFieldName="assetB"
+                amountFieldName="amountB"
+                assets={[]}
+                balance={{ value: getMaxBalance(assetBMeta) }}
+                disabledAssetSelector
+                onAmountChange={(value) => {
+                  form.setValue("lastUpdated", "assetB")
 
-                const amountA = scaleHuman(
-                  calculate_liquidity_in(
-                    reserveB,
-                    reserveA,
-                    scale(value, assetBMeta.decimals),
-                  ),
-                  assetAMeta.decimals,
-                )
+                  const amountA = scaleHuman(
+                    calculate_liquidity_in(
+                      reserveB,
+                      reserveA,
+                      scale(value, assetBMeta.decimals),
+                    ),
+                    assetAMeta.decimals,
+                  )
 
-                form.setValue("shares", getShares(amountA), {
-                  shouldValidate: true,
-                  shouldTouch: true,
-                })
+                  form.setValue("shares", getShares(amountA), {
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  })
 
-                form.setValue("amountA", amountA, {
-                  shouldValidate: true,
-                  shouldTouch: true,
-                })
-              }}
-            />
+                  form.setValue("amountA", amountA, {
+                    shouldValidate: true,
+                    shouldTouch: true,
+                  })
+                }}
+              />
+            </Box>
 
             <ModalContentDivider />
 

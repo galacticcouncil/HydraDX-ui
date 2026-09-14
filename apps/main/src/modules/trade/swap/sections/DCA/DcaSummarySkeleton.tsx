@@ -3,6 +3,7 @@ import {
   Skeleton,
   Summary,
   SummaryRowLabel,
+  Text,
 } from "@galacticcouncil/ui/components"
 import { FC } from "react"
 import { useTranslation } from "react-i18next"
@@ -17,21 +18,35 @@ export const DcaSummarySkeleton: FC = () => {
     <div>
       <Flex direction="column" gap="base" py="base">
         <SummaryRowLabel>{t("summary")}</SummaryRowLabel>
-        <Skeleton sx={{ width: "100%", height: 13 }} />
+        <Text fs="p4" lh={1.4}>
+          <Skeleton sx={{ width: "100%" }} height="1em" />
+        </Text>
       </Flex>
-      <SwapSectionSeparator sx={{ mt: 9 }} />
+      <SwapSectionSeparator sx={{ mt: "s" }} />
       <Summary separator={<SwapSectionSeparator />}>
         <SwapSummaryRow
           label={t("trade:dca.summary.scheduleEnd")}
-          content={<Skeleton sx={{ width: 150, marginLeft: "auto" }} />}
+          content={
+            <Flex ml="auto">
+              <Skeleton sx={{ width: "3xl" }} height="1em" />
+            </Flex>
+          }
         />
         <SwapSummaryRow
           label={t("trade:dca.summary.slippage")}
-          content={<Skeleton sx={{ width: 150, marginLeft: "auto" }} />}
+          content={
+            <Flex ml="auto">
+              <Skeleton sx={{ width: "3xl" }} height="1em" />
+            </Flex>
+          }
         />
         <SwapSummaryRow
           label={t("trade:dca.summary.priceImpact")}
-          content={<Skeleton sx={{ width: 150, marginLeft: "auto" }} />}
+          content={
+            <Flex ml="auto">
+              <Skeleton sx={{ width: "3xl" }} height="1em" />
+            </Flex>
+          }
         />
       </Summary>
     </div>

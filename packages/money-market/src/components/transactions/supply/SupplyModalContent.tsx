@@ -304,7 +304,7 @@ export const SupplyModalContent = React.memo(
               address: poolReserve.underlyingAsset,
             },
           ]}
-          disabled={supplyTxState.loading}
+          isDisabled={supplyTxState.loading}
           maxButtonBalance={maxAmountToSupply}
           amountError={
             isMaxExceeded ? "Insufficient balance on your account." : undefined

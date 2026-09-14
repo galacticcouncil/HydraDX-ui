@@ -208,8 +208,8 @@ Deployments to Netlify are configured outside this repo (Netlify project setting
 
 ### Validating changes
 
-1. `yarn lint` from root — runs eslint + `tsc --noEmit` on every workspace. This is the closest thing to a test suite here.
-2. `yarn build` from root — confirms the full Turborepo graph still type-checks and bundles.
+1. `yarn build` from root — confirms the full Turborepo graph still type-checks and bundles. Run this **before** linting: `apps/main` resolves workspace deps through `packages/*/build/`, so stale build output makes `yarn lint` report phantom errors (missing exports, implicit `any`) in files you never touched.
+2. `yarn lint` from root — runs eslint + `tsc --noEmit` on every workspace. This is the closest thing to a test suite here.
 3. **Run the app in a browser.** Type checks don't catch runtime/UI regressions; this repo has no automated UI tests, so manual verification of the affected flow is the bar.
 4. For component-only changes, run Storybook (`yarn workspace @galacticcouncil/ui dev`).
 

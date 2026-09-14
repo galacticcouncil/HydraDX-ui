@@ -54,6 +54,7 @@ export const GigaStakePage: FC = () => {
 
         <ToggleGroup
           type="single"
+          fullWidth
           value={type}
           onValueChange={(value) =>
             value && setType(value as "dashboard" | "actions")

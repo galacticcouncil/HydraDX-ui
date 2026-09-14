@@ -1,6 +1,7 @@
 import { HealthFactorChange } from "@galacticcouncil/money-market/components"
 import {
   AssetInput,
+  Box,
   LoadingButton,
   Modal,
   ModalBody,
@@ -87,21 +88,27 @@ export const RepayHollarModal = ({ open, onClose }: Props) => {
             control={control}
             name="amount"
             render={({ field, fieldState }) => (
-              <AssetInput
-                sx={{ pt: 0 }}
-                label={t("common:amount")}
-                symbol={hollar.symbol}
-                selectedAssetIcon={<AssetLogo id={hollar.id} size="medium" />}
-                modalDisabled
-                value={field.value}
-                onChange={field.onChange}
-                displayValue={t("common:currency", {
-                  value: inputAmount,
-                })}
-                maxBalance={maxRepay}
-                maxButtonBalance={maxRepay}
-                amountError={fieldState.error?.message}
-              />
+              <Box py={0} pb="l" width="100%">
+                <AssetInput
+                  label={t("common:amount")}
+                  asset={{
+                    symbol: hollar.symbol,
+                    icon: <AssetLogo id={hollar.id} size="medium" />,
+                  }}
+                  value={field.value}
+                  onChange={field.onChange}
+                  displayValue={t("common:currency", {
+                    value: inputAmount,
+                  })}
+                  balance={{
+                    label: t("common:balance"),
+                    value: t("common:number", { value: maxRepay }),
+                    onMax: () => field.onChange(maxRepay),
+                    isMaxDisabled: !(Number(maxRepay) > 0),
+                  }}
+                  amountError={fieldState.error?.message}
+                />
+              </Box>
             )}
           />
 

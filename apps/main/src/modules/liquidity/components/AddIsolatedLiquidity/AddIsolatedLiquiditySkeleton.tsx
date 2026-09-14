@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   ModalBody,
   ModalContentDivider,
@@ -22,13 +23,15 @@ export const AddIsolatedLiquiditySkeleton: FC<Props> = ({ closable }) => {
     <>
       <ModalHeader title={t("addLiquidity")} closable={closable} />
       <ModalBody>
-        <AssetSelect
-          label={t("liquidity.createPool.modal.assetA")}
-          disabled
-          loading
-          assets={[]}
-          selectedAsset={undefined}
-        />
+        <Box py="l" width="100%">
+          <AssetSelect
+            label={t("liquidity.createPool.modal.assetA")}
+            isDisabled
+            isLoading
+            assets={[]}
+            selectedAsset={undefined}
+          />
+        </Box>
 
         <AssetSwitcher
           assetInId=""
@@ -39,13 +42,15 @@ export const AddIsolatedLiquiditySkeleton: FC<Props> = ({ closable }) => {
           isFallbackPriceLoading
         />
 
-        <AssetSelect
-          label={t("liquidity.createPool.modal.assetB")}
-          disabled
-          loading
-          assets={[]}
-          selectedAsset={undefined}
-        />
+        <Box py="l" width="100%">
+          <AssetSelect
+            label={t("liquidity.createPool.modal.assetB")}
+            isDisabled
+            isLoading
+            assets={[]}
+            selectedAsset={undefined}
+          />
+        </Box>
 
         <ModalContentDivider />
 

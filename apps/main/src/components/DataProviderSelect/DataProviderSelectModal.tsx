@@ -44,6 +44,7 @@ export const DataProviderSelectModal: React.FC<DataProviderSelectModalProps> = (
           <Stack pt="m">
             <ToggleGroup<TabView>
               type="single"
+              fullWidth
               value={view}
               onValueChange={(value) => value && setView(value)}
             >

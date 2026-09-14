@@ -17,16 +17,18 @@ export const SHeaderTab = styled(Box)<{ readonly disabled?: boolean }>(
 
     cursor: pointer;
 
+    transition: ${theme.transitions.colors};
+
     ${disabled &&
     css`
       pointer-events: none;
     `}
 
-    &[data-status="active"] {
+    &:hover {
       color: ${theme.text.high};
     }
 
-    &:hover {
+    &[data-status="active"] {
       color: ${theme.text.high};
       background: ${theme.buttons.secondary.low.rest};
     }

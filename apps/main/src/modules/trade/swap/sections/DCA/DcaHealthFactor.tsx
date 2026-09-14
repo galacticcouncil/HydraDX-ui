@@ -26,14 +26,11 @@ export const DcaHealthFactor: FC<Props> = ({
   }
 
   return (
-    <>
-      <SwapSectionSeparator />
-      <Summary separator={<SwapSectionSeparator />}>
-        <SwapSummaryRow
-          label={t("healthFactor")}
-          content={<HealthFactorChange {...healthFactor} />}
-        />
-      </Summary>
-    </>
+    <Summary separator={<SwapSectionSeparator />}>
+      <SwapSummaryRow
+        label={t("healthFactor")}
+        content={<HealthFactorChange {...healthFactor} />}
+      />
+    </Summary>
   )
 }

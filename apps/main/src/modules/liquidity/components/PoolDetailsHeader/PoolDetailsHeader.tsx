@@ -5,6 +5,7 @@ import { Link } from "@tanstack/react-router"
 import { Plus, Repeat } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { swapTabLink } from "@/config/navigation"
 import { AssetYields } from "@/modules/liquidity/components/PoolDetailsHeader/AssetYields"
 import { PoolDetailsHeaderShell } from "@/modules/liquidity/components/PoolDetailsHeader/PoolDetailsHeaderShell"
 import {
@@ -75,7 +76,7 @@ export const PoolDetailsHeader = ({
               asChild
             >
               <Link
-                to="/trade/swap/market"
+                {...swapTabLink("market")}
                 search={{
                   assetOut: stablepoolData
                     ? stablepoolData.aToken?.id || data.id

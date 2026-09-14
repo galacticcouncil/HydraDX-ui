@@ -8,11 +8,11 @@ import {
   getDcaCompletionPercent,
   useDcaFundingBalance,
 } from "@/modules/trade/orders/lib/dcaProgress"
-import { DcaScheduleStatus } from "@/modules/trade/orders/lib/types"
+import { OrderStatus } from "@/modules/trade/orders/lib/orderData"
 import { TAsset } from "@/providers/assetsProvider"
 
 type Props = {
-  readonly status: DcaScheduleStatus
+  readonly status: OrderStatus
   readonly isDcaSwap?: boolean
   readonly sold?: string | null
   readonly total?: string | null
@@ -34,19 +34,19 @@ export const DcaOrderStatus: FC<Props> = ({
   if (isDcaSwap) return <SwapStatus />
 
   switch (status) {
-    case DcaScheduleStatus.Terminated:
+    case OrderStatus.Terminated:
       return (
         <Status color={getToken("accents.danger.secondary")}>
           {t("trade.orders.status.terminated")}
         </Status>
       )
-    case DcaScheduleStatus.Cancelled:
+    case OrderStatus.Cancelled:
       return (
         <Status color={getToken("text.low")}>
           {t("trade.orders.status.cancelled")}
         </Status>
       )
-    case DcaScheduleStatus.Created: {
+    case OrderStatus.Created: {
       const percent = getDcaCompletionPercent({
         sold,
         total,
@@ -57,7 +57,9 @@ export const DcaOrderStatus: FC<Props> = ({
       return (
         <Status
           color={getToken("accents.success.emphasis")}
-          sx={{ display: "inline-flex", alignItems: "center", gap: "s" }}
+          display="inline-flex"
+          alignItems="center"
+          gap="s"
         >
           {t("trade.orders.status.active")}
           {percent !== null && <CompletionBar percent={percent} />}
@@ -70,10 +72,22 @@ export const DcaOrderStatus: FC<Props> = ({
         </Status>
       )
     }
-    case DcaScheduleStatus.Completed:
+    case OrderStatus.Completed:
       return (
         <Status color={getToken("text.tint.quart")}>
           {t("trade.orders.status.completed")}
+        </Status>
+      )
+    case OrderStatus.Expired:
+      return (
+        <Status color={getToken("text.low")}>
+          {t("trade.orders.status.expired")}
+        </Status>
+      )
+    case OrderStatus.MigrationCancelled:
+      return (
+        <Status color={getToken("text.low")}>
+          {t("trade.orders.status.refunded")}
         </Status>
       )
   }

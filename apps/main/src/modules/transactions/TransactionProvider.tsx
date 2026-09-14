@@ -28,6 +28,7 @@ import {
   transactionStatusReducer,
 } from "@/modules/transactions/TransactionProvider.utils"
 import { TxState, TxStatus } from "@/modules/transactions/types"
+import { useRpcProvider } from "@/providers/rpcProvider"
 import { useNeckworkSyncStore } from "@/states/neckwork"
 import { useProviderRpcUrlStore } from "@/states/provider"
 import {
@@ -83,6 +84,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
 }) => {
   const queryClient = useQueryClient()
   const rpcUrl = useProviderRpcUrlStore((state) => state.rpcUrl)
+  const { isFork } = useRpcProvider()
   const armNeckworkSync = useNeckworkSyncStore((state) => state.arm)
   const { cancelTransaction, addPendingTransaction, removePendingTransaction } =
     useTransactionsStore()
@@ -218,7 +220,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
         // the indexer can't have this block yet — arm the sync instead of
         // invalidating the neckwork queries now
         const blockHeight = getTxResultBlockHeight(event)
-        if (blockHeight !== null) armNeckworkSync(blockHeight)
+        if (blockHeight !== null && !isFork) armNeckworkSync(blockHeight)
         queryClient.invalidateQueries({
           queryKey: MAX_WITHDRAW_ALL_QUERY_KEY,
         })

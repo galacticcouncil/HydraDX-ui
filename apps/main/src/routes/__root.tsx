@@ -8,6 +8,7 @@ import { neckworkClient } from "@/api/neckwork"
 import { useNeckworkSync } from "@/api/neckworkSync"
 import { usePriceSubscriber } from "@/api/spotPrice"
 import { RouterContext } from "@/App"
+import { AppUpdateBanner } from "@/components/AppUpdateBanner/AppUpdateBanner"
 import { Footer } from "@/modules/layout/components/Footer"
 import { LayoutSkeleton } from "@/modules/layout/components/LayoutSkeleton"
 import { useHasTopNavbar } from "@/modules/layout/hooks/useHasTopNavbar"
@@ -70,7 +71,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootComponent() {
   const hasTopNavbar = useHasTopNavbar()
-
   return (
     <>
       <HeadContent />
@@ -81,6 +81,7 @@ function RootComponent() {
               <MainLayout />
               <Services />
               <Footer />
+              <AppUpdateBanner />
               {!hasTopNavbar && (
                 <Suspense>
                   <MobileTabBar />

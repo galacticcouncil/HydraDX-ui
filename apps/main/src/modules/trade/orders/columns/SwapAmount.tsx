@@ -1,6 +1,7 @@
 import { ArrowRightLong } from "@galacticcouncil/ui/assets/icons"
 import { Flex, Icon, Text } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
+import { isValidBigSource } from "@galacticcouncil/utils"
 import { useTranslation } from "react-i18next"
 
 import { AssetLogo } from "@/components/AssetLogo"
@@ -27,9 +28,11 @@ export const SwapAmount = ({
     <Flex gap="m" align="center">
       <Flex gap="s" align="center">
         {showLogo && <AssetLogo id={from.id} size="small" />}
-        <Text fw={500} fs="p6" lh={1.4} color={getToken("text.high")}>
-          {t("number", { value: fromAmount })}
-        </Text>
+        {isValidBigSource(fromAmount) && (
+          <Text fw={500} fs="p6" lh={1.4} color={getToken("text.high")}>
+            {t("number", { value: fromAmount })}
+          </Text>
+        )}
         <Text
           fw={500}
           fs="p6"

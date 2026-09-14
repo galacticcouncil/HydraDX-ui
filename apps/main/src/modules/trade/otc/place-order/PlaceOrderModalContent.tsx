@@ -400,19 +400,23 @@ export const PlaceOrderModalContent: FC<Props> = ({ onClose }) => {
         <form onSubmit={form.handleSubmit((value) => submit.mutate(value))}>
           <ModalBody sx={{ p: 0 }}>
             <Box px="xl">
-              <AssetSelectFormField<PlaceOrderFormValues>
-                assetFieldName="offerAsset"
-                amountFieldName="offerAmount"
-                label={t("common:offer")}
-                assets={sufficientAssets}
-                maxBalanceFallback="0"
-                maxBalance={getMaxBalance(offerAsset)}
-                ignoreBalance={!areAssetsSelected}
-                ignoreDisplayValue={!areAssetsSelected}
-                disabledInput={!areAssetsSelected}
-                onAmountChange={handleOfferAmountChange}
-                onAssetChange={handleOfferAssetChange}
-              />
+              <Box py="l" width="100%">
+                <AssetSelectFormField<PlaceOrderFormValues>
+                  assetFieldName="offerAsset"
+                  amountFieldName="offerAmount"
+                  label={t("common:offer")}
+                  assets={sufficientAssets}
+                  balance={
+                    areAssetsSelected
+                      ? { value: getMaxBalance(offerAsset) }
+                      : false
+                  }
+                  displayValue={areAssetsSelected ? undefined : null}
+                  isReadOnly={!areAssetsSelected}
+                  onAmountChange={handleOfferAmountChange}
+                  onAssetChange={handleOfferAssetChange}
+                />
+              </Box>
               <ModalContentDivider />
               {offerAsset && buyAsset && (
                 <>
@@ -427,18 +431,19 @@ export const PlaceOrderModalContent: FC<Props> = ({ onClose }) => {
                   <ModalContentDivider />
                 </>
               )}
-              <AssetSelectFormField<PlaceOrderFormValues>
-                assetFieldName="buyAsset"
-                amountFieldName="buyAmount"
-                label={t("otc.placeOrder.buy")}
-                assets={sufficientAssets}
-                maxBalanceFallback="0"
-                hideMaxBalanceAction
-                ignoreDisplayValue={!areAssetsSelected}
-                disabledInput={!areAssetsSelected}
-                onAmountChange={handleBuyAmountChange}
-                onAssetChange={handleBuyAssetChange}
-              />
+              <Box py="l" width="100%">
+                <AssetSelectFormField<PlaceOrderFormValues>
+                  assetFieldName="buyAsset"
+                  amountFieldName="buyAmount"
+                  label={t("otc.placeOrder.buy")}
+                  assets={sufficientAssets}
+                  balance={{ onMax: null }}
+                  displayValue={areAssetsSelected ? undefined : null}
+                  isReadOnly={!areAssetsSelected}
+                  onAmountChange={handleBuyAmountChange}
+                  onAssetChange={handleBuyAssetChange}
+                />
+              </Box>
             </Box>
             {areAssetsSelected && (
               <>

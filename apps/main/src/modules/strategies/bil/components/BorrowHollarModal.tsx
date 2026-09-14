@@ -1,6 +1,7 @@
 import { HealthFactorChange } from "@galacticcouncil/money-market/components"
 import {
   AssetInput,
+  Box,
   LoadingButton,
   Modal,
   ModalBody,
@@ -89,22 +90,27 @@ export const BorrowHollarModal = ({ open, onClose }: Props) => {
             control={control}
             name="amount"
             render={({ field, fieldState }) => (
-              <AssetInput
-                sx={{ pt: 0 }}
-                label={t("bil.borrow.selectAsset")}
-                balanceLabel={t("common:available")}
-                symbol={hollar.symbol}
-                selectedAssetIcon={<AssetLogo id={hollar.id} size="medium" />}
-                modalDisabled
-                value={field.value}
-                onChange={field.onChange}
-                displayValue={t("common:currency", {
-                  value: inputAmount,
-                })}
-                maxBalance={maxBorrowableUsed}
-                maxButtonBalance={maxBorrowableUsed}
-                amountError={fieldState.error?.message}
-              />
+              <Box py={0} pb="l" width="100%">
+                <AssetInput
+                  label={t("bil.borrow.selectAsset")}
+                  asset={{
+                    symbol: hollar.symbol,
+                    icon: <AssetLogo id={hollar.id} size="medium" />,
+                  }}
+                  value={field.value}
+                  onChange={field.onChange}
+                  displayValue={t("common:currency", {
+                    value: inputAmount,
+                  })}
+                  balance={{
+                    label: t("common:available"),
+                    value: t("common:number", { value: maxBorrowableUsed }),
+                    onMax: () => field.onChange(maxBorrowableUsed),
+                    isMaxDisabled: !(Number(maxBorrowableUsed) > 0),
+                  }}
+                  amountError={fieldState.error?.message}
+                />
+              </Box>
             )}
           />
 

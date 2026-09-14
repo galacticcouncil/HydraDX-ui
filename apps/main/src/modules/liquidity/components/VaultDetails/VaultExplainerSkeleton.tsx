@@ -40,7 +40,7 @@ export const VaultExplainerSkeleton = () => {
       </Flex>
 
       <Flex mt="m">
-        <ToggleGroup type="single" value={options[0]} disabled>
+        <ToggleGroup type="single" fullWidth value={options[0]} disabled>
           {options.map((option) => (
             <ToggleGroupItem key={option} value={option}>
               {option}

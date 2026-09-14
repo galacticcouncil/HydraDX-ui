@@ -131,6 +131,7 @@ const VoteForm = ({
                 <Flex direction="column" flex={1}>
                   <ToggleGroup
                     type="single"
+                    fullWidth
                     value={value}
                     onValueChange={(nextValue) =>
                       nextValue && onChange(nextValue as VoteType)
@@ -390,9 +391,7 @@ const AmountFields = ({
           label={t("referenda.item.aye")}
           assets={[]}
           disabledAssetSelector
-          ignoreBalance
-          hideMaxBalanceAction
-          sx={{ p: 0 }}
+          balance={false}
         />
         <AssetSelectFormField<VoteModalFormValues>
           assetFieldName="asset"
@@ -400,9 +399,7 @@ const AmountFields = ({
           label={t("referenda.item.nay")}
           assets={[]}
           disabledAssetSelector
-          ignoreBalance
-          hideMaxBalanceAction
-          sx={{ p: 0 }}
+          balance={false}
         />
       </Stack>
     )
@@ -422,9 +419,7 @@ const AmountFields = ({
           label={t("referenda.item.aye")}
           assets={[]}
           disabledAssetSelector
-          ignoreBalance
-          hideMaxBalanceAction
-          sx={{ p: 0 }}
+          balance={false}
         />
         <AssetSelectFormField<VoteModalFormValues>
           assetFieldName="asset"
@@ -432,9 +427,7 @@ const AmountFields = ({
           label={t("referenda.item.nay")}
           assets={[]}
           disabledAssetSelector
-          ignoreBalance
-          hideMaxBalanceAction
-          sx={{ p: 0 }}
+          balance={false}
         />
         <AssetSelectFormField<VoteModalFormValues>
           assetFieldName="asset"
@@ -442,9 +435,7 @@ const AmountFields = ({
           label={t("referenda.item.abstain")}
           assets={[]}
           disabledAssetSelector
-          ignoreBalance
-          hideMaxBalanceAction
-          sx={{ p: 0 }}
+          balance={false}
         />
       </Stack>
     )
@@ -459,8 +450,7 @@ const AmountFields = ({
       }
       assets={[]}
       disabledAssetSelector
-      maxBalance={totalHdxBalanceHuman}
-      sx={{ p: 0 }}
+      balance={{ value: totalHdxBalanceHuman }}
     />
   )
 }

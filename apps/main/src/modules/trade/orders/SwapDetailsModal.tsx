@@ -21,6 +21,7 @@ import {
   MarketDcaStatus,
   SwapStatus,
 } from "@/modules/trade/orders/columns/SwapStatus"
+import { toOrderStatusFromSchedule } from "@/modules/trade/orders/lib/orderData"
 import { RoutedTradeData, SwapData } from "@/modules/trade/orders/lib/types"
 
 type Props = {
@@ -50,7 +51,10 @@ export const SwapDetailsModal = ({ details }: Props) => {
           {details.status?.kind !== "market" &&
             details.status?.kind !== "marketDca" &&
             details.status?.status && (
-              <DcaOrderStatus status={details.status.status} isDcaSwap />
+              <DcaOrderStatus
+                status={toOrderStatusFromSchedule(details.status.status)}
+                isDcaSwap
+              />
             )}
         </Flex>
         <ModalContentDivider />
@@ -65,9 +69,10 @@ export const SwapDetailsModal = ({ details }: Props) => {
           <Separator orientation="vertical" />
           <Amount
             label={t("price")}
-            value={t("currency", {
+            value={t("trade:trade.orders.pricePair", {
               value: details.fillPrice,
-              symbol: `${details.from.symbol} / ${details.to.symbol}`,
+              leftSymbol: details.from.symbol,
+              rightSymbol: details.to.symbol,
             })}
           />
         </Grid>

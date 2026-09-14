@@ -47,7 +47,7 @@ export const VaultStats = ({
           ? () => (
               <ToggleGroup
                 type="single"
-                fullWidth={isMobile}
+                fullWidth
                 size={isMobile ? "small" : "medium"}
                 value={chart}
                 onValueChange={(value) =>

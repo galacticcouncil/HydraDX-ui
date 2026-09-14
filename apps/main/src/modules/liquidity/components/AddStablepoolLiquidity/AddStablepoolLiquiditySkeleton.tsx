@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   Summary,
   Text,
@@ -43,6 +44,7 @@ export const AddStablepoolLiquiditySkeleton = (
             <Flex flex={1}>
               <ToggleGroup
                 type="single"
+                fullWidth
                 value={addStablepoolOptions[0]?.id}
                 disabled
               >
@@ -72,13 +74,15 @@ export const AddStablepoolLiquiditySkeleton = (
 
         <ModalContentDivider />
 
-        <AssetSelect
-          label={t("liquidity.add.modal.selectAsset")}
-          disabled
-          loading
-          assets={[]}
-          selectedAsset={undefined}
-        />
+        <Box py="l" width="100%">
+          <AssetSelect
+            label={t("liquidity.add.modal.selectAsset")}
+            isDisabled
+            isLoading
+            assets={[]}
+            selectedAsset={undefined}
+          />
+        </Box>
 
         <ModalContentDivider />
 

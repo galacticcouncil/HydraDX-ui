@@ -29,7 +29,7 @@ import { useShallow } from "zustand/shallow"
 
 import { TAssetData } from "@/api/assets"
 import { AssetLabelFull } from "@/components/AssetLabelFull"
-import { LINKS } from "@/config/navigation"
+import { LINKS, swapTabLink } from "@/config/navigation"
 import { AssetDetailStaking } from "@/modules/portfolio/overview/MyAssets/AssetDetailStaking"
 import { DepositToHydrationTableAction } from "@/modules/portfolio/overview/MyAssets/DepositToHydrationAction"
 import { TransferPositionModal } from "@/modules/portfolio/overview/Transfer/TransferPositionModal"
@@ -240,7 +240,7 @@ export const useMyAssetsColumns = (
             </TableRowAction>
             <TableRowAction disabled={!row.original.isTradable} asChild>
               <Link
-                to="/trade/swap/market"
+                {...swapTabLink("market")}
                 search={{ assetIn: row.original.id }}
                 disabled={!row.original.isTradable}
               >

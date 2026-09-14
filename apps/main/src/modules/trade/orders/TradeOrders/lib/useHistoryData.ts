@@ -6,15 +6,14 @@ import Big from "big.js"
 import { useMemo } from "react"
 
 import { neckworkClient } from "@/api/neckwork"
+import { toApiDcaStatuses } from "@/modules/trade/orders/lib/apiVocabulary"
 import {
-  toApiDcaStatuses,
-  toDcaScheduleStatus,
-} from "@/modules/trade/orders/lib/apiVocabulary"
-import {
-  DcaScheduleStatus,
-  OrderData,
+  DcaOrderData,
   OrderKind,
-} from "@/modules/trade/orders/lib/types"
+  toOrderStatusFromSchedule,
+} from "@/modules/trade/orders/lib/orderData"
+import { DcaScheduleStatus } from "@/modules/trade/orders/lib/types"
+import { useNeckworkTradeQueriesEnabled } from "@/modules/trade/swap/tradeDataSource"
 import { useAssets } from "@/providers/assetsProvider"
 import { scaleHuman } from "@/utils/formatting"
 
@@ -27,6 +26,7 @@ export const useHistoryData = (
   const { account } = useAccount()
   const accountAddress = account?.address ?? ""
   const owner = safeConvertSS58toPublicKey(accountAddress)
+  const neckworkEnabled = useNeckworkTradeQueriesEnabled()
 
   const { data, isLoading } = useQuery({
     ...dcaSchedulesQuery(neckworkClient, {
@@ -36,15 +36,16 @@ export const useHistoryData = (
       page,
       pageSize,
     }),
+    enabled: neckworkEnabled && !!owner,
     placeholderData: keepPreviousData,
   })
 
   const { getAssetWithFallback } = useAssets()
 
   const totalCount = data?.totalCount ?? 0
-  const orders = useMemo<Array<OrderData>>(
+  const orders = useMemo<Array<DcaOrderData>>(
     () =>
-      data?.items.map<OrderData>((schedule) => {
+      data?.items.map<DcaOrderData>((schedule) => {
         const from = getAssetWithFallback(schedule.assetIn)
         const to = getAssetWithFallback(schedule.assetOut)
 
@@ -69,10 +70,13 @@ export const useHistoryData = (
           ),
           to,
           toAmountExecuted: scaleHuman(schedule.executedAmountOut, to.decimals),
-          status: toDcaScheduleStatus(schedule.status),
-          date: new Date(schedule.lastEventAt ?? schedule.createdAt),
+          status: toOrderStatusFromSchedule(
+            schedule.status as DcaScheduleStatus,
+          ),
+          timestamp: schedule.lastEventAt ?? schedule.createdAt,
           blocksPeriod: String(schedule.periodBlocks),
           isOpenBudget: schedule.isRollingBudget,
+          limitPrice: null,
         }
       }) ?? [],
     [data, getAssetWithFallback],

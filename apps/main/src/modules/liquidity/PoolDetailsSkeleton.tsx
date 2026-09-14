@@ -35,7 +35,7 @@ export const PoolDetailsSkeleton = () => {
                 </ToggleGroupItem>
               ))}
             </ToggleGroup>
-            <ToggleGroup type="single" value="chart">
+            <ToggleGroup type="single" fullWidth value="chart">
               {types.map((option) => (
                 <ToggleGroupItem key={option.id} value={option.id}>
                   {option.leadingElement}

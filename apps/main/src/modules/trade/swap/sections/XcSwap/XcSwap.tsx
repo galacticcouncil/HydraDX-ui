@@ -1,30 +1,39 @@
 import { HealthFactorRiskWarning } from "@galacticcouncil/money-market/components"
-import {
-  Box,
-  Button,
-  LoadingButton,
-  Text,
-} from "@galacticcouncil/ui/components"
+import { Button, Text } from "@galacticcouncil/ui/components"
 import { useWeb3ConnectModal, WalletMode } from "@galacticcouncil/web3-connect"
+import { useSearch } from "@tanstack/react-router"
 import Big from "big.js"
 import { useEffect, useState } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 import { TradeType } from "@/api/trade"
-import { AuthorizedAction } from "@/components/AuthorizedAction/AuthorizedAction"
-import { isTwapEnabled } from "@/modules/trade/swap/sections/Market/lib/isTwapEnabled"
+import { TradeFormShell } from "@/modules/trade/swap/components/TradeFormShell/TradeFormShell"
+import { TradeFormSubmit } from "@/modules/trade/swap/components/TradeFormSubmit"
 import { useXcSwapAlerts } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapAlerts"
 import { XcSwapFormValues } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapForm"
+import { isTwapEnabled } from "@/modules/trade/swap/sections/XcSwap/lib/isTwapEnabled"
 import { isXcSwapTradeEnabled } from "@/modules/trade/swap/sections/XcSwap/lib/isXcSwapTradeEnabled"
 import { XcSwapAlerts } from "@/modules/trade/swap/sections/XcSwap/XcSwapAlerts"
 import { XcSwapFields } from "@/modules/trade/swap/sections/XcSwap/XcSwapFields"
 import { XcSwapOptions } from "@/modules/trade/swap/sections/XcSwap/XcSwapOptions"
-import { useXcSwap } from "@/modules/trade/swap/sections/XcSwap/XcSwapProvider"
+import {
+  useXcSwap,
+  XcSwapProvider,
+} from "@/modules/trade/swap/sections/XcSwap/XcSwapProvider"
 import { XcSwapSummary } from "@/modules/trade/swap/sections/XcSwap/XcSwapSummary"
-import { SwapSectionSeparator } from "@/modules/trade/swap/SwapPage.styled"
 
 export const XcSwap: React.FC = () => {
+  const { assetIn, assetOut } = useSearch({ from: "/trade/_history" })
+
+  return (
+    <XcSwapProvider assetIn={assetIn} assetOut={assetOut}>
+      <XcSwapForm />
+    </XcSwapProvider>
+  )
+}
+
+const XcSwapForm: React.FC = () => {
   const {
     destChainAssetPairs,
     onSubmit,
@@ -44,8 +53,7 @@ export const XcSwap: React.FC = () => {
   const { toggle } = useWeb3ConnectModal()
   const isWalletConnectRequired = !!requiredWalletMode && !isWalletCompatible
 
-  const [sellAmount, destAddress, isSingleTrade] = form.watch([
-    "sellAmount",
+  const [destAddress, isSingleTrade] = form.watch([
     "destAddress",
     "isSingleTrade",
   ])
@@ -55,7 +63,6 @@ export const XcSwap: React.FC = () => {
 
   const { watch, setValue } = form
 
-  // Revert to single trade if scheduler cannot split the order
   const onChainSwap = quote?.kind === "oc" ? quote.swap : undefined
   useEffect(() => {
     if (onChainSwap && !isTwapEnabled(onChainSwap)) {
@@ -85,7 +92,6 @@ export const XcSwap: React.FC = () => {
     }
   }, [watch])
 
-  // OnChain-only: gate submit on accepting the health-factor risk (mirror Market)
   const isHealthFactorConsentRequired =
     !isCrossChain &&
     !!healthFactor &&
@@ -113,25 +119,48 @@ export const XcSwap: React.FC = () => {
     isQuoteRefreshing ||
     (isSingleTrade ? isQuoteLoading : isTwapLoading)
 
-  const submitLabel = (() => {
-    if (!sellAmount) return t("trade:xc.swap.cta.enterAmount")
-    if (hasBlockingAlerts) return t("trade:xc.swap.cta.unavailable")
+  const disabledLabel = (() => {
     if (isCrossChain && !destAddress.trim())
       return t("trade:xc.swap.cta.enterRecipient")
-    if (!isFormValid) return t("trade:xc.swap.cta.unavailable")
+    if (!isFormValid) return undefined
     if (!isHealthFactorCheckSatisfied)
       return t("trade:xc.swap.cta.acceptHealthFactor")
-    return isSingleTrade ? t("swap") : t("trade:market.twap.cta")
+    return undefined
   })()
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      <XcSwapFields destChainAssetPairs={destChainAssetPairs} />
-      <XcSwapOptions />
-      <SwapSectionSeparator />
-      <XcSwapAlerts />
-      {healthFactor && shouldRenderHealthFactorWarning && (
-        <Box mt="base">
+      <TradeFormShell
+        fields={<XcSwapFields destChainAssetPairs={destChainAssetPairs} />}
+        summary={<XcSwapSummary />}
+        submit={
+          isWalletConnectRequired ? (
+            <Button
+              size="large"
+              variant="secondary"
+              width="100%"
+              onClick={() => toggle(requiredWalletMode)}
+            >
+              <Text fs="p3">
+                {requiredWalletMode === WalletMode.EVM
+                  ? t("connectWallet.evm")
+                  : t("connectWallet")}
+              </Text>
+            </Button>
+          ) : (
+            <TradeFormSubmit
+              isEnabled={canSubmit}
+              isLoading={isSubmitLoading}
+              disabledLabel={disabledLabel}
+            >
+              {isSingleTrade ? t("swap") : t("trade:market.twap.cta")}
+            </TradeFormSubmit>
+          )
+        }
+      >
+        <XcSwapOptions />
+        <XcSwapAlerts />
+        {healthFactor && shouldRenderHealthFactorWarning && (
           <HealthFactorRiskWarning
             canContinue={isTradeReady}
             message={t("healthFactor.warning")}
@@ -139,43 +168,8 @@ export const XcSwap: React.FC = () => {
             isUserConsentRequired={healthFactor.isUserConsentRequired}
             onAcceptedChange={setHealthFactorRiskAccepted}
           />
-        </Box>
-      )}
-      <Box py="m">
-        {isWalletConnectRequired ? (
-          <Button
-            size="large"
-            variant="secondary"
-            width="100%"
-            onClick={() => toggle(requiredWalletMode)}
-          >
-            <Text fs="p3">
-              {requiredWalletMode === WalletMode.EVM
-                ? t("connectWallet.evm")
-                : t("connectWallet")}
-            </Text>
-          </Button>
-        ) : (
-          <AuthorizedAction size="large" width="100%">
-            <LoadingButton
-              type="submit"
-              size="large"
-              width="100%"
-              isLoading={isSubmitLoading}
-              disabled={!canSubmit || isSubmitLoading}
-              variant={canSubmit ? "primary" : "muted"}
-              loadingVariant="muted"
-              loadingMode={canSubmit ? "inline" : "replace"}
-              sx={{
-                "&:disabled": { cursor: "auto", opacity: 1 },
-              }}
-            >
-              {submitLabel}
-            </LoadingButton>
-          </AuthorizedAction>
         )}
-      </Box>
-      <XcSwapSummary />
+      </TradeFormShell>
     </form>
   )
 }

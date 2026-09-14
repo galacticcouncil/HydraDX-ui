@@ -1,5 +1,6 @@
 import {
   Amount,
+  Box,
   Button,
   Flex,
   ModalBody,
@@ -166,16 +167,17 @@ const JoinFarmsForm = ({
                 fieldState: { error },
               }) =>
                 isEditable ? (
-                  <AssetSelect
-                    assets={[]}
-                    selectedAsset={meta}
-                    maxBalance={formValues.amount}
-                    value={value}
-                    onChange={onChange}
-                    amountError={error?.message}
-                    ignoreDisplayValue
-                    sx={{ pt: 0 }}
-                  />
+                  <Box py={0} pb="l" width="100%">
+                    <AssetSelect
+                      assets={[]}
+                      selectedAsset={meta}
+                      balance={{ value: formValues.amount }}
+                      value={value}
+                      onChange={onChange}
+                      amountError={error?.message}
+                      displayValue={null}
+                    />
+                  </Box>
                 ) : (
                   <Flex direction="column">
                     <Flex align="center" justify="space-between" gap="base">

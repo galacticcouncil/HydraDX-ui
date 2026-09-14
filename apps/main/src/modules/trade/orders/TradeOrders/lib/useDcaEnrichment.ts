@@ -7,15 +7,13 @@ import { useMemo } from "react"
 
 import { neckworkClient } from "@/api/neckwork"
 import { toApiDcaStatuses } from "@/modules/trade/orders/lib/apiVocabulary"
-import {
-  DCA_OPEN_ORDER_STATUSES,
-  OrderData,
-} from "@/modules/trade/orders/lib/types"
+import { DcaOrderData } from "@/modules/trade/orders/lib/orderData"
+import { DCA_OPEN_ORDER_STATUSES } from "@/modules/trade/orders/lib/types"
 import { scaleHuman } from "@/utils/formatting"
 
 const PAGE_SIZE = 100
 
-export const useDcaEnrichment = (orders: Array<OrderData>) => {
+export const useDcaEnrichment = (orders: Array<DcaOrderData>) => {
   const { account } = useAccount()
   const owner = safeConvertSS58toPublicKey(account?.address ?? "")
 

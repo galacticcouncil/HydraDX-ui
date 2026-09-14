@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
-import { LINKS } from "@/config/navigation"
+import { swapTabLink } from "@/config/navigation"
 
 export const Route = createFileRoute("/")({
   beforeLoad: () => {
-    throw redirect({ to: LINKS.swapMarket, replace: true })
+    throw redirect({ ...swapTabLink("market"), replace: true })
   },
 })

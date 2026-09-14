@@ -12,7 +12,8 @@
     "preview": "turbo preview",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
-    "i18n": "turbo i18n"
+    "i18n": "turbo i18n",
+    "test": "turbo test"
   },
   "resolutions": {
     "polkadot-api": "^2.1.7",
@@ -21,7 +22,7 @@
   },
   "dependencies": {
     "@galacticcouncil/common": "^1.2.0",
-    "@galacticcouncil/descriptors": "^2.7.0",
+    "@galacticcouncil/descriptors": "2.9.0-pr367-1323cc7",
     "@galacticcouncil/sdk-next": "^2.2.0",
     "@galacticcouncil/xc": "^2.1.0",
     "@galacticcouncil/xc-cfg": "^2.6.0",

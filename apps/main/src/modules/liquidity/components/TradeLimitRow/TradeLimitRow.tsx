@@ -93,9 +93,7 @@ export const TradeLimit = ({ type, disabled }: TradeLimitRowProps) => {
                   description={
                     isLiquidity
                       ? t("liquidity:liquidity.tradeLimit.description")
-                      : t(
-                          "trade:swap.settings.modal.single.slippage.description",
-                        )
+                      : undefined
                   }
                   error={error?.message}
                 />

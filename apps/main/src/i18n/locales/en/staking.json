@@ -34,8 +34,8 @@
   "gigaStaking.banner.cta.stake": "Check GIGAHDX",
   "gigaStaking.claim.cta": "Claim rewards",
   "gigaStaking.claim.label": "Voting rewards to claim",
-  "gigaStaking.claim.tooltip": "Claims your voting reward shares from completed referenda and any already-credited pending rewards, compounded into your stake position in one transaction. Passive yield is already accruing automatically — no claim needed. To receive HDX in your wallet, you must unstake.",
-  "gigaStaking.claim.locked": "+{{ value }} {{ symbol }} earned but currently locked under active conviction periods — claimable once those vote-locks expire.",
+  "gigaStaking.claim.tooltip": "Claims your voting reward shares from completed referenda and any already-credited pending rewards, compounded into your stake position in one transaction. Passive yield is already accruing automatically - no claim needed. To receive HDX in your wallet, you must unstake.",
+  "gigaStaking.claim.locked": "+{{ value }} {{ symbol }} earned but currently locked under active conviction periods - claimable once those vote-locks expire.",
   "gigaStaking.claim.toasts.submitted": "Claiming voting rewards",
   "gigaStaking.claim.toasts.success": "Voting rewards claimed and compounded into your stake",
   "gigaStaking.supply.label": "Supply staked",
@@ -143,7 +143,7 @@
   "dashboard.projectedAPR.tooltip.docs": "Go to docs",
   "dashboard.projectedAPR.gigaStaking.tooltip": [
     "Annualised from recent on-chain activity - voting measured over a trailing 60 days, base from the recent GIGAHDX exchange-rate trend.",
-    "Base APR is measured from HDX flowing into the GIGAHDX reward pot — every GIGAHDX holder shares it proportionally to their balance, no action required.",
+    "Base APR is measured from HDX flowing into the GIGAHDX reward pot - every GIGAHDX holder shares it proportionally to their balance, no action required.",
     "Voting APR is conditional: it only applies if you vote. The figure assumes maximum conviction (Locked6x - 8× reward multiplier, 224-day lock).",
     "Your actual share scales with your stake, your chosen conviction, and the number of other voters on each referendum.",
     "Past performance does not guarantee future results."
@@ -201,7 +201,7 @@
   "referenda.participate": "Participate in governance to speed up the rate at which you can claim your staking rewards.",
   "referenda.rewardPool": "{{value}} in rewards pool",
   "referenda.rewardPool.upTo": "Estimated {{value}} in rewards pool",
-  "referenda.rewardPool.estimateTooltip": "Upper bound — the pool is sized when the first voter removes their vote after the referendum ends. Multiple referenda share this pool: whichever allocates first takes its slice, and the rest see a smaller pot.",
+  "referenda.rewardPool.estimateTooltip": "Upper bound - the pool is sized when the first voter removes their vote after the referendum ends. Multiple referenda share this pool: whichever allocates first takes its slice, and the rest see a smaller pot.",
 
   "referenda.item.aye": "Aye",
   "referenda.item.nay": "Nay",
@@ -217,7 +217,7 @@
   "referenda.item.yourVotes": "My votes",
   "referenda.item.convictionLabel": "Conviction",
   "referenda.item.capital": "Vote amount",
-  "referenda.item.convictionVarious": "—",
+  "referenda.item.convictionVarious": "-",
   "referenda.item.cta": "Vote",
   "referenda.item.vote": "Vote",
   "referenda.item.removeVote": "Remove vote",
@@ -242,7 +242,7 @@
   "referenda.vote.modal.reuseGigaStakingLocks": "Reuse GIGAHDX locks: <0>≈{{ value,currency }}</0>",
   "referenda.vote.modal.lockDuration.value": "≈{{ value }} Days",
   "referenda.vote.modal.lockDuration.description": "Your HDX/GIGAHDX will stay locked for entire voting period. After the vote ends, it remains locked for additional period based on your selected multiplier",
-  "referenda.vote.modal.multiplier.tooltip": "Conviction multiplier — increases your vote weight in exchange for locking your tokens longer after the vote concludes. 0.1x means no lock but the vote only counts at 10% weight.",
+  "referenda.vote.modal.multiplier.tooltip": "Conviction multiplier - increases your vote weight in exchange for locking your tokens longer after the vote concludes. 0.1x means no lock but the vote only counts at 10% weight.",
 
   "claim.header": "Are you sure you want to claim rewards?",
   "claim.cta": "Sign Transaction",

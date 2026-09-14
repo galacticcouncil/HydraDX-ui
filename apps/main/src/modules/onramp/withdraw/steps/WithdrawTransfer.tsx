@@ -133,23 +133,34 @@ export const WithdrawTransfer: React.FC<WithdrawTransferProps> = ({
               control={form.control}
               render={({ field, fieldState }) => (
                 <AssetInput
-                  sx={{ p: 0 }}
-                  disabled={!isAccountAllowed}
+                  isDisabled={!isAccountAllowed}
                   label={t("common:asset")}
                   value={field.value}
-                  symbol={assetMeta?.symbol ?? ""}
-                  selectedAssetIcon={<AssetLogo id={asset?.assetId ?? ""} />}
+                  asset={
+                    assetMeta
+                      ? {
+                          symbol: assetMeta.symbol,
+                          icon: <AssetLogo id={asset?.assetId ?? ""} />,
+                        }
+                      : null
+                  }
                   onChange={field.onChange}
-                  loading={isLoadingTransfer}
+                  isLoading={isLoadingTransfer}
                   amountError={fieldState.error?.message}
-                  maxButtonBalance={toDecimal(
-                    transferData.max,
-                    transferData.decimals,
-                  )}
-                  maxBalance={toDecimal(
-                    transferData.balance,
-                    transferData.decimals,
-                  )}
+                  balance={{
+                    label: t("common:balance"),
+                    value: t("common:number", {
+                      value: toDecimal(
+                        transferData.balance,
+                        transferData.decimals,
+                      ),
+                    }),
+                    onMax: () =>
+                      field.onChange(
+                        toDecimal(transferData.max, transferData.decimals),
+                      ),
+                    isMaxDisabled: !(Number(transferData.max) > 0),
+                  }}
                 />
               )}
             />

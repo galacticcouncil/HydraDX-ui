@@ -33,11 +33,13 @@ const TAB_TITLE_KEYS = {
 type PairFilter = "all" | "current"
 
 type Props = {
+  readonly tabs?: ReadonlyArray<TradeOrderTab>
   readonly paginationProps: PaginationProps
   readonly openOrdersCount: number
 }
 
 export const TradeOrdersHeader: FC<Props> = ({
+  tabs = tradeOrderTabs,
   paginationProps,
   openOrdersCount,
 }) => {
@@ -54,7 +56,7 @@ export const TradeOrdersHeader: FC<Props> = ({
         gap="base"
         my="l"
         horizontalEdgeOffset="xl"
-        items={tradeOrderTabs.map<TabItem>((tab) => ({
+        items={tabs.map<TabItem>((tab) => ({
           to: pathname,
           title: t(TAB_TITLE_KEYS[tab]),
           search: {

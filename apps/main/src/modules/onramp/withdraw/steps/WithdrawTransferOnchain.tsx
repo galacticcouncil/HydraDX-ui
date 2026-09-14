@@ -72,13 +72,23 @@ export const WithdrawTransferOnchain: React.FC<
             control={form.control}
             render={({ field, fieldState }) => (
               <AssetInput
-                sx={{ p: 0 }}
                 label={t("common:asset")}
                 value={field.value}
-                symbol={assetMeta?.symbol ?? ""}
-                selectedAssetIcon={<AssetLogo id={asset?.assetId ?? ""} />}
+                asset={
+                  assetMeta
+                    ? {
+                        symbol: assetMeta.symbol,
+                        icon: <AssetLogo id={asset?.assetId ?? ""} />,
+                      }
+                    : null
+                }
                 onChange={field.onChange}
-                maxBalance={maxBalance.toString()}
+                balance={{
+                  label: t("common:balance"),
+                  value: t("common:number", { value: maxBalance.toString() }),
+                  onMax: () => field.onChange(maxBalance.toString()),
+                  isMaxDisabled: !(Number(maxBalance.toString()) > 0),
+                }}
                 amountError={fieldState.error?.message}
               />
             )}

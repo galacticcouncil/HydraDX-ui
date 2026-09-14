@@ -46,7 +46,7 @@ export type ScheduledOrdersQueryVariables = Types.Exact<{
 }>;
 
 
-export type ScheduledOrdersQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null, call?: { __typename?: 'Call', args?: any | null } | null, block: { __typename?: 'Block', height: number, hash: string } }> };
+export type ScheduledOrdersQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null, call?: { __typename?: 'Call', args?: any | null } | null, block: { __typename?: 'Block', height: number, hash: string, timestamp: string } }> };
 
 export type OrdersStatusQueryVariables = Types.Exact<{
   who: Types.Scalars['String']['input'];
@@ -55,6 +55,13 @@ export type OrdersStatusQueryVariables = Types.Exact<{
 
 export type OrdersStatusQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null }> };
 
+export type MigratedOrdersQueryVariables = Types.Exact<{
+  who: Types.Scalars['String']['input'];
+}>;
+
+
+export type MigratedOrdersQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null, block: { __typename?: 'Block', height: number, hash: string, timestamp: string } }> };
+
 export type OrderTradesQueryVariables = Types.Exact<{
   id: Types.Scalars['Int']['input'];
 }>;
@@ -62,9 +69,18 @@ export type OrderTradesQueryVariables = Types.Exact<{
 
 export type OrderTradesQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null, block: { __typename?: 'Block', height: number, timestamp: string } }> };
 
-export type OrderPlannedExecutionQueryVariables = Types.Exact<{
-  id: Types.Scalars['Int']['input'];
+export type IntentsSubmittedQueryVariables = Types.Exact<{
+  owner: Types.Scalars['String']['input'];
+  limit: Types.Scalars['Int']['input'];
+  offset: Types.Scalars['Int']['input'];
 }>;
 
 
-export type OrderPlannedExecutionQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null }> };
+export type IntentsSubmittedQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null, block: { __typename?: 'Block', height: number, hash: string, timestamp: string } }> };
+
+export type IntentEventsQueryVariables = Types.Exact<{
+  idFilters: Array<Types.EventWhereInput> | Types.EventWhereInput;
+}>;
+
+
+export type IntentEventsQuery = { __typename?: 'Query', events: Array<{ __typename?: 'Event', name: string, args?: any | null, block: { __typename?: 'Block', height: number, hash: string, timestamp: string } }> };

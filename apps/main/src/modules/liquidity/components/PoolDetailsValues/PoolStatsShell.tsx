@@ -63,6 +63,7 @@ export const PoolStatsShell = ({
         <Flex direction="column" gap="base" sx={{ flexShrink: 0 }}>
           <ToggleGroup
             type="single"
+            fullWidth
             value={type}
             onValueChange={(value) => value && setType(value as PoolStatsType)}
           >

@@ -1,4 +1,5 @@
 import "@galacticcouncil/ui/fonts.css"
+import "@/utils/appUpdate"
 
 import { ThemeProvider } from "@galacticcouncil/ui/theme"
 import { Provider as TooltipProvider } from "@radix-ui/react-tooltip"
@@ -18,6 +19,8 @@ import { Page404 } from "@/components/Page404"
 import { RouteError } from "@/components/RouteError"
 import i18n from "@/i18n"
 import { useRemoveInitialLoader } from "@/modules/layout/hooks/useRemoveInitialLoader"
+import { TutorialProvider } from "@/modules/tutorials/TutorialProvider"
+import { applyResetTutorialsParam } from "@/modules/tutorials/utils/resetTutorials"
 
 import { routeTree } from "./routeTree.gen"
 
@@ -35,6 +38,8 @@ const queryClient = new QueryClient({
 })
 
 setupPortfolioPersistence(queryClient)
+
+applyResetTutorialsParam()
 
 export interface RouterContext {
   queryClient: QueryClient
@@ -58,6 +63,8 @@ const router = createRouter({
   scrollRestorationBehavior: "smooth",
 })
 
+console.log("new build 11")
+
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router
@@ -73,7 +80,9 @@ export const App = () => {
         <DataProviderResolver>
           <ThemeProvider>
             <TooltipProvider>
-              <RouterProvider router={router} />
+              <TutorialProvider>
+                <RouterProvider router={router} />
+              </TutorialProvider>
               <Toaster />
             </TooltipProvider>
           </ThemeProvider>

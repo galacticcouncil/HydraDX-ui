@@ -3,6 +3,7 @@ import {
   HealthFactorRiskWarning,
 } from "@galacticcouncil/money-market/components"
 import {
+  Box,
   Button,
   Modal,
   ModalBody,
@@ -70,15 +71,16 @@ export const GigaHDXBorrowForm = ({
       <ModalHeader title={t("borrow:borrow")} />
       <form onSubmit={onSubmit} autoComplete="off">
         <ModalBody sx={{ pt: 0 }}>
-          <AssetSelectFormField<GigaHDXBorrowFormValues>
-            assetFieldName="asset"
-            amountFieldName="amount"
-            label={t("amount")}
-            assets={[]}
-            disabledAssetSelector
-            maxBalance={borrowableAmount}
-            balanceLabel={t("available")}
-          />
+          <Box py="l" width="100%">
+            <AssetSelectFormField<GigaHDXBorrowFormValues>
+              assetFieldName="asset"
+              amountFieldName="amount"
+              label={t("amount")}
+              assets={[]}
+              disabledAssetSelector
+              balance={{ value: borrowableAmount, label: t("available") }}
+            />
+          </Box>
           <ModalContentDivider />
           <Summary
             separator={<ModalContentDivider />}

@@ -11,7 +11,7 @@ import {
 
 export type XcChainAssetSelectProps = Omit<
   AssetInputProps,
-  "selectedAssetIcon" | "symbol" | "onAsssetBtnClick" | "modalDisabled"
+  "asset" | "onAssetClick"
 > & {
   readonly chainAssetPairs: XcChainAssetPair[]
   readonly selectedChain: XcChain | null
@@ -41,16 +41,15 @@ export const XcChainAssetSelect = ({
     <>
       <AssetInput
         {...assetInputProps}
-        selectedAssetIcon={
-          currentSelection ? (
-            <XcAssetLogo asset={currentSelection.asset} />
-          ) : undefined
+        asset={
+          currentSelection
+            ? {
+                symbol: currentSelection.asset.symbol,
+                icon: <XcAssetLogo asset={currentSelection.asset} />,
+              }
+            : null
         }
-        symbol={selectedAsset?.symbol}
-        modalDisabled={disabledAssetSelector}
-        onAsssetBtnClick={
-          !disabledAssetSelector ? () => setOpen(true) : undefined
-        }
+        onAssetClick={!disabledAssetSelector ? () => setOpen(true) : undefined}
       />
 
       <ChainAssetSelectDialog

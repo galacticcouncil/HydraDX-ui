@@ -33,7 +33,9 @@ export const useDcaValidation = (
   readonly errors: ReadonlyArray<DcaValidationError>
 } => {
   const {
-    dca: { slippage },
+    swap: {
+      split: { twapSlippage },
+    },
   } = useTradeSettings()
 
   if (!order) {
@@ -45,7 +47,7 @@ export const useDcaValidation = (
   const warnings: Array<DcaValidationWarning> = []
   const errors: Array<DcaValidationError> = []
 
-  if (priceImpact < -slippage) {
+  if (priceImpact < -twapSlippage) {
     errors.push(DcaValidationError.PriceImpact)
   } else if (priceImpact < PRICE_IMPACT_WARNING_THRESHOLD) {
     warnings.push(DcaValidationWarning.PriceImpact)

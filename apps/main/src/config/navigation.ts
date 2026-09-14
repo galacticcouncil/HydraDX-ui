@@ -24,14 +24,23 @@ import { getDeployPreviewId } from "@/utils/deploy"
 
 type Route = FileRouteTypes["to"]
 
+export type SwapTabParam = "market" | "limit" | "twap"
+
+export const swapTabLink = (tab: SwapTabParam) =>
+  ({
+    to: "/trade/swap/$tab",
+    params: { tab },
+  }) as const
+
 export const LINKS = {
   home: "/",
   liquidity: "/liquidity",
   myLiquidity: "/liquidity",
   pools: "/liquidity",
   swap: "/trade/swap",
-  swapMarket: "/trade/swap/market",
-  swapDca: "/trade/swap/dca",
+  swapMarket: "/trade/swap/$tab",
+  swapLimit: "/trade/swap/$tab",
+  swapTwap: "/trade/swap/$tab",
   portfolio: "/portfolio",
   portfolioOverview: "/portfolio",
   portfolioTracked: "/portfolio/tracked",
@@ -77,6 +86,7 @@ type NavigationItemCommon = {
   icon?: React.ComponentType
   enabled?: boolean
   defaultChild?: Route
+  params?: Record<string, string>
   search?: Record<string, string | boolean>
   exact?: boolean
 }
@@ -102,6 +112,7 @@ export const NAVIGATION: NavigationItem[] = [
     key: "trade",
     to: LINKS.trade,
     defaultChild: LINKS.swapMarket,
+    params: { tab: "market" },
     icon: Repeat2Icon,
     children: [
       {
@@ -109,8 +120,21 @@ export const NAVIGATION: NavigationItem[] = [
         to: LINKS.swap,
         icon: Repeat2Icon,
         children: [
-          { key: "swapMarket", to: LINKS.swapMarket },
-          { key: "swapDca", to: LINKS.swapDca },
+          {
+            key: "swapMarket",
+            to: LINKS.swapMarket,
+            params: { tab: "market" },
+          },
+          {
+            key: "swapLimit",
+            to: LINKS.swapLimit,
+            params: { tab: "limit" },
+          },
+          {
+            key: "swapTwap",
+            to: LINKS.swapTwap,
+            params: { tab: "twap" },
+          },
         ],
       },
       { key: "otc", to: LINKS.otc, icon: CoinsIcon },
@@ -274,8 +298,12 @@ export const getMenuTranslations = (t: TFunction) =>
       title: t("navigation.swapMarket.title"),
       description: "",
     },
-    swapDca: {
-      title: t("navigation.swapDca.title"),
+    swapTwap: {
+      title: t("navigation.swapTwap.title"),
+      description: "",
+    },
+    swapLimit: {
+      title: t("navigation.swapLimit.title"),
       description: "",
     },
     otc: {

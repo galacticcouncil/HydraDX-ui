@@ -1,7 +1,8 @@
 import { neckwork } from "@galacticcouncil/utils"
 import { isNumber } from "remeda"
 
-import { OrderKind, OrderStatus } from "@/modules/trade/orders/lib/types"
+import { OrderKind } from "@/modules/trade/orders/lib/orderData"
+import { OrderStatus as SwapRowStatus } from "@/modules/trade/orders/lib/types"
 
 type BlockEventRef = {
   readonly paraBlockHeight: number
@@ -13,7 +14,7 @@ type SwapEventRef = BlockEventRef & {
 }
 
 export const getSwapExplorerLink = (
-  status: OrderStatus | null,
+  status: SwapRowStatus | null,
   swapEvent: SwapEventRef | null | undefined,
   dcaExecutionEvent?: BlockEventRef | null,
   scheduleId?: number,

@@ -88,6 +88,7 @@ type BannersState = {
     }
   }
   closedGigaNewsIds: string[]
+  gigaNewsDeferred: boolean
 }
 
 type BannersActions = {
@@ -99,6 +100,7 @@ type BannersActions = {
   closeGigaNews: (id: string) => void
   openAllGigaNews: () => void
   closeAllGigaNews: () => void
+  deferGigaNews: () => void
 }
 
 type BannersStore = BannersState & BannersActions
@@ -111,6 +113,7 @@ const defaultState: BannersState = {
     ["giga-migration"]: { visible: undefined, type: "flow" },
   },
   closedGigaNewsIds: [],
+  gigaNewsDeferred: false,
 }
 
 const bannerIds = Object.keys(
@@ -180,6 +183,7 @@ export const useBannersStore = create<BannersStore>()(
             closedGigaNewsIds: bannerConfig.map((banner) => banner.id),
           }
         }),
+      deferGigaNews: () => set({ gigaNewsDeferred: true }),
     }),
     {
       name: "banners",

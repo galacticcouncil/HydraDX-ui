@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next"
 
 import { DcaPriceImpactWarning } from "@/modules/trade/swap/sections/DCA/DcaPriceImpactWarning"
 import { DcaValidationWarning } from "@/modules/trade/swap/sections/DCA/useDcaValidation"
-import { SwapSectionSeparator } from "@/modules/trade/swap/SwapPage.styled"
 
 type Props = {
   readonly isFormValid: boolean
@@ -55,51 +54,48 @@ export const DcaWarnings: FC<Props> = ({
   }
 
   return (
-    <>
-      <SwapSectionSeparator />
-      <Flex direction="column" my="base" gap="s">
-        {warnings.map((warning) => {
-          switch (warning) {
-            case DcaValidationWarning.PriceImpact:
-              return (
-                <DcaPriceImpactWarning
-                  key={warning}
-                  canContinue={isFormValid}
-                  message={warningDescriptions[warning]}
-                  accepted={priceImpactLossAccepted}
-                  onAcceptedChange={onPriceImpactLossAcceptedChange}
-                />
-              )
+    <Flex direction="column" my="base" gap="s">
+      {warnings.map((warning) => {
+        switch (warning) {
+          case DcaValidationWarning.PriceImpact:
+            return (
+              <DcaPriceImpactWarning
+                key={warning}
+                canContinue={isFormValid}
+                message={warningDescriptions[warning]}
+                accepted={priceImpactLossAccepted}
+                onAcceptedChange={onPriceImpactLossAcceptedChange}
+              />
+            )
 
-            default:
-              return (
-                <Alert
-                  key={warning}
-                  variant="warning"
-                  description={warningDescriptions[warning]}
-                />
-              )
+          default:
+            return (
+              <Alert
+                key={warning}
+                variant="warning"
+                description={warningDescriptions[warning]}
+              />
+            )
+        }
+      })}
+      {shouldRenderHealthFactorWarning && (
+        <HealthFactorRiskWarning
+          canContinue={isFormValid}
+          message={
+            isOpenBudget
+              ? t("trade:dca.warnings.collateral")
+              : t("healthFactor.warning")
           }
-        })}
-        {shouldRenderHealthFactorWarning && (
-          <HealthFactorRiskWarning
-            canContinue={isFormValid}
-            message={
-              isOpenBudget
-                ? t("trade:dca.warnings.collateral")
-                : t("healthFactor.warning")
-            }
-            toggleMessage={
-              isOpenBudget
-                ? t("trade:dca.warnings.collateral.confirmation")
-                : undefined
-            }
-            accepted={healthFactorRiskAccepted}
-            isUserConsentRequired={healthFactor.isUserConsentRequired}
-            onAcceptedChange={onHealthFactorRiskAcceptedChange}
-          />
-        )}
-      </Flex>
-    </>
+          toggleMessage={
+            isOpenBudget
+              ? t("trade:dca.warnings.collateral.confirmation")
+              : undefined
+          }
+          accepted={healthFactorRiskAccepted}
+          isUserConsentRequired={healthFactor.isUserConsentRequired}
+          onAcceptedChange={onHealthFactorRiskAcceptedChange}
+        />
+      )}
+    </Flex>
   )
 }

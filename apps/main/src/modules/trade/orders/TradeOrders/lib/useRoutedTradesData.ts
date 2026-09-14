@@ -11,6 +11,7 @@ import {
   MarketSwapStatus,
   RoutedTradeData,
 } from "@/modules/trade/orders/lib/types"
+import { useNeckworkTradeQueriesEnabled } from "@/modules/trade/swap/tradeDataSource"
 import { useAssets } from "@/providers/assetsProvider"
 import { scaleHuman } from "@/utils/formatting"
 
@@ -22,6 +23,8 @@ export const useRoutedTradesData = (
   page: number,
   pageSize: number,
 ) => {
+  const neckworkEnabled = useNeckworkTradeQueriesEnabled()
+
   const { data, isLoading } = useQuery({
     ...routedTradesQuery(neckworkClient, {
       account: address,
@@ -29,6 +32,7 @@ export const useRoutedTradesData = (
       page,
       pageSize,
     }),
+    enabled: neckworkEnabled && !!address,
     placeholderData: keepPreviousData,
   })
 

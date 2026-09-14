@@ -2,6 +2,7 @@ import { HealthFactorRiskWarning } from "@galacticcouncil/money-market/component
 import { HealthFactorChange } from "@galacticcouncil/money-market/components"
 import {
   Alert,
+  Box,
   Button,
   Flex,
   LoadingButton,
@@ -141,13 +142,15 @@ export const TransferPositionModal: FC<Props> = ({ assetId, onClose }) => {
         <ModalHeader align="center" title={t("transfer.modal.title")} />
         <ModalBody sx={{ py: 0 }}>
           <ModalContentDivider />
-          <AssetSelectFormField<TransferPositionFormValues>
-            label={t("transfer.modal.asset.label")}
-            assetFieldName="asset"
-            amountFieldName="amount"
-            maxBalance={getMaxBalance(asset)}
-            assets={tradable}
-          />
+          <Box py="l" width="100%">
+            <AssetSelectFormField<TransferPositionFormValues>
+              label={t("transfer.modal.asset.label")}
+              assetFieldName="asset"
+              amountFieldName="amount"
+              balance={{ value: getMaxBalance(asset) }}
+              assets={tradable}
+            />
+          </Box>
           <ModalContentDivider />
           <AddressBookFormField<TransferPositionFormValues>
             fieldName="address"
