@@ -1,10 +1,8 @@
 import { chainsMap } from "@galacticcouncil/xc-cfg"
 import { useQuery } from "@tanstack/react-query"
-import { useState } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { useDebounce } from "react-use"
 
-import { XC_SWAP_QUOTE_DEBOUNCE_MS } from "@/modules/trade/swap/sections/XcSwap/config/ui"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { XcSwapFormValues } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapForm"
 
 export const xcDestBalanceQueryKey = (chainKey: string, address: string) =>
@@ -17,12 +15,7 @@ type UseXcDestBalanceParams = {
 export const useXcDestBalance = ({ form }: UseXcDestBalanceParams) => {
   const [destChain, destAddress] = form.watch(["destChain", "destAddress"])
 
-  const [debouncedAddress, setDebouncedAddress] = useState("")
-  useDebounce(
-    () => setDebouncedAddress(destAddress),
-    XC_SWAP_QUOTE_DEBOUNCE_MS,
-    [destAddress],
-  )
+  const [debouncedAddress] = useDebouncedValue(destAddress)
 
   const address = debouncedAddress.trim()
   // zec has no balance reader configured, so it never fetches

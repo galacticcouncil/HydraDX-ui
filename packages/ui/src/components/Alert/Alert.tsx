@@ -54,12 +54,7 @@ export const Alert: FC<AlertProps> = ({
         <Tooltip text={tooltip}>
           {title && <SAlertTitle variant={variant}>{title}</SAlertTitle>}
           {typeof description === "string" ? (
-            <Text
-              fw={title ? 400 : 500}
-              fs="p4"
-              lh={1.3}
-              color={getToken("text.high")}
-            >
+            <Text fw={500} fs="p4" lh={1.3} color={getToken("text.high")}>
               {description}
             </Text>
           ) : (

@@ -50,7 +50,7 @@ export const useBestNumber = () => {
 }
 
 const RECONNECT_GRACE_MS = 2_000
-const BLOCK_STALE_MS = 60_000
+const BLOCK_STALE_MS = 60_000 * 3
 
 let lastBlockAt = Date.now()
 

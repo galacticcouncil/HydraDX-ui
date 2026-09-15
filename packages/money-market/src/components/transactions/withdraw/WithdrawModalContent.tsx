@@ -68,17 +68,24 @@ export const WithdrawModalContent: React.FC<TxModalWrapperRenderProps> = ({
   const underlyingBalance = Big(userReserve?.underlyingBalance || "0")
   const isMaxSelected =
     !!_amount && Big(_amount).gte(maxAmountToWithdrawWithFee)
+  const isFullWithdraw =
+    isMaxSelected && maxAmountToWithdraw.eq(underlyingBalance)
   const withdrawAmount = isMaxSelected ? maxAmountToWithdrawWithFee : _amount
+  const effectiveWithdrawAmount = isFullWithdraw
+    ? maxAmountToWithdraw.toString()
+    : withdrawAmount
 
   const isMaxExceeded =
-    !!withdrawAmount && Big(withdrawAmount).gt(maxAmountToWithdrawWithFee)
+    !isFullWithdraw &&
+    !!withdrawAmount &&
+    Big(withdrawAmount).gt(maxAmountToWithdrawWithFee)
 
   const handleChange = (value: string) => {
     const maxSelected =
       !!value && Big(value).gte(maxAmountToWithdrawWithFee.toString())
     amountRef.current = maxSelected ? maxAmountToWithdrawWithFee : value
     setAmount(value)
-    if (maxSelected && Big(maxAmountToWithdrawWithFee).eq(underlyingBalance)) {
+    if (maxSelected && maxAmountToWithdraw.eq(underlyingBalance)) {
       setWithdrawMax("-1")
     } else {
       setWithdrawMax(maxAmountToWithdrawWithFee)
@@ -91,14 +98,14 @@ export const WithdrawModalContent: React.FC<TxModalWrapperRenderProps> = ({
     user,
     userReserve,
     poolReserve,
-    withdrawAmount,
+    withdrawAmount: effectiveWithdrawAmount,
   })
 
   const { blockingError, errorText } = useWithdrawError({
     assetsBlockingWithdraw,
     poolReserve,
     healthFactorAfterWithdraw,
-    withdrawAmount,
+    withdrawAmount: effectiveWithdrawAmount,
   })
 
   // calculating input usd value
@@ -152,7 +159,9 @@ export const WithdrawModalContent: React.FC<TxModalWrapperRenderProps> = ({
           content={
             <ValueDetail
               value={formatCurrency(
-                underlyingBalance.minus(withdrawAmount || "0").toString(),
+                underlyingBalance
+                  .minus(effectiveWithdrawAmount || "0")
+                  .toString(),
                 {
                   symbol,
                 },

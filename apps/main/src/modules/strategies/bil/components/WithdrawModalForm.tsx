@@ -2,10 +2,10 @@ import { HealthFactorChange } from "@galacticcouncil/money-market/components"
 import {
   AssetInput,
   Box,
-  Button,
   Checkbox,
   Flex,
   Label,
+  LoadingButton,
   ModalBody,
   ModalContentDivider,
   ModalFooter,
@@ -226,9 +226,15 @@ export const WithdrawModalForm = ({
         </ModalBody>
         <Separator />
         <ModalFooter>
-          <Button type="submit" size="large" width="100%" disabled={!canSubmit}>
+          <LoadingButton
+            type="submit"
+            size="large"
+            width="100%"
+            isLoading={isPending}
+            disabled={!canSubmit}
+          >
             {t("common:withdraw")}
-          </Button>
+          </LoadingButton>
         </ModalFooter>
       </form>
     </FormProvider>

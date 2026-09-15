@@ -78,6 +78,12 @@ export const AssetInput = ({
   className,
 }: AssetInputProps) => {
   const usedMaxBalance = maxButtonBalance || maxBalance
+  const isMaxDisabled =
+    Big(usedMaxBalance || "0").lte(0) ||
+    loading ||
+    maxBalanceLoading ||
+    !onChange ||
+    !!disabled
 
   const handleMaxButtonClick = () => {
     if (usedMaxBalance) {
@@ -129,13 +135,7 @@ export const AssetInput = ({
               <MicroButton
                 aria-label="Max balance button"
                 onClick={handleMaxButtonClick}
-                disabled={
-                  Big(usedMaxBalance || "0").lte(0) ||
-                  loading ||
-                  maxBalanceLoading ||
-                  !onChange ||
-                  !!disabled
-                }
+                disabled={isMaxDisabled}
               >
                 max
               </MicroButton>

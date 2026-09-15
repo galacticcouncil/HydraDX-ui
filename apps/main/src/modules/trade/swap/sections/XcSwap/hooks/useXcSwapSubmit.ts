@@ -1,3 +1,4 @@
+import { XcSwapClient } from "@galacticcouncil/xc-swap"
 import { useMemo, useRef } from "react"
 import { UseFormReturn } from "react-hook-form"
 
@@ -11,6 +12,7 @@ import {
   shouldResetXcSwapFormAfterSubmit,
 } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapFormReset"
 import { XcSwapQuote } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapQuote"
+import { XcAsset } from "@/modules/trade/swap/sections/XcSwap/types"
 import { useAssets } from "@/providers/assetsProvider"
 import { TransactionActions } from "@/states/transactions"
 
@@ -24,6 +26,10 @@ type UseXcSwapSubmitParams = {
   quote: XcSwapQuote
   maxSwapSellBalance: string
   maxTwapSellBalance: string
+  xcSwap: XcSwapClient
+  originAssetMap: Map<string, XcAsset>
+  refundTo: string | null
+  swapSlippage: number
 }
 
 export const useXcSwapSubmit = ({
@@ -31,6 +37,10 @@ export const useXcSwapSubmit = ({
   quote,
   maxSwapSellBalance,
   maxTwapSellBalance,
+  xcSwap,
+  originAssetMap,
+  refundTo,
+  swapSlippage,
 }: UseXcSwapSubmitParams) => {
   const { getAsset } = useAssets()
   const onSubmitRef = useRef<(() => void) | undefined>(undefined)
@@ -43,7 +53,10 @@ export const useXcSwapSubmit = ({
     [],
   )
 
-  const submit = useSubmitXcSwap(transactionActions)
+  const submit = useSubmitXcSwap(
+    { xcSwap, originAssetMap, refundTo, swapSlippage },
+    transactionActions,
+  )
   const submitOmnipool = useSubmitSwap(transactionActions)
   const submitTwap = useSubmitTwap(transactionActions)
 
@@ -87,11 +100,11 @@ export const useXcSwapSubmit = ({
     }
 
     if (quote?.kind === "xc") {
-      submit.mutate([values, quote.swap])
+      submit.mutate(values)
     } else if (quote?.kind === "oc" && values.isSingleTrade) {
-      submitOmnipool.mutate([toMarketFormValues(values), quote.swap])
+      submitOmnipool.mutate(toMarketFormValues(values))
     } else if (quote?.kind === "oc" && quote.twap) {
-      submitTwap.mutate([toMarketFormValues(values), quote.twap])
+      submitTwap.mutate(toMarketFormValues(values))
     }
   }
 

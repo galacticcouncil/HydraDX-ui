@@ -4,7 +4,7 @@ import React from "react"
 import { useTranslation } from "react-i18next"
 import { toLowerCase } from "remeda"
 
-import { Trade, TradeType } from "@/api/trade"
+import { bestBuyQuery, bestSellQuery, TradeType } from "@/api/trade"
 import { MarketFormValues } from "@/modules/trade/swap/sections/Market/lib/useMarketForm"
 import { MarketSellAllAlert } from "@/modules/trade/swap/sections/Market/MarketSellAllAlert"
 import { useRpcProvider } from "@/providers/rpcProvider"
@@ -14,7 +14,8 @@ import { scaleHuman } from "@/utils/formatting"
 
 export const useSubmitSwap = (actions?: TransactionActions) => {
   const { t } = useTranslation(["common", "trade"])
-  const { sdk } = useRpcProvider()
+  const rpc = useRpcProvider()
+  const { sdk } = rpc
   const { account } = useAccount()
   const address = account?.address ?? ""
   const {
@@ -26,12 +27,27 @@ export const useSubmitSwap = (actions?: TransactionActions) => {
   const { createTransaction } = useTransactionsStore()
 
   return useMutation({
-    mutationFn: async ([values, swap]: [MarketFormValues, Trade]) => {
+    mutationFn: async (values: MarketFormValues) => {
       const { sellAsset, buyAsset } = values
-      const { amountIn, amountOut, type } = swap
 
       if (!sellAsset) throw new Error("Invalid sell asset")
       if (!buyAsset) throw new Error("Invalid buy asset")
+
+      const swap = await rpc.queryClient.ensureQueryData(
+        values.type === TradeType.Buy
+          ? bestBuyQuery(rpc, {
+              assetIn: sellAsset.id,
+              assetOut: buyAsset.id,
+              amountOut: values.buyAmount,
+            })
+          : bestSellQuery(rpc, {
+              assetIn: sellAsset.id,
+              assetOut: buyAsset.id,
+              amountIn: values.sellAmount,
+            }),
+      )
+
+      const { amountIn, amountOut, type } = swap
 
       const sellDecimals = sellAsset.decimals
       const sellSymbol = sellAsset.symbol

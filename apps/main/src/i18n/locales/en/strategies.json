@@ -82,6 +82,8 @@
   "bil.deposit.option.instantValue": "Sell BIL on secondary market at slight discount",
   "bil.deposit.cta.paused": "Deposits paused",
   "bil.deposit.cta.full": "Vault at capacity",
+  "bil.deposit.capacityAlert.description.vault": "The vault has reached its TVL cap of {{ value, number(notation: 'compact'; maximumFractionDigits: 2) }} {{ symbol }}. New deposits are not accepted until capacity becomes available.",
+  "bil.deposit.capacityAlert.description.pool": "The supply cap for BIL has been reached. New deposits are not accepted until capacity becomes available.",
   "bil.deposit.cta.belowMin": "Minimum deposit amount is {{ value, currency }}",
   "bil.deposit.cta.exceedsCap": "Exceeds remaining capacity of {{ value, number }} {{symbol}}",
   "bil.deposit.remaining": "Remaining capacity",

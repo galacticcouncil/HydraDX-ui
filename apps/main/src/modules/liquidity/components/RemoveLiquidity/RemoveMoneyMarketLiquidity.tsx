@@ -4,8 +4,8 @@ import {
 } from "@galacticcouncil/money-market/components"
 import { HealthFactorResult } from "@galacticcouncil/money-market/utils"
 import {
-  Button,
   Flex,
+  LoadingButton,
   ModalBody,
   ModalContentDivider,
   ModalHeader,
@@ -228,16 +228,20 @@ const RemoveMoneyMarketLiquidityForm = (
 
             <ModalContentDivider />
 
-            <Button
+            <LoadingButton
               type="submit"
               size="large"
               width="100%"
+              isLoading={isTradePending}
               disabled={
-                !isValid || !isHealthFactorCheckSatisfied || isLoadingMaxBalance
+                !isValid ||
+                !isHealthFactorCheckSatisfied ||
+                isLoadingMaxBalance ||
+                isTradePending
               }
             >
               {title ?? t("removeLiquidity")}
-            </Button>
+            </LoadingButton>
           </form>
         </Flex>
       </ModalBody>

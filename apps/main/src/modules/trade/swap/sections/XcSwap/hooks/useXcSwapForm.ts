@@ -46,7 +46,7 @@ const schema = z
         })
       } else if (
         data.destChain &&
-        !data.destChain.addressValidator(data.destAddress)
+        !data.destChain.addressValidator(data.destAddress.trim())
       ) {
         ctx.addIssue({
           code: "custom",

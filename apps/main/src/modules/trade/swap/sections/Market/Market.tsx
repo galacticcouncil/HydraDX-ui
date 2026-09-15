@@ -109,8 +109,8 @@ export const Market: FC = () => {
       <form
         onSubmit={form.handleSubmit((values) =>
           isSingleTrade
-            ? swap && submitSwap.mutate([values, swap])
-            : twap && submitTwap.mutate([values, twap]),
+            ? swap && submitSwap.mutate(values)
+            : twap && submitTwap.mutate(values),
         )}
       >
         <MarketFields

@@ -18,7 +18,6 @@ import Big from "big.js"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { first, isNullish } from "remeda"
-import { useDebounce } from "use-debounce"
 import z from "zod"
 
 import { healthFactorQuery } from "@/api/aave"
@@ -34,6 +33,7 @@ import {
 import { useAccountFeePaymentAssetId } from "@/api/payments"
 import { spotPriceQuery } from "@/api/spotPrice"
 import { bestSellWithTxQuery } from "@/api/trade"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { useMinimumTradeAmount } from "@/modules/liquidity/components/RemoveLiquidity/RemoveMoneyMarketLiquidity.utils"
 import { useCreateBatchTx } from "@/modules/transactions/hooks/useBatchTx"
 import {
@@ -161,7 +161,7 @@ export const useSupplyIsolatedLiquidity = ({
     enabled: !isAaveSupply,
   })
 
-  const [debouncedAmountIn] = useDebounce(amountIn, 300)
+  const [debouncedAmountIn, isAmountInSynced] = useDebouncedValue(amountIn)
 
   const collateralType = getAssetCollateralType(
     userReserve,
@@ -203,7 +203,7 @@ export const useSupplyIsolatedLiquidity = ({
   const isBlockedSupply =
     isBlockedByBorrowedAssets || !!supplyCapWarning || !!debtCeilingWarning
 
-  const { data: trade, isLoading: isTradeLoading } = useQuery(
+  const { data: quotedTrade, isLoading: isTradeQueryLoading } = useQuery(
     bestSellWithTxQuery(rpc, {
       assetIn: assetIn.id,
       assetOut: aToken.id,
@@ -213,21 +213,28 @@ export const useSupplyIsolatedLiquidity = ({
     }),
   )
 
+  const trade = isAmountInSynced ? quotedTrade : undefined
+  const isTradeLoading = isTradeQueryLoading || !isAmountInSynced
+
   const minReceiveAmount =
     (isAaveSupply
       ? trade?.swap.amountOut
       : getMinimumTradeAmount(trade?.swap)?.toString()) ?? "0"
   const minReceiveAmountShifted = scaleHuman(minReceiveAmount, aToken.decimals)
 
-  const { data: healthFactor } = useQuery(
-    healthFactorQuery(rpc, {
-      address: account?.address ?? "",
-      fromAsset: assetIn,
-      fromAmount: debouncedAmountIn,
-      toAsset: isBlockedSupply ? null : aToken,
-      toAmount: minReceiveAmountShifted,
-    }),
-  )
+  const { data: healthFactor, isPlaceholderData: isHealthFactorStale } =
+    useQuery(
+      healthFactorQuery(rpc, {
+        address: account?.address ?? "",
+        fromAsset: assetIn,
+        fromAmount: debouncedAmountIn,
+        toAsset: isBlockedSupply ? null : aToken,
+        toAmount: minReceiveAmountShifted,
+      }),
+    )
+
+  const isHealthFactorLoading =
+    !isBlockedSupply && (isTradeLoading || isHealthFactorStale)
 
   const toasts = useProtocolActionToasts(CustomToastAction.supplyIsolated, {
     value: t("currency", {
@@ -276,6 +283,7 @@ export const useSupplyIsolatedLiquidity = ({
     onSubmit,
     collateralType,
     healthFactor,
+    isHealthFactorLoading,
     isolationWarning,
     supplyCapWarning,
     debtCeilingWarning,

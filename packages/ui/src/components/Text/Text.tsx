@@ -1,7 +1,7 @@
 import { ResponsiveStyleValue, ThemeUICSSProperties } from "@theme-ui/core"
 import { FC, Ref } from "react"
 
-import { Box, BoxProps } from "@/components"
+import { Box, BoxProps } from "@/components/Box"
 import { ThemeFont } from "@/theme"
 import { getToken } from "@/utils"
 

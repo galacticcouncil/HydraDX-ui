@@ -213,6 +213,10 @@ export const XcSwapProvider: React.FC<XcSwapProviderProps> = ({
     quote: isQuoteRefreshing ? null : quote,
     maxSwapSellBalance,
     maxTwapSellBalance,
+    xcSwap,
+    originAssetMap,
+    refundTo,
+    swapSlippage,
   })
 
   return (

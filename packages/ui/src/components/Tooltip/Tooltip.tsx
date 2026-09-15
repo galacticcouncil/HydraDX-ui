@@ -7,15 +7,12 @@ import {
 import { FC, ReactNode, useState } from "react"
 
 import { CircleInfo } from "@/assets/icons"
-import {
-  BoxProps,
-  ButtonIcon,
-  Drawer,
-  DrawerBody,
-  Flex,
-  Icon,
-  Text,
-} from "@/components"
+import { BoxProps } from "@/components/Box"
+import { ButtonIcon } from "@/components/Button"
+import { Drawer, DrawerBody } from "@/components/Drawer"
+import { Flex } from "@/components/Flex"
+import { Icon } from "@/components/Icon"
+import { Text } from "@/components/Text"
 import { useBreakpoints } from "@/theme"
 import { getToken } from "@/utils"
 

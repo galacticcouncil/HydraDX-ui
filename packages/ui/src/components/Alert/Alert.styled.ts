@@ -50,6 +50,7 @@ const textColorVariants = createVariants<AlertVariant>((theme) => ({
   `,
   warning: css`
     color: ${theme.accents.alertAlt.primary};
+    filter: brightness(0.8);
   `,
 }))
 

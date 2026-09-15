@@ -5,7 +5,6 @@ import { useEffect, useMemo } from "react"
 import { useFormContext } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { first, isNullish } from "remeda"
-import { useDebounce } from "use-debounce"
 
 import {
   AAVE_GAS_LIMIT,
@@ -17,6 +16,7 @@ import { useAccountBalances } from "@/api/balances"
 import { useAccountFeePaymentAssetId } from "@/api/payments"
 import { useOmnipoolIds } from "@/api/pools"
 import { bestSellWithTxQuery } from "@/api/trade"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import {
   useCheckJoinOmnipoolFarm,
   useLiquidityOmnipoolShares,
@@ -247,8 +247,8 @@ export const useAddMoneyMarketOmnipoolLiquidity = ({
     }
   })()
 
-  const [debouncedAmountIn] = useDebounce(amounIn, 300)
-  const { data: trade } = useQuery(
+  const [debouncedAmountIn, isAmountInSynced] = useDebouncedValue(amounIn)
+  const { data: quotedTrade, isLoading: isTradeQueryLoading } = useQuery(
     bestSellWithTxQuery(rpc, {
       assetIn,
       assetOut: erc20Id,
@@ -257,6 +257,10 @@ export const useAddMoneyMarketOmnipoolLiquidity = ({
       address: account?.address ?? "",
     }),
   )
+
+  const trade = isAmountInSynced ? quotedTrade : undefined
+  const isTradeLoading =
+    !isERC20Providing && (isTradeQueryLoading || !isAmountInSynced)
 
   const minERC20ToGet = (() => {
     if (isERC20Providing) {
@@ -666,6 +670,7 @@ export const useAddMoneyMarketOmnipoolLiquidity = ({
     healthFactor,
     poolShare: omnipoolShares?.poolShare,
     isAddableToOmnipool: true,
+    isTradeLoading,
     swap: trade?.swap,
     ...formData,
     meta,
@@ -738,8 +743,8 @@ export const useAddMoneyMarketLiquidity = ({
     }
   })()
 
-  const [debouncedAmountIn] = useDebounce(amounIn, 300)
-  const { data: trade } = useQuery(
+  const [debouncedAmountIn, isAmountInSynced] = useDebouncedValue(amounIn)
+  const { data: quotedTrade, isLoading: isTradeQueryLoading } = useQuery(
     bestSellWithTxQuery(rpc, {
       assetIn,
       assetOut: erc20Id,
@@ -748,6 +753,9 @@ export const useAddMoneyMarketLiquidity = ({
       address: account?.address ?? "",
     }),
   )
+
+  const trade = isAmountInSynced ? quotedTrade : undefined
+  const isTradeLoading = isTradeQueryLoading || !isAmountInSynced
 
   const tradeAmountOut = split
     ? (trade?.swap.amountOut ?? "0")
@@ -937,6 +945,7 @@ export const useAddMoneyMarketLiquidity = ({
     minReceiveAmount,
     healthFactor: Big(debouncedAmountIn).gt(0) ? healthFactor : undefined,
     isAddableToOmnipool: false,
+    isTradeLoading,
     swap: split ? undefined : trade?.swap,
     ...formData,
   }

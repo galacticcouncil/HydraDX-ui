@@ -48,7 +48,6 @@ export const Dca: FC = () => {
 
   const {
     order,
-    orderTx,
     dryRunError,
     healthFactor: initialHealthFactor,
     isLoading,
@@ -115,10 +114,7 @@ export const Dca: FC = () => {
   return (
     <FormProvider {...form}>
       <form
-        onSubmit={form.handleSubmit(
-          (values) =>
-            order && orderTx && submitDcaOrder.mutate([values, order, orderTx]),
-        )}
+        onSubmit={form.handleSubmit((values) => submitDcaOrder.mutate(values))}
       >
         <Controller
           control={form.control}

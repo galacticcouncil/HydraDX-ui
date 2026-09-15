@@ -1,12 +1,14 @@
 import { Hourglass, Lock, Zap } from "@galacticcouncil/ui/assets/icons"
 import {
+  Alert,
   AssetInput,
   Box,
-  Button,
   Flex,
   Icon,
+  LoadingButton,
   Paper,
   Separator,
+  Stack,
   Summary,
   SummaryRow,
   Text,
@@ -47,8 +49,11 @@ export const BilDeposit = () => {
   const capacityKnown = vaultStats.tvlCap > 0
   const remaining = vaultStats.remainingDepositHollar
   const atCapacity = capacityKnown && remaining <= 0
-  const effectiveMax =
-    capacityKnown && Big(balance).gt(remaining) ? remaining.toString() : balance
+
+  const maxButtonBalance =
+    !capacityKnown || atCapacity
+      ? balance
+      : Big.min(balance, remaining).toString()
 
   const form = useBilDepositForm({
     maxBalance: balance,
@@ -108,7 +113,7 @@ export const BilDeposit = () => {
                     value: amount || "0",
                   })}
                   maxBalance={balance}
-                  maxButtonBalance={effectiveMax}
+                  maxButtonBalance={maxButtonBalance}
                   amountError={fieldState.error?.message}
                 />
               )}
@@ -206,18 +211,35 @@ export const BilDeposit = () => {
 
           <Separator mx="-xl" />
 
-          <Box py="xl">
+          <Stack gap="l" py="xl">
+            {atCapacity && (
+              <Alert
+                variant="warning"
+                title={t("bil.deposit.cta.full")}
+                description={t(
+                  vaultStats.depositLimitBinding === "pool"
+                    ? "bil.deposit.capacityAlert.description.pool"
+                    : "bil.deposit.capacityAlert.description.vault",
+                  {
+                    value: vaultStats.tvlCap,
+                    symbol: hollar.symbol,
+                  },
+                )}
+              />
+            )}
             <AuthorizedAction size="large" width="100%">
-              <Button
+              <LoadingButton
                 type="submit"
                 size="large"
                 width="100%"
+                variant={!canSubmit ? "tertiary" : "primary"}
+                isLoading={depositMutation.isPending}
                 disabled={!canSubmit}
               >
                 {ctaLabel}
-              </Button>
+              </LoadingButton>
             </AuthorizedAction>
-          </Box>
+          </Stack>
         </Paper>
       </form>
     </FormProvider>

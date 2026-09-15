@@ -1,10 +1,10 @@
 import { useAccount } from "@galacticcouncil/web3-connect"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { UseFormReturn } from "react-hook-form"
-import { useDebounce } from "use-debounce"
 
 import { healthFactorQuery } from "@/api/aave"
 import { bestSellQuery, bestSellTwapQuery } from "@/api/trade"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { isTwapEnabled } from "@/modules/trade/swap/sections/Market/lib/isTwapEnabled"
 import { TradeProviderProps } from "@/modules/trade/swap/sections/Market/lib/tradeProvider"
 import { MarketFormValues } from "@/modules/trade/swap/sections/Market/lib/useMarketForm"
@@ -24,8 +24,9 @@ export const useMarketSellData = (
     "buyAmount",
   ])
 
-  const [debouncedSellAmount] = useDebounce(sellAmount, 300)
-  const [debouncedBuyAmount] = useDebounce(buyAmount, 300)
+  const [debouncedSellAmount, isSellAmountSynced] =
+    useDebouncedValue(sellAmount)
+  const [debouncedBuyAmount] = useDebouncedValue(buyAmount)
 
   const [
     { data: swap, isLoading: isSwapLoading },
@@ -61,11 +62,11 @@ export const useMarketSellData = (
   )
 
   return {
-    swap,
-    twap,
+    swap: isSellAmountSynced ? swap : undefined,
+    twap: isSellAmountSynced ? twap : undefined,
     healthFactor: healthFactorData,
-    isSwapLoading,
-    isTwapLoading,
+    isSwapLoading: isSwapLoading || !isSellAmountSynced,
+    isTwapLoading: isTwapLoading || !isSellAmountSynced,
     isHealthFactorLoading,
   }
 }

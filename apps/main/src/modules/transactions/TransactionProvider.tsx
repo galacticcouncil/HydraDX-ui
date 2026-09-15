@@ -215,8 +215,7 @@ export const TransactionProvider: React.FC<TransactionProviderProps> = ({
         transaction.invalidateQueries?.forEach((queryKey) =>
           queryClient.invalidateQueries({ queryKey }),
         )
-        // the indexer can't have this block yet — arm the sync instead of
-        // invalidating the neckwork queries now
+
         const blockHeight = getTxResultBlockHeight(event)
         if (blockHeight !== null) armNeckworkSync(blockHeight)
         queryClient.invalidateQueries({

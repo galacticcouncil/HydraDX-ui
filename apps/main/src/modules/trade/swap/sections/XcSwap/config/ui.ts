@@ -1,5 +1,3 @@
-export const XC_SWAP_QUOTE_DEBOUNCE_MS = 300
-
 export const XC_SWAP_CHAIN_ITEM_HEIGHT = 40
 export const XC_SWAP_MAX_VISIBLE_CHAIN_ITEMS = 10
 

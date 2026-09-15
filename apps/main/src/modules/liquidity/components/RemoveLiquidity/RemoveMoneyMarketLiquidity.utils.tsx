@@ -7,7 +7,6 @@ import { useCallback, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 import { prop } from "remeda"
-import { useDebounce } from "use-debounce"
 import z from "zod/v4"
 
 import {
@@ -21,6 +20,7 @@ import { StableSwapBase } from "@/api/pools"
 import { bestSellWithTxQuery, Trade } from "@/api/trade"
 import { calculateSlippage } from "@/api/utils/slippage"
 import { TSelectedAsset } from "@/components/AssetSelect/AssetSelect"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { TRemoveStablepoolLiquidityFormValues } from "@/modules/liquidity/components/RemoveLiquidity/RemoveStablepoolLiquidity.utils"
 import { calculatePoolFee } from "@/modules/liquidity/Liquidity.utils"
 import { TReserve } from "@/modules/liquidity/Liquidity.utils"
@@ -91,16 +91,20 @@ export const useRemoveMoneyMarketLiquidity = ({
 
   const removeAmount = Big(scale(removeAmountShifted, meta.decimals))
 
-  const [debouncedAmount] = useDebounce(removeAmountShifted, 300)
-  const { data: trade, isLoading: isTradePending } = useQuery(
+  const [debouncedAmountIn, isAmountInSynced] =
+    useDebouncedValue(removeAmountShifted)
+  const { data: quotedTrade, isLoading: isTradeLoading } = useQuery(
     bestSellWithTxQuery(rpc, {
       assetIn: erc20Id,
       assetOut: split ? stableswapId : receiveAsset.id,
-      amountIn: debouncedAmount,
+      amountIn: debouncedAmountIn,
       slippage: swapSlippage,
       address: account?.address ?? "",
     }),
   )
+
+  const trade = isAmountInSynced ? quotedTrade : undefined
+  const isTradePending = isTradeLoading || !isAmountInSynced
 
   const amountOut = trade?.swap?.amountOut.toString() ?? "0"
   const amountOutShifted = scaleHuman(amountOut, receiveAsset.decimals)
@@ -158,7 +162,7 @@ export const useRemoveMoneyMarketLiquidity = ({
     healthFactorQuery(rpc, {
       address: account?.address ?? "",
       fromAsset: meta,
-      fromAmount: debouncedAmount,
+      fromAmount: debouncedAmountIn,
       toAsset,
       toAmount,
     }),
@@ -208,7 +212,7 @@ export const useRemoveMoneyMarketLiquidity = ({
                 })
 
                 const tOptions = {
-                  value: debouncedAmount,
+                  value: debouncedAmountIn,
                   symbol: meta.symbol,
                 }
 

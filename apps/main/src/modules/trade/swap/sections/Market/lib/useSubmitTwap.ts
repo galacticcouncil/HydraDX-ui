@@ -1,10 +1,10 @@
-import { TradeOrder } from "@galacticcouncil/sdk-next/sor"
 import { useAccount } from "@galacticcouncil/web3-connect"
 import { useMutation } from "@tanstack/react-query"
 import { formatDistanceToNow } from "date-fns"
 import { useTranslation } from "react-i18next"
 
 import { blockTimeQuery } from "@/api/chain"
+import { bestBuyQuery, bestSellTwapQuery, TradeType } from "@/api/trade"
 import { MarketFormValues } from "@/modules/trade/swap/sections/Market/lib/useMarketForm"
 import { useRpcProvider } from "@/providers/rpcProvider"
 import { useTradeSettings } from "@/states/tradeSettings"
@@ -26,10 +26,37 @@ export const useSubmitTwap = (actions?: TransactionActions) => {
   const { createTransaction } = useTransactionsStore()
 
   return useMutation({
-    mutationFn: async ([values, twap]: [MarketFormValues, TradeOrder]) => {
-      const { sellAsset } = values
-      const sellDecimals = sellAsset?.decimals ?? 0
-      const sellSymbol = sellAsset?.symbol ?? ""
+    mutationFn: async (values: MarketFormValues) => {
+      const { sellAsset, buyAsset } = values
+
+      if (!sellAsset) throw new Error("Invalid sell asset")
+      if (!buyAsset) throw new Error("Invalid buy asset")
+
+      const sellDecimals = sellAsset.decimals
+      const sellSymbol = sellAsset.symbol
+
+      const budget = await (async () => {
+        if (values.type !== TradeType.Buy) return values.sellAmount
+
+        const quote = await rpc.queryClient.ensureQueryData(
+          bestBuyQuery(rpc, {
+            assetIn: sellAsset.id,
+            assetOut: buyAsset.id,
+            amountOut: values.buyAmount,
+          }),
+        )
+
+        return scaleHuman(quote.amountIn, sellDecimals)
+      })()
+
+      const twap = await rpc.queryClient.ensureQueryData(
+        bestSellTwapQuery(rpc, {
+          assetIn: sellAsset.id,
+          assetOut: buyAsset.id,
+          amountIn: budget,
+        }),
+      )
+
       const blockTimeMs = await rpc.queryClient.ensureQueryData(
         blockTimeQuery(sdk),
       )

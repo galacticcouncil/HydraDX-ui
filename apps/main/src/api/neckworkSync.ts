@@ -8,7 +8,11 @@ import { useEffect } from "react"
 import { neckworkClient } from "@/api/neckwork"
 import { useNeckworkEnabled, useNeckworkSyncStore } from "@/states/neckwork"
 
+/** Poll the indexer for status every 10 seconds. */
 const STATUS_POLL_INTERVAL = 10_000
+
+/** Grace period for indexer to catch up to the block height. */
+const GRACE_BLOCKS = 10
 
 /** Give up waiting for the indexer after this long and refresh anyway. */
 const ARM_TIMEOUT = 120_000
@@ -37,7 +41,9 @@ export const useNeckworkSync = () => {
 
   const indexedBlock = status?.blockHeight
   const isIndexed =
-    !!indexedBlock && !!armedForBlock && indexedBlock >= armedForBlock
+    !!indexedBlock &&
+    !!armedForBlock &&
+    indexedBlock >= armedForBlock + GRACE_BLOCKS
 
   const isTimedOut = !!armedAt && Date.now() - armedAt >= ARM_TIMEOUT
 

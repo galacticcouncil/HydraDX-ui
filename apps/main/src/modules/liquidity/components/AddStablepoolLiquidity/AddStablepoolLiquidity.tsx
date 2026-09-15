@@ -3,8 +3,8 @@ import { HealthFactorResult } from "@galacticcouncil/money-market/utils"
 import {
   Alert,
   Box,
-  Button,
   Flex,
+  LoadingButton,
   ModalBody,
   ModalContentDivider,
   ModalFooter,
@@ -88,7 +88,9 @@ type AddStablepoolLiquidityFormProps = AddStablepoolLiquidityProps &
     | (ReturnType<typeof useAddMoneyMarketLiquidity> &
         TAddMoneyMarketLiquidityWrapperReturn),
     "form"
-  >
+  > & {
+    isTradeLoading?: boolean
+  }
 
 export const AddStablepoolLiquidityWrapper = (
   props: AddStablepoolLiquidityProps,
@@ -171,6 +173,7 @@ export const AddStablepoolLiquidityForm = ({
   isAddableToOmnipool,
   title,
   swap,
+  isTradeLoading = false,
   ...props
 }: AddStablepoolLiquidityFormProps) => {
   const { getAssetWithFallback } = useAssets()
@@ -193,7 +196,7 @@ export const AddStablepoolLiquidityForm = ({
 
   const customErrors = getCustomErrors(formState.errors.sharesAmount)
 
-  const isSubmitDisabled = !formState.isValid
+  const isSubmitDisabled = !formState.isValid || isTradeLoading
 
   if (!split && !selectedAssetId)
     return (
@@ -409,16 +412,17 @@ export const AddStablepoolLiquidityForm = ({
         <ModalContentDivider />
       </ModalBody>
       <ModalFooter sx={{ pt: 0 }}>
-        <Button
+        <LoadingButton
           type="submit"
           size="large"
           width="100%"
+          isLoading={isTradeLoading}
           disabled={isSubmitDisabled}
         >
           {isJoinFarms
             ? t("liquidity.add.modal.submitAndjoinFarms")
             : (title ?? t("liquidity.add.modal.submit"))}
-        </Button>
+        </LoadingButton>
       </ModalFooter>
     </form>
   )

@@ -9,6 +9,7 @@ import * as z from "zod/v4"
 
 import { tradeOrderTabs } from "@/modules/trade/orders/TradeOrders/TradeOrdersHeader"
 import { NATIVE_ASSET_ID } from "@/utils/consts"
+import { isHydrationAssetId } from "@/utils/trade"
 
 export const DEFAULT_TRADE_ASSET_IN_ID = HOLLAR_ASSET_ID
 export const DEFAULT_TRADE_ASSET_OUT_ID = NATIVE_ASSET_ID
@@ -46,6 +47,17 @@ const searchSchema = z
         ...search,
         assetIn: DEFAULT_TRADE_ASSET_IN_ID,
         assetOut: DEFAULT_TRADE_ASSET_OUT_ID,
+        destPlatform: HYDRATION_CHAIN_KEY,
+      }
+    }
+
+    if (
+      isHydrationAssetId(search.assetOut) &&
+      search.destPlatform !== HYDRATION_CHAIN_KEY
+    ) {
+      return {
+        ...search,
+        destPlatform: HYDRATION_CHAIN_KEY,
       }
     }
 

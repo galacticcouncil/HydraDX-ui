@@ -1,8 +1,7 @@
 import { XcSwapClient, XcSwapTrade } from "@galacticcouncil/xc-swap"
 import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { UseFormReturn } from "react-hook-form"
-import { useDebounce } from "react-use"
 
 import {
   bestBuyQuery,
@@ -12,19 +11,19 @@ import {
   TradeOrder,
   TradeType,
 } from "@/api/trade"
+import { useDebouncedValue } from "@/hooks/useDebouncedValue"
 import { isTwapEnabled } from "@/modules/trade/swap/sections/Market/lib/isTwapEnabled"
-import { XC_SWAP_RECIPIENT_PLACEHOLDERS } from "@/modules/trade/swap/sections/XcSwap/config/meta"
-import { XC_SWAP_QUOTE_DEBOUNCE_MS } from "@/modules/trade/swap/sections/XcSwap/config/ui"
 import { XcSwapFormValues } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapForm"
-import { assertXcSwapQuoteParams } from "@/modules/trade/swap/sections/XcSwap/lib/assertXcSwapQuoteParams"
 import { getQuoteFormUpdate } from "@/modules/trade/swap/sections/XcSwap/lib/getQuoteFormUpdate"
+import { isXcDestAsset } from "@/modules/trade/swap/sections/XcSwap/lib/xcSwapAssets"
 import {
-  isXcDestAsset,
-  sellAssetToXcAsset,
-} from "@/modules/trade/swap/sections/XcSwap/lib/xcSwapAssets"
+  getXcSwapAmountIn,
+  getXcSwapQuoteRecipient,
+  xcSwapQuoteQuery,
+} from "@/modules/trade/swap/sections/XcSwap/lib/xcSwapQuoteQuery"
 import { XcAsset } from "@/modules/trade/swap/sections/XcSwap/types"
 import { useRpcProvider } from "@/providers/rpcProvider"
-import { scale, scaleHuman } from "@/utils/formatting"
+import { scaleHuman } from "@/utils/formatting"
 
 export type XcSwapQuote =
   | { kind: "xc"; swap: XcSwapTrade }
@@ -72,33 +71,12 @@ export const useXcSwapQuote = ({
     "destAddress",
   ])
 
-  const recipientPlaceholder = destChain
-    ? XC_SWAP_RECIPIENT_PLACEHOLDERS[destChain.key]
-    : undefined
-  const isDestAddressValid = destChain
-    ? destChain.addressValidator(destAddress.trim())
-    : false
+  const recipient = getXcSwapQuoteRecipient(destChain, destAddress)
 
-  const recipient = isDestAddressValid
-    ? destAddress.trim()
-    : recipientPlaceholder
+  const [debouncedAmountIn, isAmountInSynced] = useDebouncedValue(sellAmount)
+  const [debouncedAmountOut, isAmountOutSynced] = useDebouncedValue(buyAmount)
 
-  const [debouncedAmount, setDebouncedAmount] = useState("")
-  useDebounce(() => setDebouncedAmount(sellAmount), XC_SWAP_QUOTE_DEBOUNCE_MS, [
-    sellAmount,
-  ])
-
-  const [debouncedBuyAmount, setDebouncedBuyAmount] = useState("")
-  useDebounce(
-    () => setDebouncedBuyAmount(buyAmount),
-    XC_SWAP_QUOTE_DEBOUNCE_MS,
-    [buyAmount],
-  )
-
-  const amountIn =
-    sellAsset && debouncedAmount
-      ? BigInt(scale(debouncedAmount, sellAsset.decimals))
-      : null
+  const amountIn = getXcSwapAmountIn(sellAsset, debouncedAmountIn)
 
   const xcQuoteEnabled =
     isCrossChain &&
@@ -117,35 +95,17 @@ export const useXcSwapQuote = ({
     isPlaceholderData: isXcPlaceholderData,
     error: xcQuoteError,
   } = useQuery({
-    enabled: xcQuoteEnabled,
-    retry: false,
-    placeholderData: amountIn ? keepPreviousData : undefined,
-    queryKey: [
-      "xcSwap",
-      "quote",
-      sellAsset?.id,
-      amountIn?.toString(),
-      isXcDestAsset(buyAsset) ? buyAsset.oneClickId : undefined,
+    ...xcSwapQuoteQuery(xcSwap, {
+      sellAsset,
+      buyAsset: isXcDestAsset(buyAsset) ? buyAsset : null,
+      amountIn,
       recipient,
       refundTo,
-      swapSlippage,
-    ],
-    queryFn: () => {
-      if (!sellAsset) {
-        throw new Error("Source asset is required")
-      }
-
-      return xcSwap.swap(
-        assertXcSwapQuoteParams({
-          srcAsset: sellAssetToXcAsset(sellAsset, originAssetMap),
-          amountIn,
-          destAsset: buyAsset,
-          recipient,
-          refundTo,
-          slippage: swapSlippage,
-        }),
-      )
-    },
+      slippage: swapSlippage,
+      originAssetMap,
+    }),
+    enabled: xcQuoteEnabled,
+    placeholderData: amountIn ? keepPreviousData : undefined,
   })
 
   const isOnChainBuy = !isCrossChain && type === TradeType.Buy
@@ -156,14 +116,14 @@ export const useXcSwapQuote = ({
     ? bestBuyQuery(rpc, {
         assetIn: omnipoolAssetIn,
         assetOut: omnipoolAssetOut,
-        amountOut: debouncedBuyAmount,
+        amountOut: debouncedAmountOut,
       })
     : bestSellQuery(rpc, {
         assetIn: omnipoolAssetIn,
         assetOut: omnipoolAssetOut,
-        amountIn: debouncedAmount,
+        amountIn: debouncedAmountIn,
       })
-  const debouncedInput = isOnChainBuy ? debouncedBuyAmount : debouncedAmount
+  const debouncedInput = isOnChainBuy ? debouncedAmountOut : debouncedAmountIn
   const {
     data: omnipoolTrade,
     isLoading: isOmnipoolQuoteLoading,
@@ -182,7 +142,7 @@ export const useXcSwapQuote = ({
     ? omnipoolTrade && sellAsset
       ? scaleHuman(omnipoolTrade.amountIn, sellAsset.decimals)
       : ""
-    : debouncedAmount
+    : debouncedAmountIn
 
   const twapEnabled = !isCrossChain && isTwapEnabled(omnipoolTrade)
 
@@ -247,12 +207,10 @@ export const useXcSwapQuote = ({
     validTwap,
   ])
 
-  const isInputSettled = isOnChainBuy
-    ? debouncedBuyAmount === buyAmount
-    : debouncedAmount === sellAmount
+  const isInputSynced = isOnChainBuy ? isAmountOutSynced : isAmountInSynced
 
   const isQuoteRefreshing =
-    !isInputSettled ||
+    !isInputSynced ||
     (isCrossChain
       ? isXcQuoteFetching && isXcPlaceholderData
       : isSingleTrade

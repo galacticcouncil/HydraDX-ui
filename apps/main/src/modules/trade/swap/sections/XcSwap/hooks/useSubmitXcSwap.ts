@@ -1,5 +1,5 @@
 import { HYDRATION_CHAIN_KEY } from "@galacticcouncil/utils"
-import { XcSwapTrade } from "@galacticcouncil/xc-swap"
+import { XcSwapClient } from "@galacticcouncil/xc-swap"
 import { useMutation } from "@tanstack/react-query"
 import { minutesToMilliseconds } from "date-fns"
 import waitFor from "p-wait-for"
@@ -9,7 +9,15 @@ import { useErc20Allowance } from "@/api/evm"
 import { PendingApproval } from "@/components/PendingApproval"
 import { XC_SWAP_CONFIG } from "@/config/xcSwap"
 import { XcSwapFormValues } from "@/modules/trade/swap/sections/XcSwap/hooks/useXcSwapForm"
+import { isXcDestAsset } from "@/modules/trade/swap/sections/XcSwap/lib/xcSwapAssets"
+import {
+  getXcSwapAmountIn,
+  requireXcSwapRecipient,
+  xcSwapQuoteQuery,
+} from "@/modules/trade/swap/sections/XcSwap/lib/xcSwapQuoteQuery"
+import { XcAsset } from "@/modules/trade/swap/sections/XcSwap/types"
 import { AnyTransaction } from "@/modules/transactions/types"
+import { useRpcProvider } from "@/providers/rpcProvider"
 import {
   TransactionActions,
   TransactionType,
@@ -18,19 +26,44 @@ import {
 } from "@/states/transactions"
 import { getErrorMessage } from "@/utils/errors"
 
-export const useSubmitXcSwap = (actions?: TransactionActions) => {
+type UseSubmitXcSwapParams = {
+  readonly xcSwap: XcSwapClient
+  readonly originAssetMap: Map<string, XcAsset>
+  readonly refundTo: string | null
+  readonly swapSlippage: number
+}
+
+export const useSubmitXcSwap = (
+  { xcSwap, originAssetMap, refundTo, swapSlippage }: UseSubmitXcSwapParams,
+  actions?: TransactionActions,
+) => {
   const { t } = useTranslation(["common", "trade"])
+  const { queryClient } = useRpcProvider()
   const { createTransaction } = useTransactionsStore()
   const getErc20Allowance = useErc20Allowance()
 
   return useMutation({
-    mutationFn: async ([values, trade]: [XcSwapFormValues, XcSwapTrade]) => {
+    mutationFn: async (values: XcSwapFormValues) => {
       const { sellAsset, sellAmount, destChain, buyAsset, destAddress } = values
 
       if (!sellAsset) throw new Error("Source asset is required")
       if (!destChain) throw new Error("Destination chain is required")
       if (!buyAsset) throw new Error("Destination asset is required")
       if (!destAddress) throw new Error("Destination address is required")
+
+      const recipient = requireXcSwapRecipient(destChain, destAddress)
+
+      const trade = await queryClient.ensureQueryData(
+        xcSwapQuoteQuery(xcSwap, {
+          sellAsset,
+          buyAsset: isXcDestAsset(buyAsset) ? buyAsset : null,
+          amountIn: getXcSwapAmountIn(sellAsset, sellAmount),
+          recipient,
+          refundTo,
+          slippage: swapSlippage,
+          originAssetMap,
+        }),
+      )
 
       const buildErrorMeta: TransactionXcSwapMeta = {
         type: TransactionType.XcSwap,
