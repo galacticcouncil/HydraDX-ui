@@ -33,7 +33,7 @@ export const ProviderInstalledButton: React.FC<ProviderButtonOwnProps> = ({
         actionLabel: t("provider.continue"),
         onClick: () =>
           isConnected
-            ? setPage(Web3ConnectModalPage.AccountSelect)
+            ? setPage(Web3ConnectModalPage.Wallets)
             : enable(provider),
       }
     }

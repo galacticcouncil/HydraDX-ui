@@ -16,6 +16,7 @@ const DEFAULT_ANIMATION_DURATION = 200
 const shouldForwardProp = (prop: string) =>
   isPropValid(prop) &&
   prop !== "animationDurationMs" &&
+  prop !== "contentWidth" &&
   prop !== "hasTopContent" &&
   prop !== "noPadding" &&
   prop !== "isBlurred"
@@ -82,11 +83,13 @@ export const SModalWrapper = styled(Overlay, { shouldForwardProp })<{
 export const SModalContent = styled(Content, {
   shouldForwardProp,
 })<{
+  contentWidth?: string
   hasTopContent?: boolean
 }>(
-  ({ theme, hasTopContent }) => css`
+  ({ theme, contentWidth, hasTopContent }) => css`
     --modal-content-padding: ${theme.space.xl};
     --modal-content-inset: calc(var(--modal-content-padding) * -1);
+    --modal-content-width: ${contentWidth ?? theme.sizes["6xl"]};
     --modal-top-content-height: ${hasTopContent ? theme.sizes["2xl"] : "0px"};
 
     position: fixed;
@@ -115,7 +118,8 @@ export const SModalContent = styled(Content, {
       position: relative;
       inset: auto;
 
-      max-width: ${theme.sizes["6xl"]};
+      width: min(var(--modal-content-width), calc(100vw - 32px));
+      max-width: min(var(--modal-content-width), calc(100vw - 32px));
       height: auto;
 
       &[data-state="open"] {
@@ -135,7 +139,8 @@ export const SModalPaper = styled(Paper)`
   display: flex;
   flex-direction: column;
 
-  max-width: ${({ theme }) => theme.sizes["6xl"]};
+  width: 100%;
+  max-width: 100%;
   padding-bottom: env(safe-area-inset-bottom);
 
   ${mq("max-xs")} {

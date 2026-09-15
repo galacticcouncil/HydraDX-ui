@@ -1,3 +1,4 @@
+import { Buffer } from "buffer"
 import { AccountId } from "polkadot-api"
 
 const SUIVISION_URL = "https://suivision.xyz"

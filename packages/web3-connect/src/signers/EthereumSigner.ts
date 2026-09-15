@@ -143,8 +143,6 @@ export class EthereumSigner {
       this.publicClient = evmClient.getProvider() as PublicClient
     }
 
-    await this.walletClient.switchChain({ id: evmClient.chain.id })
-
     return chain
   }
 
@@ -250,6 +248,7 @@ export class EthereumSigner {
         }
       } catch (err) {
         options.onError(this.formatError(err))
+        throw err
       }
     }
 

@@ -15,7 +15,7 @@ export const MultisigSignerSelectContent = () => {
         title={t("multisig.signerSelect.title")}
         description={t("multisig.signerSelect.description")}
         align="center"
-        onBack={() => setPage(Web3ConnectModalPage.AccountSelect)}
+        onBack={() => setPage(Web3ConnectModalPage.Wallets)}
       />
       <ModalBody scrollable>
         <MultisigSignerSelect />

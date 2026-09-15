@@ -1,11 +1,32 @@
-import { Button, Text } from "@galacticcouncil/ui/components"
-import { css, styled } from "@galacticcouncil/ui/utils"
+import { Box, Button, Text } from "@galacticcouncil/ui/components"
+import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
+
+import { ProviderLogo } from "@/components/provider/ProviderLogo"
+
+export const SAvatar = styled(Box)`
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+`
+
+export const SProviderBadge = styled(ProviderLogo)(
+  ({ theme }) => css`
+    position: absolute;
+    right: ${pxToRem(-2)};
+    bottom: ${pxToRem(-2)};
+
+    border: 2px solid ${theme.buttons.outlineDark.rest};
+    border-radius: ${theme.radii.full};
+    background: ${theme.surfaces.themeBasePalette.background};
+  `,
+)
 
 export const SConnectedButton = styled(Button)(
   ({ theme }) => css`
     background: ${theme.buttons.outlineDark.rest};
-    gap: ${theme.space.s};
+    gap: ${theme.space.base};
     padding: ${theme.space.base};
+    padding-left: calc(${theme.space.base} - 0.1rem);
 
     &:not(:disabled):hover,
     &:not(:disabled):active {

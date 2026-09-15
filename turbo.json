@@ -10,6 +10,9 @@
       "dependsOn": ["^build"],
       "cache": false
     },
+    "test": {
+      "cache": false
+    },
     "lint:fix": {
       "cache": false
     },

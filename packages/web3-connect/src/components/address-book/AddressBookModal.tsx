@@ -30,18 +30,14 @@ import {
   WalletMode,
 } from "@/config/wallet"
 import i18n from "@/i18n"
-import {
-  addressToPublicKey,
-  getWalletModeByAddress,
-  getWalletModeName,
-} from "@/utils/wallet"
+import { addressToPublicKey } from "@/utils/publicKey"
+import { getWalletModeByAddress, getWalletModeName } from "@/utils/wallet"
 
 type Props = {
   readonly header?: React.ReactNode
   readonly onBack?: () => void
   readonly align?: "default" | "center"
   readonly whitelist?: ReadonlyArray<WalletAccountFilterOptionOverride>
-  /** public keys that must not be listed or selectable */
   readonly excludePublicKeys?: ReadonlyArray<string>
   readonly onSelect?: (address: Address) => void
 }

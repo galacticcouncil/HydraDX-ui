@@ -7,24 +7,23 @@ import {
   Text,
 } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
-import {
-  formatCurrency,
-  formatNumber,
-  shortenAccountAddress,
-} from "@galacticcouncil/utils"
+import { formatCurrency, formatNumber } from "@galacticcouncil/utils"
 
 import { SAccountActionCopyButton } from "@/components/account/AccountActionButton.styled"
 import { AccountDeleteButton } from "@/components/account/AccountDeleteButton"
 import { SAccountOption } from "@/components/account/AccountOption.styled"
+import { ShortAddress } from "@/components/account/ShortAddress"
 import { ProviderLogo } from "@/components/provider/ProviderLogo"
 import { WalletProviderType } from "@/config/providers"
 import { WalletMode } from "@/config/wallet"
 import { Account } from "@/hooks/useWeb3Connect"
-import { getAccountAvatarTheme } from "@/utils"
 import { getWalletModeIcon } from "@/utils/wallet"
 import { getWallet } from "@/wallets"
 
-export type AccountOptionProps = Omit<Account, "provider"> & {
+export type AccountOptionProps = Omit<
+  Account,
+  "provider" | "canUseOnHydration"
+> & {
   provider?: WalletProviderType
   mode?: WalletMode
   className?: string
@@ -70,10 +69,7 @@ export const AccountOption: React.FC<AccountOptionProps> = ({
     >
       <Flex align="center" gap="m">
         <Box sx={{ flexShrink: 0 }}>
-          <AccountAvatar
-            address={account.displayAddress}
-            theme={getAccountAvatarTheme(account as Account)}
-          />
+          <AccountAvatar address={account.displayAddress} />
         </Box>
         <Flex direction="column" width="100%" sx={{ minWidth: 0 }}>
           <Flex align="center" justify="space-between" height="l">
@@ -114,10 +110,10 @@ export const AccountOption: React.FC<AccountOptionProps> = ({
           <Flex align="center" justify="space-between" gap="s">
             <Text fs="p4" color={getToken("text.medium")} sx={{ minWidth: 0 }}>
               <Text as="span" truncate display={["none", "block"]}>
-                {account.displayAddress}
+                <ShortAddress address={account.displayAddress} />
               </Text>
               <Text as="span" display={["block", "none"]}>
-                {shortenAccountAddress(account.displayAddress, 12)}
+                <ShortAddress address={account.displayAddress} length={12} />
               </Text>
             </Text>
             <Flex pl="m" ml="auto" gap="base">

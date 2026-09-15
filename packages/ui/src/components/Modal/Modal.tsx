@@ -59,6 +59,7 @@ type ModalContentProps = React.ComponentPropsWithoutRef<
   ref?: Ref<React.ElementRef<typeof DialogPrimitive.Content>>
   topContent?: ReactNode
   animationDurationMs?: number
+  contentWidth?: string
 }
 
 const ModalContent: FC<ModalContentProps> = ({
@@ -251,6 +252,7 @@ export type ModalProps = React.ComponentProps<typeof ModalRoot> & {
   disableAutoFocus?: boolean
   topContent?: ReactNode
   animationDurationMs?: number
+  contentWidth?: string
   ref?: Ref<React.ElementRef<typeof DialogPrimitive.Content>>
 }
 
@@ -261,6 +263,7 @@ const Modal = ({
   disableAutoFocus = false,
   topContent,
   animationDurationMs,
+  contentWidth,
   ref,
   ...props
 }: ModalProps) => {
@@ -299,6 +302,7 @@ const Modal = ({
           onOpenAutoFocus={
             disableAutoFocus ? (e) => e.preventDefault() : undefined
           }
+          contentWidth={contentWidth}
           ref={ref}
         >
           {children}

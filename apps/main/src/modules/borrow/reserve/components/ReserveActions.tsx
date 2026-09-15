@@ -4,7 +4,7 @@ import {
   useWalletData,
 } from "@galacticcouncil/money-market/hooks"
 import { isGho } from "@galacticcouncil/money-market/utils"
-import { Wallet } from "@galacticcouncil/ui/assets/icons"
+import { WalletIcon } from "@galacticcouncil/ui/assets/icons"
 import {
   Button,
   Flex,
@@ -72,7 +72,7 @@ export const ReserveActions: React.FC<ReserveActionsProps> = ({ reserve }) => {
   return (
     <Stack separated gap="xl" separator={<Separator mx={-20} />}>
       <Flex gap="xl" align="center">
-        <Icon component={Wallet} sx={{ color: getToken("text.low") }} />
+        <Icon component={WalletIcon} sx={{ color: getToken("text.low") }} />
         <ValueStats
           size="small"
           font="secondary"

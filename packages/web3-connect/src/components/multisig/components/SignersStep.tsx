@@ -73,7 +73,7 @@ export const SignersStep: React.FC<SignersStepProps> = ({
   const isAddDisabled = !lastValue || !!errors.signers?.[lastIndex]?.value
 
   return (
-    <Stack gap="base" p="xl" pt={0}>
+    <Stack gap="base" pb="xl" px="s" pt={0}>
       {fields.map((field, index) => {
         const signerValue = signers[index]?.value ?? ""
 

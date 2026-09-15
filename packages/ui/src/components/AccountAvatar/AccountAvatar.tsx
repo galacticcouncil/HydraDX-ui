@@ -1,63 +1,30 @@
-import {
-  EvmAddr,
-  NearAddr,
-  SolanaAddr,
-  Ss58Addr,
-  SuiAddr,
-  ZecAddr,
-} from "@galacticcouncil/utils"
-import { lazy, Suspense } from "react"
+import { Suspense, useMemo } from "react"
 
+import { accountIcon } from "@/components/AccountAvatar/emoji/accountIcon"
+import { AccountEmoji } from "@/components/AccountAvatar/identicons/AccountEmoji"
 import { EmptyIdenticon } from "@/components/AccountAvatar/identicons/EmptyIdenticon"
-import { NearIdenticon } from "@/components/AccountAvatar/identicons/NearIdenticon"
-import { SolanaIdenticon } from "@/components/AccountAvatar/identicons/SolanaIdenticon"
-import { SuiIdenticon } from "@/components/AccountAvatar/identicons/SuiIdenticon"
-import { ZcashIdenticon } from "@/components/AccountAvatar/identicons/ZcashIdenticon"
+import { Identican } from "@/components/AccountAvatar/identicons/Identican"
+import { useAvatarStyleStore } from "@/components/AccountAvatar/store"
 import { Box, BoxProps } from "@/components/Box"
 import { useUiScale } from "@/styles/media"
 import { getToken } from "@/utils"
 
-const PolkadotIdenticon = lazy(async () => ({
-  default: await import(
-    "@/components/AccountAvatar/identicons/PolkadotIdenticon"
-  ).then((m) => m.PolkadotIdenticon),
-}))
-
-const TalismanIdenticon = lazy(async () => ({
-  default: await import(
-    "@/components/AccountAvatar/identicons/TalismanIdenticon"
-  ).then((m) => m.TalismanIdenticon),
-}))
-
-const EthereumIdenticon = lazy(async () => ({
-  default: await import(
-    "@/components/AccountAvatar/identicons/EthereumIdenticon"
-  ).then((m) => m.EthereumIdenticon),
-}))
-
-export type AccountAvatarTheme =
-  | "auto"
-  | "polkadot"
-  | "evm"
-  | "talisman"
-  | "solana"
-  | "sui"
-  | "near"
-  | "zcash"
 export type AccountAvatarProps = BoxProps & {
   address: string
   size?: number
-  theme?: AccountAvatarTheme
 }
 
 export const AccountAvatar: React.FC<AccountAvatarProps> = ({
-  size = 32,
-  theme = "auto",
+  size = 42,
   ...props
 }) => {
   const uiScale = useUiScale()
   const scaledSize = size * uiScale
-  const chosenTheme = theme === "auto" ? getAutoTheme(props.address) : theme
+
+  const avatarStyle = useAvatarStyleStore((state) => state.avatarStyle)
+  // AccountInput passes the live input value, so the address is a partial
+  // string on every keystroke — unresolvable means empty, not a fallback glyph.
+  const icon = useMemo(() => accountIcon(props.address), [props.address])
 
   return (
     <Suspense
@@ -69,43 +36,13 @@ export const AccountAvatar: React.FC<AccountAvatarProps> = ({
         />
       }
     >
-      {chosenTheme === null && <EmptyIdenticon size={scaledSize} />}
-      {chosenTheme === "evm" && (
-        <EthereumIdenticon size={scaledSize} {...props} />
-      )}
-      {chosenTheme === "talisman" && (
-        <TalismanIdenticon size={scaledSize} {...props} />
-      )}
-      {chosenTheme === "polkadot" && (
-        <PolkadotIdenticon size={scaledSize} {...props} />
-      )}
-      {chosenTheme === "solana" && (
-        <SolanaIdenticon size={scaledSize} {...props} />
-      )}
-      {chosenTheme === "sui" && <SuiIdenticon size={scaledSize} {...props} />}
-      {chosenTheme === "near" && <NearIdenticon size={scaledSize} {...props} />}
-      {chosenTheme === "zcash" && (
-        <ZcashIdenticon size={scaledSize} {...props} />
+      {!icon ? (
+        <EmptyIdenticon size={scaledSize} {...props} />
+      ) : avatarStyle === "emoji" ? (
+        <AccountEmoji size={scaledSize} {...props} />
+      ) : (
+        <Identican size={scaledSize} {...props} />
       )}
     </Suspense>
   )
-}
-
-function getAutoTheme(address: string): AccountAvatarTheme | null {
-  switch (true) {
-    case EvmAddr.isValid(address):
-      return "evm"
-    case Ss58Addr.isValid(address):
-      return "polkadot"
-    case SolanaAddr.isValid(address):
-      return "solana"
-    case SuiAddr.isValid(address):
-      return "sui"
-    case NearAddr.isValid(address):
-      return "near"
-    case ZecAddr.isValid(address):
-      return "zcash"
-    default:
-      return null
-  }
 }

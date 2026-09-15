@@ -14,6 +14,7 @@ import { getWallet } from "@/wallets"
 
 type UseWeb3EnableOptions = {
   disconnectOnError?: boolean
+  eager?: boolean
 }
 
 const ADDRESS_BOOK_PROVIDER_BLACKLIST = [
@@ -22,9 +23,18 @@ const ADDRESS_BOOK_PROVIDER_BLACKLIST = [
 ]
 
 export const useWeb3Enable = (options: UseWeb3EnableOptions = {}) => {
-  const { setStatus, setError, disconnect, setAccounts } = useWeb3Connect(
-    useShallow(pick(["setStatus", "setError", "disconnect", "setAccounts"])),
-  )
+  const { setStatus, setError, disconnect, setAccounts, markRecent } =
+    useWeb3Connect(
+      useShallow(
+        pick([
+          "setStatus",
+          "setError",
+          "disconnect",
+          "setAccounts",
+          "markRecent",
+        ]),
+      ),
+    )
 
   const { add: addToAddressBook } = useAddressStore()
 
@@ -40,6 +50,7 @@ export const useWeb3Enable = (options: UseWeb3EnableOptions = {}) => {
     onSuccess: (data, type) => {
       setAccounts(data.map(toStoredAccount), type)
       setStatus(type, WalletProviderStatus.Connected)
+      if (!options.eager) markRecent(type)
 
       const addresses = data
         .map(
@@ -63,11 +74,13 @@ export const useWeb3Enable = (options: UseWeb3EnableOptions = {}) => {
       }
 
       setStatus(type, WalletProviderStatus.Error)
-      if (error instanceof BaseWalletError) {
-        setError(error.message)
-      } else {
-        setError("Unexpected error, please try again.")
-      }
+      const errorMessage =
+        error instanceof BaseWalletError
+          ? error.message
+          : error instanceof Error && error.message
+            ? error.message
+            : "Unexpected error, please try again."
+      setError(errorMessage)
     },
   })
 

@@ -14,7 +14,7 @@ import { persist } from "zustand/middleware"
 import { isWalletProviderType, WalletProviderType } from "@/config/providers"
 import { WalletMode } from "@/config/wallet"
 import { useWeb3Connect } from "@/hooks/useWeb3Connect"
-import { addressToPublicKey } from "@/utils/wallet"
+import { addressToPublicKey } from "@/utils/publicKey"
 import { getWalletModeByAddress } from "@/utils/wallet"
 
 import {

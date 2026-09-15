@@ -7,7 +7,7 @@ import { getWalletModeByChain } from "@/modules/xcm/transfer/utils/chain"
 
 type Props = Omit<
   Web3ConnectButtonProps,
-  "mode" | "allowIncompatibleAccounts"
+  "mode" | "requiresHydrationAccount"
 > & {
   chain: AnyChain | null
 }
@@ -23,7 +23,6 @@ export const AuthorizedActionForChain: FC<Props> = ({
     return (
       <Web3ConnectButton
         {...props}
-        allowIncompatibleAccounts
         mode={chain ? getWalletModeByChain(chain) : undefined}
       />
     )

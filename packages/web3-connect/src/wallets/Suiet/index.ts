@@ -1,5 +1,3 @@
-import { getWallets } from "@mysten/wallet-standard"
-
 import { WalletProviderType } from "@/config/providers"
 import { BaseSuiWallet } from "@/wallets/BaseSuiWallet"
 
@@ -11,19 +9,4 @@ export class Suiet extends BaseSuiWallet {
   title = "Suiet"
   installUrl = "https://suiet.app"
   logo = logo
-
-  constructor() {
-    super()
-    const wallets = getWallets()
-
-    const provider = wallets
-      .get()
-      .find(
-        (wallet) =>
-          wallet.chains.includes("sui:mainnet") &&
-          wallet.name === this.accessor,
-      )
-
-    this._provider = provider
-  }
 }

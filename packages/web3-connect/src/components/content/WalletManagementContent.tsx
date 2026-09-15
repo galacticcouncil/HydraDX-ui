@@ -1,0 +1,961 @@
+import { Plus, Search, WalletIcon } from "@galacticcouncil/ui/assets/icons"
+import {
+  Box,
+  Button,
+  Flex,
+  Icon,
+  Input,
+  ScrollArea,
+  Text,
+} from "@galacticcouncil/ui/components"
+import { useBreakpoints } from "@galacticcouncil/ui/theme"
+import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  CircleAlert,
+  Download,
+  LogOut,
+  Users,
+} from "lucide-react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "react"
+import { FormProvider } from "react-hook-form"
+import { useTranslation } from "react-i18next"
+import { useDebounce } from "react-use"
+import { pick, prop } from "remeda"
+import { useShallow } from "zustand/react/shallow"
+
+import { AddressBookModal } from "@/components/address-book"
+import {
+  WalletAccount,
+  WalletAccountSection,
+  WalletAccountTile,
+} from "@/components/content/WalletManagementAccounts"
+import {
+  SAccountFilterButton,
+  SLayoutGrid,
+  SModalBody,
+  SModalHeader,
+  SRightColumn,
+  SRightPanelFrame,
+  SScrollAreaContent,
+  SSourceColumn,
+  SSourceFooter,
+  SSourceFooterAction,
+  SSourceScrollFrame,
+  SWalletManagementShell,
+} from "@/components/content/WalletManagementContent.styled"
+import {
+  WalletGroupSourceButton,
+  WalletProviderSourceButton,
+  WalletSourceButton,
+  WalletSourceGroup,
+} from "@/components/content/WalletManagementSource"
+import {
+  SSourceAction,
+  SSourceCategoryLabel,
+} from "@/components/content/WalletManagementSource.styled"
+import {
+  WalletChainSelectState,
+  WalletConnectionState,
+} from "@/components/content/WalletManagementStates"
+import {
+  ExternalWalletForm,
+  useExternalWalletConnection,
+} from "@/components/external/ExternalWalletForm"
+import { useExternalWalletForm } from "@/components/external/ExternalWalletForm.form"
+import { MultisigConfigList } from "@/components/multisig/MultisigConfigList"
+import { MultisigSetupPanel } from "@/components/multisig/MultisigSetupPanel"
+import { MultisigSignerSelect } from "@/components/multisig/MultisigSignerSelect"
+import { WalletProviderType } from "@/config/providers"
+import {
+  chipModesForAccounts,
+  providersForMode,
+  WalletAccountFilterOption,
+  WalletMode,
+} from "@/config/wallet"
+import { useWeb3ConnectContext } from "@/context/Web3ConnectContext"
+import { useAccount } from "@/hooks/useAccount"
+import { useAccountsWithBalance } from "@/hooks/useAccountsWithBalance"
+import { useMultisigConfigs } from "@/hooks/useMultisigConfigs"
+import { useWeb3Connect, WalletProviderStatus } from "@/hooks/useWeb3Connect"
+import { useWeb3Enable } from "@/hooks/useWeb3Enable"
+import { Wallet } from "@/types/wallet"
+import { getWalletModeName, toAccount } from "@/utils"
+import {
+  filterAccounts,
+  getFilteredAccounts,
+  isAccountSelected,
+} from "@/utils/accountFilter"
+import {
+  getSelectableWallets,
+  getWalletSourceAction,
+  getWalletSourceGroupAction,
+  isWalletSourceGroupId,
+  selectWalletSources,
+  WalletSourceId,
+} from "@/utils/walletSource"
+import { getWallet, getWallets } from "@/wallets"
+
+type MultisigStep = "list" | "setup" | "signer"
+
+const filterWalletGroups = (groups: WalletSourceGroup[], search: string) => {
+  const phrase = search.toLowerCase().trim()
+  if (!phrase) return groups
+  return groups.filter((group) => group.title.toLowerCase().includes(phrase))
+}
+
+export const WalletManagementContent = () => {
+  const { t } = useTranslation()
+  const { account: currentAccount } = useAccount()
+  const { mode, onAccountSelect, isControlled, setModalContentWidth } =
+    useWeb3ConnectContext()
+  const { gte } = useBreakpoints()
+  const isDesktop = gte("md")
+  const { enable, disconnect } = useWeb3Enable()
+  const { enable: enableWithDisconnectOnError } = useWeb3Enable({
+    disconnectOnError: true,
+  })
+  const {
+    accounts,
+    toggle,
+    providers: walletProviders,
+    recentProvider,
+    recentlyUsedProviders,
+    error,
+    meta,
+    getStatus,
+  } = useWeb3Connect(
+    useShallow(
+      pick([
+        "accounts",
+        "toggle",
+        "providers",
+        "recentProvider",
+        "recentlyUsedProviders",
+        "error",
+        "meta",
+        "getStatus",
+      ]),
+    ),
+  )
+
+  const [selectedSource, setSelectedSource] = useState<WalletSourceId>(
+    meta?.initialProvider ?? "all",
+  )
+  const [accountFilter, setAccountFilter] = useState<WalletAccountFilterOption>(
+    WalletMode.Default,
+  )
+  /**
+   * Which of the two columns is on screen below `md`. Desktop shows both, so
+   * the flag is dead weight there and is set unconditionally - a flag that is
+   * always correct beats one maintained only on some viewports.
+   */
+  const [showAccounts, setShowAccounts] = useState(false)
+  const [walletSearchValue, setWalletSearchValue] = useState("")
+  const [accountSearchValue, setAccountSearchValue] = useState("")
+  const [walletSearch, setWalletSearch] = useState("")
+  const [accountSearch, setAccountSearch] = useState("")
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const [isAddressBookOpen, setIsAddressBookOpen] = useState(false)
+  const externalWalletForm = useExternalWalletForm()
+  const { connectExternalWallet } = useExternalWalletConnection()
+  const showExternalWallet = !meta?.hideExternalWallet
+  const showMultisig =
+    mode === WalletMode.Default ||
+    mode === WalletMode.Substrate ||
+    mode === WalletMode.SubstrateEVM
+  const multisigConfigs = useMultisigConfigs()
+  const [multisigStep, setMultisigStep] = useState<MultisigStep>("list")
+
+  useEffect(() => {
+    if (!meta?.initialProvider) return
+    setSelectedSource(meta.initialProvider)
+  }, [meta?.initialProvider])
+
+  /**
+   * The single entry point for picking a wallet source. Seeding the initial
+   * provider above deliberately does not go through it: the modal always opens
+   * on the wallet list, even when a wallet is already connected.
+   */
+  const selectSource = useCallback((source: WalletSourceId) => {
+    setSelectedSource(source)
+    setShowAccounts(true)
+  }, [])
+
+  useDebounce(() => setWalletSearch(walletSearchValue), 100, [
+    walletSearchValue,
+  ])
+  useDebounce(() => setAccountSearch(accountSearchValue), 100, [
+    accountSearchValue,
+  ])
+
+  const allWallets = useMemo(() => getWallets(), [])
+
+  /**
+   * The single gate the forced mode acts through. `null` means "no
+   * restriction" and covers two cases: Default, where no chain has been
+   * singled out and every wallet is connectable; and a chain that has no
+   * connectors yet (Near, Zcash), where filtering would render an empty modal.
+   */
+  const modeProviders = useMemo(() => providersForMode(mode), [mode])
+
+  const providers = useMemo(
+    () =>
+      modeProviders
+        ? walletProviders.filter(({ type }) => modeProviders.includes(type))
+        : walletProviders,
+    [modeProviders, walletProviders],
+  )
+  const connectedProviderTypes = useMemo(
+    () =>
+      providers
+        .filter(({ status }) => status === WalletProviderStatus.Connected)
+        .map(prop("type")),
+    [providers],
+  )
+  const pendingProviderTypes = useMemo(
+    () =>
+      providers
+        .filter(({ status }) => status === WalletProviderStatus.Pending)
+        .map(prop("type")),
+    [providers],
+  )
+
+  const isProvidersConnecting = pendingProviderTypes.length > 0
+  const pendingProvider = pendingProviderTypes[0]
+  const pendingWallet = pendingProvider ? getWallet(pendingProvider) : undefined
+  const errorWallet = recentProvider ? getWallet(recentProvider) : undefined
+  const hasConnectedWalletState =
+    connectedProviderTypes.length > 0 || accounts.length > 0
+  const connectedAccountsCount = useMemo(
+    () => filterAccounts(mode)(accounts.map(toAccount)).length,
+    [accounts, mode],
+  )
+  const showErrorState = !!error
+
+  const {
+    recentGroups: recentWalletGroups,
+    installedGroups: installedWalletGroups,
+    otherGroups: otherWalletGroups,
+  } = useMemo(
+    () =>
+      selectWalletSources(
+        allWallets,
+        modeProviders,
+        connectedProviderTypes,
+        recentlyUsedProviders,
+      ),
+    [allWallets, connectedProviderTypes, modeProviders, recentlyUsedProviders],
+  )
+
+  const selectedWallet =
+    selectedSource !== "all" &&
+    selectedSource !== "recent" &&
+    !isWalletSourceGroupId(selectedSource)
+      ? getWallet(selectedSource)
+      : undefined
+  const selectedWalletGroup = isWalletSourceGroupId(selectedSource)
+    ? [
+        ...recentWalletGroups,
+        ...installedWalletGroups,
+        ...otherWalletGroups,
+      ].find((group) => group.id === selectedSource)
+    : undefined
+  const selectedWalletStatus = selectedWallet
+    ? getStatus(selectedWallet.provider)
+    : null
+  const isExternalWalletSelected =
+    selectedSource === WalletProviderType.ExternalWallet && showExternalWallet
+  const isMultisigSelected =
+    selectedSource === WalletProviderType.Multisig && showMultisig
+  const showSelectedWalletConnectState =
+    !!selectedWallet &&
+    selectedWallet.provider !== WalletProviderType.ExternalWallet &&
+    !selectedWallet.installed &&
+    (selectedWalletStatus === WalletProviderStatus.Disconnected ||
+      selectedWalletStatus === WalletProviderStatus.Pending)
+  const showWalletGroupChainSelectState =
+    !!selectedWalletGroup &&
+    getSelectableWallets(selectedWalletGroup, connectedProviderTypes).length > 1
+  const showAccountPanel =
+    hasConnectedWalletState ||
+    isExternalWalletSelected ||
+    isMultisigSelected ||
+    isProvidersConnecting ||
+    showSelectedWalletConnectState ||
+    showWalletGroupChainSelectState ||
+    showErrorState
+
+  /**
+   * `showAccountPanel` stays the authority on whether the right column has
+   * anything to render, so an emptied panel falls back to the wallet list on
+   * its own - no effect chasing the six async states that feed it.
+   */
+  const isAccountsView = showAccounts && showAccountPanel
+
+  /**
+   * Below `md` the width is pinned: only one column is ever on screen, and
+   * `--modal-content-width` lives two components up, so a change here is an
+   * unanimated jump on every forward/back press.
+   */
+  useLayoutEffect(() => {
+    setModalContentWidth?.(
+      !isDesktop || showAccountPanel ? pxToRem(650) : pxToRem(452),
+    )
+  }, [isDesktop, setModalContentWidth, showAccountPanel])
+
+  const visibleRecentWalletGroups = useMemo(
+    () => filterWalletGroups(recentWalletGroups, walletSearch),
+    [recentWalletGroups, walletSearch],
+  )
+
+  const visibleInstalledWalletGroups = useMemo(
+    () => filterWalletGroups(installedWalletGroups, walletSearch),
+    [installedWalletGroups, walletSearch],
+  )
+
+  const visibleOtherWalletGroups = useMemo(
+    () => filterWalletGroups(otherWalletGroups, walletSearch),
+    [otherWalletGroups, walletSearch],
+  )
+
+  const visibleReachableWalletCount =
+    visibleRecentWalletGroups.length + visibleInstalledWalletGroups.length
+
+  const shouldAutoOpenMoreWallets =
+    !showAccountPanel && visibleReachableWalletCount === 0
+  const isMoreWalletsListOpen = isMoreOpen || shouldAutoOpenMoreWallets
+
+  /**
+   * Accounts the forced mode allows, narrowed by the selected wallet source.
+   * `mode` is a hard bound applied unconditionally - the chips below can only
+   * narrow further, never widen past it.
+   */
+  const modeAccounts = useMemo(() => {
+    const selectedProvider =
+      selectedSource !== "all" &&
+      selectedSource !== "recent" &&
+      !isWalletSourceGroupId(selectedSource)
+        ? selectedSource
+        : null
+
+    const sourceAccounts =
+      selectedSource === "recent"
+        ? accounts.filter((account) =>
+            connectedProviderTypes.includes(account.provider),
+          )
+        : selectedProvider
+          ? accounts.filter((account) => account.provider === selectedProvider)
+          : accounts
+
+    return filterAccounts(mode)(sourceAccounts.map(toAccount))
+  }, [accounts, connectedProviderTypes, mode, selectedSource])
+
+  /**
+   * Chips are derived from the accounts actually on screen, so a filter that
+   * cannot change what is displayed is never offered. A forced mode therefore
+   * renders no chips at all: one mode survives, and one chip plus All is noise.
+   */
+  const chipModes = useMemo(
+    () => chipModesForAccounts(modeAccounts),
+    [modeAccounts],
+  )
+
+  /**
+   * The chip set shrinks as wallets disconnect. Drop a filter that no longer
+   * has a chip, otherwise it silently empties the list.
+   */
+  useEffect(() => {
+    if (accountFilter === WalletMode.Default) return
+    if (chipModes.includes(accountFilter)) return
+    setAccountFilter(WalletMode.Default)
+  }, [accountFilter, chipModes])
+
+  const accountList = useMemo(
+    () =>
+      getFilteredAccounts(
+        modeAccounts,
+        currentAccount,
+        accountSearch,
+        accountFilter,
+      ),
+    [accountFilter, accountSearch, currentAccount, modeAccounts],
+  )
+
+  const { accountsWithBalances, areBalancesLoading } =
+    useAccountsWithBalance(accountList)
+
+  const groupedAccounts = useMemo(() => {
+    const groups = new Map<WalletProviderType, WalletAccount[]>()
+
+    for (const account of accountsWithBalances) {
+      const group = groups.get(account.provider) ?? []
+      group.push(account)
+      groups.set(account.provider, group)
+    }
+
+    return Array.from(groups.entries()).map(([provider, groupAccounts]) => ({
+      provider,
+      wallet: getWallet(provider),
+      accounts: groupAccounts,
+    }))
+  }, [accountsWithBalances])
+
+  const handleAccountSelect = useCallback(
+    (account: ReturnType<typeof toAccount>) => {
+      onAccountSelect(account)
+      if (!isControlled) {
+        toggle()
+      }
+    },
+    [isControlled, onAccountSelect, toggle],
+  )
+
+  const handleProviderSelect = (wallet: Wallet) => {
+    selectSource(wallet.provider)
+  }
+
+  const handleWalletClick = (wallet: Wallet) => {
+    handleProviderSelect(wallet)
+
+    if (
+      getWalletSourceAction(wallet, getStatus(wallet.provider)) === "connect"
+    ) {
+      void enable(wallet.provider).catch(() => undefined)
+    }
+  }
+
+  const handleWalletGroupSelect = (group: WalletSourceGroup) => {
+    const action = getWalletSourceGroupAction(group, connectedProviderTypes)
+
+    if (action.kind === "wallet") {
+      handleWalletClick(action.wallet)
+      return
+    }
+
+    selectSource(group.id)
+  }
+
+  const renderWalletGroup = (group: WalletSourceGroup) => {
+    const variant = showAccountPanel ? "management" : "firstConnection"
+
+    if (group.wallets.length === 1) {
+      const [wallet] = group.wallets
+
+      return (
+        <WalletProviderSourceButton
+          key={group.id}
+          wallet={wallet}
+          active={selectedSource === wallet.provider}
+          status={getStatus(wallet.provider)}
+          pending={pendingProviderTypes.includes(wallet.provider)}
+          variant={variant}
+          onClick={() => handleWalletClick(wallet)}
+          onDisconnect={() => disconnect(wallet.provider)}
+        />
+      )
+    }
+
+    const connectedGroupProviders = group.providers.filter((provider) =>
+      connectedProviderTypes.includes(provider),
+    )
+
+    return (
+      <WalletGroupSourceButton
+        key={group.id}
+        group={group}
+        active={
+          selectedSource === group.id ||
+          group.providers.includes(selectedSource as WalletProviderType)
+        }
+        connected={connectedGroupProviders.length > 0}
+        pending={group.providers.some((provider) =>
+          pendingProviderTypes.includes(provider),
+        )}
+        variant={variant}
+        onClick={() => handleWalletGroupSelect(group)}
+        onDisconnect={() => {
+          for (const provider of connectedGroupProviders) {
+            disconnect(provider)
+          }
+        }}
+      />
+    )
+  }
+
+  if (isAddressBookOpen) {
+    return (
+      <AddressBookModal
+        whitelist={[WalletMode.Substrate, WalletMode.EVM]}
+        onBack={() => setIsAddressBookOpen(false)}
+        onSelect={async (address) => {
+          externalWalletForm.setValue("address", address.address, {
+            shouldValidate: true,
+          })
+          const isConnected = await connectExternalWallet(address.address)
+
+          if (!isConnected) {
+            setIsAddressBookOpen(false)
+          }
+        }}
+      />
+    )
+  }
+
+  const otherWalletsPreviewCount = 2
+  const hasMoreOtherWallets =
+    visibleOtherWalletGroups.length > otherWalletsPreviewCount
+  const visibleOtherWallets =
+    !hasMoreOtherWallets || isMoreWalletsListOpen
+      ? visibleOtherWalletGroups
+      : visibleOtherWalletGroups.slice(0, otherWalletsPreviewCount)
+
+  const selectedSourceTitle = isMultisigSelected
+    ? t("multisig.title")
+    : (selectedWallet?.title ?? selectedWalletGroup?.title)
+
+  return (
+    <SWalletManagementShell showAccountPanel={showAccountPanel}>
+      <SModalHeader
+        title={
+          meta?.title ??
+          (!isDesktop && isAccountsView && selectedSourceTitle
+            ? selectedSourceTitle
+            : showAccountPanel
+              ? t("provider.selectSourceWallet")
+              : t("provider.selectSourceWalletOnly"))
+        }
+        onBack={
+          !isDesktop && isAccountsView
+            ? () => setShowAccounts(false)
+            : undefined
+        }
+        description={
+          meta?.description ??
+          (showAccountPanel
+            ? undefined
+            : t("provider.selectSourceWalletDescription"))
+        }
+        align="center"
+        showAccountPanel={showAccountPanel}
+      />
+      <SModalBody noPadding scrollable={false}>
+        <SLayoutGrid showAccountPanel={showAccountPanel}>
+          <SSourceColumn mobileHidden={isAccountsView}>
+            <Input
+              value={walletSearchValue}
+              onChange={(event) => setWalletSearchValue(event.target.value)}
+              customSize="large"
+              iconStart={Search}
+              placeholder={t("provider.searchWallets")}
+              width="100%"
+              sx={{ flexShrink: 0 }}
+            />
+
+            <SSourceScrollFrame hasFooter={hasConnectedWalletState}>
+              <ScrollArea>
+                <SScrollAreaContent
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "base",
+                  }}
+                >
+                  {showAccountPanel && connectedAccountsCount > 0 && (
+                    <Flex direction="column" gap="s">
+                      <WalletSourceButton
+                        active={selectedSource === "all"}
+                        title={t("provider.allAccountsAndWallets")}
+                        subtitle={t("provider.allAccountsCount", {
+                          count: connectedAccountsCount,
+                        })}
+                        icon={WalletIcon}
+                        onClick={() => selectSource("all")}
+                      />
+                    </Flex>
+                  )}
+
+                  {visibleRecentWalletGroups.length > 0 && (
+                    <Flex direction="column" gap="s">
+                      <SSourceCategoryLabel
+                        fs="p5"
+                        fw={500}
+                        lh={1.25}
+                        color={getToken("text.low")}
+                      >
+                        {t("provider.recentlyUsed")}
+                      </SSourceCategoryLabel>
+                      {visibleRecentWalletGroups.map(renderWalletGroup)}
+                    </Flex>
+                  )}
+
+                  {(visibleInstalledWalletGroups.length > 0 ||
+                    showExternalWallet ||
+                    showMultisig) && (
+                    <Flex direction="column" gap="s">
+                      {visibleInstalledWalletGroups.length > 0 && (
+                        <SSourceCategoryLabel
+                          fs="p5"
+                          fw={500}
+                          lh={1.25}
+                          color={getToken("text.low")}
+                        >
+                          {t("provider.installed")}
+                        </SSourceCategoryLabel>
+                      )}
+
+                      {visibleInstalledWalletGroups.map(renderWalletGroup)}
+
+                      {showExternalWallet && (
+                        <WalletProviderSourceButton
+                          wallet={getWallet(WalletProviderType.ExternalWallet)}
+                          active={
+                            selectedSource === WalletProviderType.ExternalWallet
+                          }
+                          status={getStatus(WalletProviderType.ExternalWallet)}
+                          pending={pendingProviderTypes.includes(
+                            WalletProviderType.ExternalWallet,
+                          )}
+                          variant={
+                            showAccountPanel ? "management" : "firstConnection"
+                          }
+                          onClick={() =>
+                            selectSource(WalletProviderType.ExternalWallet)
+                          }
+                          onDisconnect={() =>
+                            disconnect(WalletProviderType.ExternalWallet)
+                          }
+                        />
+                      )}
+
+                      {showMultisig && (
+                        <WalletSourceButton
+                          title={t("multisig.title")}
+                          subtitle={t("multisig.setup.short")}
+                          icon={Users}
+                          variant={
+                            showAccountPanel ? "management" : "firstConnection"
+                          }
+                          active={isMultisigSelected}
+                          onClick={() => {
+                            setMultisigStep(
+                              multisigConfigs.length > 0 ? "list" : "setup",
+                            )
+                            selectSource(WalletProviderType.Multisig)
+                          }}
+                        />
+                      )}
+                    </Flex>
+                  )}
+
+                  {visibleOtherWalletGroups.length > 0 && (
+                    <Flex direction="column" gap="s">
+                      <SSourceCategoryLabel
+                        fs="p5"
+                        fw={500}
+                        lh={1.25}
+                        color={getToken("text.low")}
+                      >
+                        {t("provider.otherWallets")}
+                      </SSourceCategoryLabel>
+                      {visibleOtherWallets.map(renderWalletGroup)}
+                      {hasMoreOtherWallets && (
+                        <WalletSourceButton
+                          title={
+                            isMoreWalletsListOpen
+                              ? t("provider.hide")
+                              : t("provider.showMore")
+                          }
+                          icon={isMoreWalletsListOpen ? ChevronUp : ChevronDown}
+                          variant={
+                            showAccountPanel ? "management" : "firstConnection"
+                          }
+                          action={
+                            <SSourceAction as="span">
+                              <Icon
+                                size="xs"
+                                component={
+                                  isMoreWalletsListOpen
+                                    ? ChevronUp
+                                    : ChevronDown
+                                }
+                              />
+                            </SSourceAction>
+                          }
+                          onClick={() => setIsMoreOpen((open) => !open)}
+                        />
+                      )}
+                    </Flex>
+                  )}
+                </SScrollAreaContent>
+              </ScrollArea>
+              {hasConnectedWalletState && (
+                <SSourceFooter>
+                  <SSourceFooterAction>
+                    <WalletSourceButton
+                      title={t("provider.logOutAll")}
+                      icon={LogOut}
+                      variant={
+                        showAccountPanel ? "management" : "firstConnection"
+                      }
+                      onClick={() => disconnect()}
+                    />
+                  </SSourceFooterAction>
+                </SSourceFooter>
+              )}
+            </SSourceScrollFrame>
+          </SSourceColumn>
+
+          <SRightPanelFrame
+            aria-hidden={!showAccountPanel}
+            showAccountPanel={showAccountPanel}
+            mobileHidden={!isAccountsView}
+          >
+            {isMultisigSelected ? (
+              <SRightColumn>
+                {multisigStep !== "list" && multisigConfigs.length > 0 && (
+                  <Button
+                    variant="muted"
+                    size="small"
+                    type="button"
+                    sx={{ flexShrink: 0, alignSelf: "flex-start" }}
+                    onClick={() => setMultisigStep("list")}
+                  >
+                    <Icon size="s" component={ChevronLeft} />
+                    {t("back")}
+                  </Button>
+                )}
+                <Box flex={1} sx={{ minHeight: 0, overflowY: "auto" }}>
+                  {multisigStep === "list" ? (
+                    <MultisigConfigList
+                      onSelected={() => setMultisigStep("signer")}
+                    />
+                  ) : multisigStep === "setup" ? (
+                    <MultisigSetupPanel
+                      onContinue={() => setMultisigStep("signer")}
+                    />
+                  ) : (
+                    <MultisigSignerSelect />
+                  )}
+                </Box>
+                {multisigStep === "list" && (
+                  <Button
+                    variant="accent"
+                    outline
+                    size="large"
+                    width="100%"
+                    type="button"
+                    sx={{ flexShrink: 0 }}
+                    onClick={() => setMultisigStep("setup")}
+                  >
+                    <Icon size="s" component={Plus} />
+                    {t("multisig.configSelect.setupNew")}
+                  </Button>
+                )}
+              </SRightColumn>
+            ) : selectedSource === WalletProviderType.ExternalWallet &&
+              showExternalWallet ? (
+              <SRightColumn>
+                <Box flex={1} sx={{ minHeight: 0, overflowY: "auto" }}>
+                  <FormProvider {...externalWalletForm}>
+                    <ExternalWalletForm
+                      onAddressBookOpen={() => setIsAddressBookOpen(true)}
+                      hideSubmitAction
+                    />
+                  </FormProvider>
+                </Box>
+              </SRightColumn>
+            ) : showErrorState ? (
+              <WalletConnectionState
+                title={t("error.title")}
+                description={error || t("error.unknown")}
+                visual={
+                  errorWallet
+                    ? { type: "error", wallet: errorWallet }
+                    : { type: "icon", icon: CircleAlert }
+                }
+                action={
+                  recentProvider
+                    ? {
+                        label: t("error.retry"),
+                        onClick: () =>
+                          enableWithDisconnectOnError(recentProvider),
+                      }
+                    : undefined
+                }
+              />
+            ) : showWalletGroupChainSelectState && selectedWalletGroup ? (
+              <WalletChainSelectState
+                group={selectedWalletGroup}
+                getStatus={getStatus}
+                onInstall={(wallet) => {
+                  if (wallet.installUrl) {
+                    window.open(
+                      wallet.installUrl,
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                }}
+                onSelect={handleWalletClick}
+                onDisconnect={(wallet) => disconnect(wallet.provider)}
+              />
+            ) : showSelectedWalletConnectState && selectedWallet ? (
+              <WalletConnectionState
+                title={selectedWallet.title}
+                description={
+                  selectedWalletStatus === WalletProviderStatus.Pending
+                    ? t("provider.connectingWalletDescription")
+                    : t("provider.walletNotInstalledDescription", {
+                        wallet: selectedWallet.title,
+                      })
+                }
+                visual={{
+                  type:
+                    selectedWalletStatus === WalletProviderStatus.Pending
+                      ? "loading"
+                      : "wallet",
+                  wallet: selectedWallet,
+                }}
+                action={
+                  selectedWalletStatus === WalletProviderStatus.Pending
+                    ? {
+                        label: t("provider.connectingWallet"),
+                      }
+                    : {
+                        label: t("provider.installWallet", {
+                          wallet: selectedWallet.title,
+                        }),
+                        icon: Download,
+                        disabled: !selectedWallet.installUrl,
+                        onClick: () => {
+                          if (selectedWallet.installUrl) {
+                            window.open(
+                              selectedWallet.installUrl,
+                              "_blank",
+                              "noopener,noreferrer",
+                            )
+                          }
+                        },
+                      }
+                }
+              />
+            ) : isProvidersConnecting && pendingWallet ? (
+              <WalletConnectionState
+                title={t("provider.waitingForAuth")}
+                description={t("provider.authorizeDescription")}
+                visual={{
+                  type: "loading",
+                  wallet: pendingWallet,
+                }}
+                action={{
+                  label: t("provider.connectingWallet"),
+                }}
+              />
+            ) : (
+              <SRightColumn>
+                <Input
+                  value={accountSearchValue}
+                  onChange={(event) =>
+                    setAccountSearchValue(event.target.value)
+                  }
+                  customSize="large"
+                  iconStart={Search}
+                  placeholder={t("account.searchAccounts")}
+                  width="100%"
+                  sx={{ flexShrink: 0 }}
+                />
+
+                {chipModes.length > 0 && (
+                  <Flex gap="base" wrap sx={{ flexShrink: 0 }}>
+                    {chipModes.map((filter) => (
+                      <SAccountFilterButton
+                        key={filter}
+                        variant={
+                          accountFilter === filter ? "secondary" : "muted"
+                        }
+                        outline={accountFilter !== filter}
+                        size="small"
+                        onClick={() => setAccountFilter(filter)}
+                      >
+                        {filter === WalletMode.Default
+                          ? t("accountFilter.all")
+                          : getWalletModeName(filter)}
+                      </SAccountFilterButton>
+                    ))}
+                  </Flex>
+                )}
+
+                <Box
+                  flex={1}
+                  height="100%"
+                  overflow="hidden"
+                  sx={{ minHeight: 0 }}
+                >
+                  <ScrollArea>
+                    <SScrollAreaContent
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "base",
+                      }}
+                    >
+                      {accountsWithBalances.length > 0 ? (
+                        selectedSource === "all" ? (
+                          groupedAccounts.map((group) => (
+                            <WalletAccountSection
+                              key={group.provider}
+                              title={group.wallet?.title ?? group.provider}
+                              logo={group.wallet?.logo}
+                              accounts={group.accounts}
+                              currentAccount={currentAccount}
+                              isBalanceLoading={areBalancesLoading}
+                              onAccountSelect={handleAccountSelect}
+                            />
+                          ))
+                        ) : (
+                          accountsWithBalances.map((account) => (
+                            <WalletAccountTile
+                              key={`${account.publicKey}-${account.provider}`}
+                              account={account}
+                              isActive={isAccountSelected(
+                                currentAccount,
+                                account,
+                              )}
+                              isBalanceLoading={areBalancesLoading}
+                              onClick={() => handleAccountSelect(account)}
+                            />
+                          ))
+                        )
+                      ) : (
+                        <Flex
+                          align="center"
+                          justify="center"
+                          borderRadius="m"
+                          bg={getToken("surfaces.containers.dim.dimOnBg")}
+                          sx={{ minHeight: pxToRem(260) }}
+                        >
+                          <Text fs="p4" color={getToken("text.medium")}>
+                            {t("account.noResults")}
+                          </Text>
+                        </Flex>
+                      )}
+                    </SScrollAreaContent>
+                  </ScrollArea>
+                </Box>
+              </SRightColumn>
+            )}
+          </SRightPanelFrame>
+        </SLayoutGrid>
+      </SModalBody>
+    </SWalletManagementShell>
+  )
+}

@@ -6,7 +6,7 @@ import { WalletProviderType } from "@/config/providers"
 import { EthereumSigner } from "@/signers/EthereumSigner"
 import { EIP6963AnnounceProviderEvent } from "@/types/evm"
 import { SubscriptionFn, Wallet, WalletAccount } from "@/types/wallet"
-import { AuthError, NotInstalledError } from "@/utils/errors"
+import { AuthError, BaseWalletError, NotInstalledError } from "@/utils/errors"
 
 export class BaseEIP1193Wallet implements Wallet {
   provider = "" as WalletProviderType
@@ -87,6 +87,9 @@ export class BaseEIP1193Wallet implements Wallet {
       //@ts-expect-error unknown error type
       if (err.code === -32002) {
         throw new NotInstalledError(this)
+      }
+      if (err instanceof BaseWalletError) {
+        throw err
       }
       throw this.transformError(err as Error)
     }

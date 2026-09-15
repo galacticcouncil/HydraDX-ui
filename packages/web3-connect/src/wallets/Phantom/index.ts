@@ -1,7 +1,6 @@
-import { getWallets } from "@mysten/wallet-standard"
-
 import { WalletProviderType } from "@/config/providers"
 import { isPhantom } from "@/utils/solana"
+import { BaseEIP1193Wallet } from "@/wallets/BaseEIP1193Wallet"
 import { BaseSolanaWallet } from "@/wallets/BaseSolanaWallet"
 import { BaseSuiWallet } from "@/wallets/BaseSuiWallet"
 
@@ -33,22 +32,15 @@ export class PhantomSui extends BaseSuiWallet {
   installUrl = "https://phantom.com/download"
   logo = logo
 
-  constructor() {
-    super()
-    const wallets = getWallets()
-
-    const provider = wallets
-      .get()
-      .find(
-        (wallet) =>
-          wallet.chains.includes("sui:mainnet") &&
-          wallet.name === this.accessor,
-      )
-
-    this._provider = provider
-  }
-
   transformError = () => {
     return new Error("Could not connect to Sui with current account.")
   }
+}
+
+export class PhantomEvm extends BaseEIP1193Wallet {
+  provider = WalletProviderType.PhantomEvm
+  accessor = "app.phantom"
+  title = "Phantom"
+  installUrl = "https://phantom.com/download"
+  logo = logo
 }

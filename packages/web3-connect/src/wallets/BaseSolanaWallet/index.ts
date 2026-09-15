@@ -5,7 +5,11 @@ import { WalletProviderType } from "@/config/providers"
 import { SolanaSigner } from "@/signers/SolanaSigner"
 import { SolanaInjectedWindowProvider } from "@/types/solana"
 import { Wallet, WalletAccount } from "@/types/wallet"
-import { AuthError, NotInstalledError } from "@/utils/errors"
+import { AuthError, BaseWalletError, NotInstalledError } from "@/utils/errors"
+import {
+  getSolanaStandardWallet,
+  SolanaWalletStandardProvider,
+} from "@/utils/solanaWalletStandard"
 
 export class BaseSolanaWallet implements Wallet {
   provider = "" as WalletProviderType
@@ -30,19 +34,33 @@ export class BaseSolanaWallet implements Wallet {
   }
 
   get installed() {
-    return !!this._rawExtension
+    return !!this.rawExtension
   }
 
   get enabled() {
     return this._enabled
   }
 
+  /**
+   * Most Solana wallets register through the Wallet Standard rather than
+   * injecting a window object, so the lookup is lazy — the extension may
+   * not have registered yet when the wallet is constructed. Wallets that
+   * do inject (Phantom, Solflare, Brave) override this.
+   */
   get rawExtension() {
+    if (!this._rawExtension && this.accessor) {
+      const wallet = getSolanaStandardWallet(this.accessor)
+
+      if (wallet) {
+        this._rawExtension = new SolanaWalletStandardProvider(wallet)
+      }
+    }
+
     return this._rawExtension
   }
 
-  transformError = (err: Error): Error => {
-    return new Error(err.message)
+  transformError = (): Error => {
+    return new Error("Could not connect to Solana with current account.")
   }
 
   getAccounts = async (): Promise<WalletAccount[]> => {
@@ -84,8 +102,10 @@ export class BaseSolanaWallet implements Wallet {
 
       //this.subscribeAccounts()
     } catch (err: unknown) {
-      console.log({ err })
-      throw this.transformError(err as Error)
+      if (err instanceof BaseWalletError) {
+        throw err
+      }
+      throw this.transformError()
     }
   }
 
