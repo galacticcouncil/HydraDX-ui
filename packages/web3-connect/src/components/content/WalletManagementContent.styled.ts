@@ -11,11 +11,6 @@ import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
 
 type PanelProps = { showAccountPanel: boolean }
 
-/**
- * Below `md` only one column is on screen at a time, so the inactive one is
- * removed outright rather than collapsed - `display: none` keeps it out of the
- * tab order for free.
- */
 type MobileColumnProps = { mobileHidden: boolean }
 
 const shouldForwardProp = (prop: string) => prop !== "showAccountPanel"
@@ -37,7 +32,7 @@ export const SWalletManagementShell = styled(Box, {
   ({ showAccountPanel }) => css`
     width: 100%;
     max-width: 100%;
-    max-height: 80dvh;
+    max-height: 75dvh;
 
     display: flex;
     flex-direction: column;
@@ -45,7 +40,6 @@ export const SWalletManagementShell = styled(Box, {
 
     transition: width 180ms ease;
 
-    /* Below sm the modal chrome itself is edge-to-edge, so fill it. */
     ${mq("max-xs")} {
       height: 100dvh;
       max-height: 100dvh;
@@ -132,7 +126,7 @@ export const SSourceColumn = styled(Flex, {
   `,
 )
 
-const SOURCE_FOOTER_GRADIENT_HEIGHT = pxToRem(24)
+const SOURCE_FOOTER_PAD = pxToRem(4)
 const SOURCE_FOOTER_BUTTON_HEIGHT = pxToRem(40)
 
 export const SSourceScrollFrame = styled(Box, {
@@ -147,7 +141,7 @@ export const SSourceScrollFrame = styled(Box, {
     overflow: hidden;
 
     --source-footer-height: ${hasFooter
-      ? `calc(${SOURCE_FOOTER_GRADIENT_HEIGHT} + ${SOURCE_FOOTER_BUTTON_HEIGHT})`
+      ? `calc(${SOURCE_FOOTER_PAD} + ${SOURCE_FOOTER_BUTTON_HEIGHT})`
       : "0px"};
   `,
 )
@@ -158,32 +152,19 @@ export const SSourceFooter = styled(Box)(
     left: 0;
     bottom: 0;
     right: ${theme.space.base};
+    z-index: 2;
 
     display: flex;
     flex-direction: column;
+    padding-top: ${SOURCE_FOOTER_PAD};
 
     background: ${theme.surfaces.themeBasePalette.surfaceHigh};
   `,
 )
 
-export const SSourceFooterGradient = styled(Box)(
-  ({ theme }) => css`
-    height: ${SOURCE_FOOTER_GRADIENT_HEIGHT};
-    background: linear-gradient(
-      to bottom,
-      transparent,
-      ${theme.surfaces.themeBasePalette.surfaceHigh}
-    );
-    pointer-events: none;
-  `,
-)
-
-export const SSourceFooterAction = styled(Box)(
-  ({ theme }) => css`
-    min-height: ${SOURCE_FOOTER_BUTTON_HEIGHT};
-    background: ${theme.surfaces.themeBasePalette.surfaceHigh};
-  `,
-)
+export const SSourceFooterAction = styled(Box)`
+  min-height: ${SOURCE_FOOTER_BUTTON_HEIGHT};
+`
 
 export const SRightPanelFrame = styled(Box, {
   shouldForwardProp: shouldForwardColumnProp,

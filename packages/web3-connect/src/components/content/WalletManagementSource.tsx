@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next"
 import {
   SChainBadgeImage,
   SConnectedDot,
-  SConnectedSubtitle,
   SSourceAction,
   SSourceButton,
   SSourceButtonContent,
@@ -16,6 +15,7 @@ import {
   SSourceChainBadges,
   SSourceIcon,
   SSourceLogo,
+  SSourceMarkWrap,
   SStackedSourceLogo,
   SStackedSourceLogos,
   STruncatingColumn,
@@ -99,57 +99,48 @@ export const WalletSourceButton: React.FC<{
     onClick={onClick}
   >
     <SSourceButtonContent>
-      {logo ? (
-        <SSourceLogo src={logo} alt="" lazy={false} />
-      ) : icon ? (
-        <SSourceIcon>
-          <Icon size="xs" component={icon} />
-        </SSourceIcon>
-      ) : logos?.length ? (
-        <SStackedSourceLogos>
-          {logos.slice(0, 3).map((provider) => {
-            const wallet = getWallet(provider)
-            if (!wallet) return null
-            return (
-              <SStackedSourceLogo
-                key={provider}
-                src={wallet.logo}
-                alt=""
-                lazy={false}
-              />
-            )
-          })}
-        </SStackedSourceLogos>
-      ) : null}
+      {(logo || icon || logos?.length) && (
+        <SSourceMarkWrap>
+          {logo ? (
+            <SSourceLogo src={logo} alt="" lazy={false} />
+          ) : icon ? (
+            <SSourceIcon>
+              <Icon size="xs" component={icon} />
+            </SSourceIcon>
+          ) : (
+            <SStackedSourceLogos>
+              {logos?.slice(0, 3).map((provider) => {
+                const wallet = getWallet(provider)
+                if (!wallet) return null
+                return (
+                  <SStackedSourceLogo
+                    key={provider}
+                    src={wallet.logo}
+                    alt=""
+                    lazy={false}
+                  />
+                )
+              })}
+            </SStackedSourceLogos>
+          )}
+          {connected && <SConnectedDot />}
+        </SSourceMarkWrap>
+      )}
       <STruncatingColumn>
         <Text fs="p5" fw={500} color={getToken("text.high")} truncate>
           {title}
         </Text>
-        {subtitle &&
-          (connected ? (
-            <SConnectedSubtitle>
-              <SConnectedDot />
-              <Text
-                fs="p7"
-                fw={500}
-                lh={1.2}
-                color={getToken("text.medium")}
-                truncate
-              >
-                {subtitle}
-              </Text>
-            </SConnectedSubtitle>
-          ) : (
-            <Text
-              fs="p7"
-              fw={500}
-              lh={1.2}
-              color={getToken("text.medium")}
-              truncate
-            >
-              {subtitle}
-            </Text>
-          ))}
+        {subtitle && (
+          <Text
+            fs="p7"
+            fw={500}
+            lh={1.2}
+            color={getToken("text.medium")}
+            truncate
+          >
+            {subtitle}
+          </Text>
+        )}
       </STruncatingColumn>
     </SSourceButtonContent>
     {pending ? (
@@ -258,6 +249,7 @@ export const WalletGroupSourceButton: React.FC<{
   readonly pending: boolean
   readonly variant?: WalletSourceButtonVariant
   readonly onClick: () => void
+  readonly onDisconnect: () => void
 }> = ({
   group,
   active,
@@ -265,6 +257,7 @@ export const WalletGroupSourceButton: React.FC<{
   pending,
   variant = "management",
   onClick,
+  onDisconnect,
 }) => {
   const { t } = useTranslation()
   const chainModes = getWalletGroupSourceModes(group)
@@ -286,6 +279,24 @@ export const WalletGroupSourceButton: React.FC<{
       variant={variant}
       chainModes={chainModes}
       onClick={onClick}
+      action={
+        connected ? (
+          <SSourceAction
+            as="span"
+            aria-label={t("provider.disconnect")}
+            onClick={(event) => {
+              event.stopPropagation()
+              onDisconnect()
+            }}
+          >
+            <Icon size="xs" component={LogOut} />
+          </SSourceAction>
+        ) : (
+          <SSourceAction as="span">
+            <Icon size="xs" component={ChevronRight} />
+          </SSourceAction>
+        )
+      }
     />
   )
 }

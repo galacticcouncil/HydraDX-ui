@@ -1,7 +1,6 @@
-import { HydrationLogo } from "@galacticcouncil/ui/assets/icons"
 import { Box, Flex, Icon, Text } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
-import { ChevronRight, Download } from "lucide-react"
+import { ChevronRight, Download, LogOut } from "lucide-react"
 import type { ComponentType } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -25,7 +24,7 @@ import {
   SWalletMark,
 } from "@/components/content/WalletManagementStates.styled"
 import { WalletProviderType } from "@/config/providers"
-import { getWalletModeIcon, WalletMode } from "@/config/wallet"
+import { getWalletModeIcon } from "@/config/wallet"
 import { WalletProviderStatus } from "@/hooks/useWeb3Connect"
 import { Wallet } from "@/types/wallet"
 import {
@@ -112,12 +111,12 @@ export const WalletConnectionState: React.FC<WalletConnectionStateProps> = ({
             {title}
           </Text>
           <Text
-            fs="p5"
+            fs="p4"
             lh={1.3}
             color={getToken("text.medium")}
             align="center"
             textWrap="balance"
-            px="xl"
+            px="l"
           >
             {description}
           </Text>
@@ -126,7 +125,7 @@ export const WalletConnectionState: React.FC<WalletConnectionStateProps> = ({
         {action && (
           <SWalletConnectionAction
             variant="secondary"
-            size="small"
+            size="medium"
             isLoading={isLoading}
             disabled={action.disabled || isLoading}
             onClick={action.onClick}
@@ -147,7 +146,8 @@ export const WalletChainSelectState: React.FC<{
   ) => WalletProviderStatus
   readonly onInstall: (wallet: Wallet) => void
   readonly onSelect: (wallet: Wallet) => void
-}> = ({ group, getStatus, onInstall, onSelect }) => {
+  readonly onDisconnect: (wallet: Wallet) => void
+}> = ({ group, getStatus, onInstall, onSelect, onDisconnect }) => {
   const { t } = useTranslation()
   const selectableWallets = group.wallets.filter((wallet) => {
     const status = getStatus(wallet.provider)
@@ -191,8 +191,7 @@ export const WalletChainSelectState: React.FC<{
                       : t("provider.notInstalled")
                 }
                 connected={isConnected}
-                logo={mode === WalletMode.EVM ? undefined : modeIcon}
-                icon={mode === WalletMode.EVM ? HydrationLogo : undefined}
+                logo={modeIcon}
                 pending={isPending}
                 onClick={() => {
                   if (isPending) return
@@ -207,16 +206,29 @@ export const WalletChainSelectState: React.FC<{
                   onSelect(wallet)
                 }}
                 action={
-                  <SSourceAction as="span">
-                    <Icon
-                      size="xs"
-                      component={
-                        !wallet.installed && wallet.installUrl
-                          ? Download
-                          : ChevronRight
-                      }
-                    />
-                  </SSourceAction>
+                  isConnected ? (
+                    <SSourceAction
+                      as="span"
+                      aria-label={t("provider.disconnect")}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onDisconnect(wallet)
+                      }}
+                    >
+                      <Icon size="xs" component={LogOut} />
+                    </SSourceAction>
+                  ) : (
+                    <SSourceAction as="span">
+                      <Icon
+                        size="xs"
+                        component={
+                          !wallet.installed && wallet.installUrl
+                            ? Download
+                            : ChevronRight
+                        }
+                      />
+                    </SSourceAction>
+                  )
                 }
               />
             )

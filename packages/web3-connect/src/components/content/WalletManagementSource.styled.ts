@@ -1,5 +1,5 @@
 import { Theme } from "@emotion/react"
-import { Box, Flex, Image } from "@galacticcouncil/ui/components"
+import { Box, Flex, Image, Text } from "@galacticcouncil/ui/components"
 import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
 
 const roundMark = (theme: Theme, size: string) => css`
@@ -9,6 +9,27 @@ const roundMark = (theme: Theme, size: string) => css`
   flex-shrink: 0;
   object-fit: contain;
 `
+
+export const SSourceMarkWrap = styled(Box)`
+  position: relative;
+  flex-shrink: 0;
+`
+
+export const SConnectedDot = styled(Box)(
+  ({ theme }) => css`
+    position: absolute;
+    right: -${theme.space.xs};
+    bottom: -${theme.space.xs};
+    width: ${theme.sizes["2xs"]};
+    height: ${theme.sizes["2xs"]};
+    background: ${theme.accents.success.emphasis};
+    border: 2px solid ${theme.surfaces.themeBasePalette.background};
+    border-radius: ${theme.radii.full};
+    box-sizing: border-box;
+    pointer-events: none;
+    transition: ${theme.transitions.colors};
+  `,
+)
 
 export const SSourceButton = styled.button(
   ({ theme }) => css`
@@ -182,22 +203,13 @@ export const STruncatingColumn = styled(Flex)`
   min-width: 0;
 `
 
-export const SConnectedSubtitle = styled(Flex)(
+export const SSourceCategoryLabel = styled(Text)(
   ({ theme }) => css`
-    align-items: center;
-    gap: ${theme.space.xs};
-    min-width: 0;
-  `,
-)
+    position: sticky;
+    top: 0;
+    z-index: 1;
 
-export const SConnectedDot = styled(Box)(
-  ({ theme }) => css`
-    width: ${theme.sizes["3xs"]};
-    height: ${theme.sizes["3xs"]};
-    border: 1px solid ${theme.accents.success.emphasis};
-    background: ${theme.accents.success.emphasis};
-    border-radius: ${theme.radii.full};
-    box-sizing: content-box;
-    flex-shrink: 0;
+    background: ${theme.surfaces.themeBasePalette.surfaceHigh};
+    padding-bottom: ${theme.space.s};
   `,
 )

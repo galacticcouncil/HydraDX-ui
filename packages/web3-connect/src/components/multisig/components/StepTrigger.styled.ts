@@ -43,7 +43,7 @@ export const SStepTrigger = styled.button<{ isInteractive?: boolean }>(
       gap: ${theme.space.m};
       width: 100%;
       padding-block: ${theme.space.l};
-      padding-inline: ${theme.space.xl};
+      padding-inline: ${theme.space.s};
 
       & > * {
         position: relative;

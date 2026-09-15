@@ -156,12 +156,7 @@ export const selectWalletSources = <T extends WalletSourceLike>(
 
   const recentGroups = reachableGroups
     .filter((group) => isGroupConnected(group) || rankOf(group) !== NOT_RECENT)
-    .sort(
-      (a, b) =>
-        Number(isGroupConnected(b)) - Number(isGroupConnected(a)) ||
-        rankOf(a) - rankOf(b) ||
-        byTitle(a, b),
-    )
+    .sort((a, b) => rankOf(a) - rankOf(b) || byTitle(a, b))
     .slice(0, RECENT_GROUPS_LIMIT)
 
   const installedGroups = reachableGroups

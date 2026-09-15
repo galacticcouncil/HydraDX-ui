@@ -34,12 +34,6 @@ import i18n from "@/i18n"
 import { getWallet } from "@/wallets"
 
 export type Web3ConnectButtonProps = ButtonProps & {
-  /**
-   * Set on buttons that start a Hydration action. The connected account is
-   * then only shown if Hydration can use it - otherwise the button falls back
-   * to prompting for a different account. Connecting itself is never
-   * restricted, so plain connect buttons leave this off.
-   */
   requiresHydrationAccount?: boolean
   mode?: WalletMode
 }
@@ -118,8 +112,8 @@ type ConnectedMultisigAccountButtonProps = ConnectButtonProps & {
   account: Account
 }
 
-const AVATAR_SIZE = 24
-const BADGE_SIZE = AVATAR_SIZE / 2
+const AVATAR_SIZE = 26
+const BADGE_SIZE = 12
 
 const ConnectedAccountButton: React.FC<ConnectedMultisigAccountButtonProps> = ({
   ref,
@@ -145,7 +139,6 @@ const ConnectedAccountButton: React.FC<ConnectedMultisigAccountButtonProps> = ({
     <SConnectedButton ref={ref} onClick={onClick} {...props} variant="tertiary">
       <SAvatar>
         <AccountAvatar address={account.displayAddress} size={AVATAR_SIZE} />
-        {/* Logo-less providers get no badge rather than a broken image. */}
         {wallet?.logo && (
           <SProviderBadge wallet={wallet} size={pxToRem(BADGE_SIZE)} />
         )}

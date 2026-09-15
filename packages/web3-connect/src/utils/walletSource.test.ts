@@ -149,7 +149,7 @@ describe("selectWalletSources", () => {
     expect(titles(recentGroups)).toEqual(["Phantom", "Talisman"])
   })
 
-  it("puts connected sources before newer MRU entries", () => {
+  it("sorts recents by last use regardless of connection status", () => {
     const { recentGroups } = selectWalletSources(
       [PHANTOM, TALISMAN],
       null,
@@ -157,7 +157,7 @@ describe("selectWalletSources", () => {
       [WalletProviderType.Phantom, WalletProviderType.Talisman],
     )
 
-    expect(titles(recentGroups)).toEqual(["Talisman", "Phantom"])
+    expect(titles(recentGroups)).toEqual(["Phantom", "Talisman"])
   })
 
   it("caps recents at five; overflow goes to installed", () => {

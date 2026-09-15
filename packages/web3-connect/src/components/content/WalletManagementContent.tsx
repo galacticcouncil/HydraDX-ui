@@ -1,6 +1,7 @@
-import { Search, WalletIcon } from "@galacticcouncil/ui/assets/icons"
+import { Plus, Search, WalletIcon } from "@galacticcouncil/ui/assets/icons"
 import {
   Box,
+  Button,
   Flex,
   Icon,
   Input,
@@ -11,10 +12,12 @@ import { useBreakpoints } from "@galacticcouncil/ui/theme"
 import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
 import {
   ChevronDown,
+  ChevronLeft,
   ChevronUp,
   CircleAlert,
   Download,
   LogOut,
+  Users,
 } from "lucide-react"
 import {
   useCallback,
@@ -46,7 +49,6 @@ import {
   SSourceColumn,
   SSourceFooter,
   SSourceFooterAction,
-  SSourceFooterGradient,
   SSourceScrollFrame,
   SWalletManagementShell,
 } from "@/components/content/WalletManagementContent.styled"
@@ -57,6 +59,10 @@ import {
   WalletSourceGroup,
 } from "@/components/content/WalletManagementSource"
 import {
+  SSourceAction,
+  SSourceCategoryLabel,
+} from "@/components/content/WalletManagementSource.styled"
+import {
   WalletChainSelectState,
   WalletConnectionState,
 } from "@/components/content/WalletManagementStates"
@@ -65,6 +71,9 @@ import {
   useExternalWalletConnection,
 } from "@/components/external/ExternalWalletForm"
 import { useExternalWalletForm } from "@/components/external/ExternalWalletForm.form"
+import { MultisigConfigList } from "@/components/multisig/MultisigConfigList"
+import { MultisigSetupPanel } from "@/components/multisig/MultisigSetupPanel"
+import { MultisigSignerSelect } from "@/components/multisig/MultisigSignerSelect"
 import { WalletProviderType } from "@/config/providers"
 import {
   chipModesForAccounts,
@@ -75,6 +84,7 @@ import {
 import { useWeb3ConnectContext } from "@/context/Web3ConnectContext"
 import { useAccount } from "@/hooks/useAccount"
 import { useAccountsWithBalance } from "@/hooks/useAccountsWithBalance"
+import { useMultisigConfigs } from "@/hooks/useMultisigConfigs"
 import { useWeb3Connect, WalletProviderStatus } from "@/hooks/useWeb3Connect"
 import { useWeb3Enable } from "@/hooks/useWeb3Enable"
 import { Wallet } from "@/types/wallet"
@@ -93,6 +103,8 @@ import {
   WalletSourceId,
 } from "@/utils/walletSource"
 import { getWallet, getWallets } from "@/wallets"
+
+type MultisigStep = "list" | "setup" | "signer"
 
 const filterWalletGroups = (groups: WalletSourceGroup[], search: string) => {
   const phrase = search.toLowerCase().trim()
@@ -156,6 +168,12 @@ export const WalletManagementContent = () => {
   const externalWalletForm = useExternalWalletForm()
   const { connectExternalWallet } = useExternalWalletConnection()
   const showExternalWallet = !meta?.hideExternalWallet
+  const showMultisig =
+    mode === WalletMode.Default ||
+    mode === WalletMode.Substrate ||
+    mode === WalletMode.SubstrateEVM
+  const multisigConfigs = useMultisigConfigs()
+  const [multisigStep, setMultisigStep] = useState<MultisigStep>("list")
 
   useEffect(() => {
     if (!meta?.initialProvider) return
@@ -256,6 +274,8 @@ export const WalletManagementContent = () => {
     : null
   const isExternalWalletSelected =
     selectedSource === WalletProviderType.ExternalWallet && showExternalWallet
+  const isMultisigSelected =
+    selectedSource === WalletProviderType.Multisig && showMultisig
   const showSelectedWalletConnectState =
     !!selectedWallet &&
     selectedWallet.provider !== WalletProviderType.ExternalWallet &&
@@ -268,6 +288,7 @@ export const WalletManagementContent = () => {
   const showAccountPanel =
     hasConnectedWalletState ||
     isExternalWalletSelected ||
+    isMultisigSelected ||
     isProvidersConnecting ||
     showSelectedWalletConnectState ||
     showWalletGroupChainSelectState ||
@@ -443,6 +464,10 @@ export const WalletManagementContent = () => {
       )
     }
 
+    const connectedGroupProviders = group.providers.filter((provider) =>
+      connectedProviderTypes.includes(provider),
+    )
+
     return (
       <WalletGroupSourceButton
         key={group.id}
@@ -451,14 +476,17 @@ export const WalletManagementContent = () => {
           selectedSource === group.id ||
           group.providers.includes(selectedSource as WalletProviderType)
         }
-        connected={group.providers.some((provider) =>
-          connectedProviderTypes.includes(provider),
-        )}
+        connected={connectedGroupProviders.length > 0}
         pending={group.providers.some((provider) =>
           pendingProviderTypes.includes(provider),
         )}
         variant={variant}
         onClick={() => handleWalletGroupSelect(group)}
+        onDisconnect={() => {
+          for (const provider of connectedGroupProviders) {
+            disconnect(provider)
+          }
+        }}
       />
     )
   }
@@ -490,13 +518,9 @@ export const WalletManagementContent = () => {
       ? visibleOtherWalletGroups
       : visibleOtherWalletGroups.slice(0, otherWalletsPreviewCount)
 
-  /**
-   * On the mobile accounts column the back arrow is the only cue that the view
-   * moved, so the header names what was picked. Falls through to the shared
-   * titles for "all", which already reads correctly there.
-   */
-  const selectedSourceTitle =
-    selectedWallet?.title ?? selectedWalletGroup?.title
+  const selectedSourceTitle = isMultisigSelected
+    ? t("multisig.title")
+    : (selectedWallet?.title ?? selectedWalletGroup?.title)
 
   return (
     <SWalletManagementShell showAccountPanel={showAccountPanel}>
@@ -542,7 +566,7 @@ export const WalletManagementContent = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    gap: showAccountPanel ? "m" : "base",
+                    gap: "base",
                   }}
                 >
                   {showAccountPanel && connectedAccountsCount > 0 && (
@@ -561,30 +585,31 @@ export const WalletManagementContent = () => {
 
                   {visibleRecentWalletGroups.length > 0 && (
                     <Flex direction="column" gap="s">
-                      <Text
+                      <SSourceCategoryLabel
                         fs="p5"
                         fw={500}
                         lh={1.25}
                         color={getToken("text.low")}
                       >
                         {t("provider.recentlyUsed")}
-                      </Text>
+                      </SSourceCategoryLabel>
                       {visibleRecentWalletGroups.map(renderWalletGroup)}
                     </Flex>
                   )}
 
                   {(visibleInstalledWalletGroups.length > 0 ||
-                    showExternalWallet) && (
+                    showExternalWallet ||
+                    showMultisig) && (
                     <Flex direction="column" gap="s">
                       {visibleInstalledWalletGroups.length > 0 && (
-                        <Text
+                        <SSourceCategoryLabel
                           fs="p5"
                           fw={500}
                           lh={1.25}
                           color={getToken("text.low")}
                         >
                           {t("provider.installed")}
-                        </Text>
+                        </SSourceCategoryLabel>
                       )}
 
                       {visibleInstalledWalletGroups.map(renderWalletGroup)}
@@ -610,46 +635,51 @@ export const WalletManagementContent = () => {
                           }
                         />
                       )}
+
+                      {showMultisig && (
+                        <WalletSourceButton
+                          title={t("multisig.title")}
+                          subtitle={t("multisig.setup.short")}
+                          icon={Users}
+                          variant={
+                            showAccountPanel ? "management" : "firstConnection"
+                          }
+                          active={isMultisigSelected}
+                          onClick={() => {
+                            setMultisigStep(
+                              multisigConfigs.length > 0 ? "list" : "setup",
+                            )
+                            selectSource(WalletProviderType.Multisig)
+                          }}
+                        />
+                      )}
                     </Flex>
                   )}
 
                   {visibleOtherWalletGroups.length > 0 && (
                     <Flex direction="column" gap="s">
-                      <Text
+                      <SSourceCategoryLabel
                         fs="p5"
                         fw={500}
                         lh={1.25}
                         color={getToken("text.low")}
-                        pt={showAccountPanel ? undefined : "l"}
                       >
-                        {showAccountPanel
-                          ? t("provider.otherWallets")
-                          : t("provider.otherWalletsFirstConnection")}
-                      </Text>
+                        {t("provider.otherWallets")}
+                      </SSourceCategoryLabel>
                       {visibleOtherWallets.map(renderWalletGroup)}
                       {hasMoreOtherWallets && (
                         <WalletSourceButton
                           title={
                             isMoreWalletsListOpen
                               ? t("provider.hide")
-                              : showAccountPanel
-                                ? t("provider.moreWallets")
-                                : t("provider.showMore")
+                              : t("provider.showMore")
                           }
-                          icon={
-                            showAccountPanel
-                              ? undefined
-                              : isMoreWalletsListOpen
-                                ? ChevronUp
-                                : ChevronDown
-                          }
+                          icon={isMoreWalletsListOpen ? ChevronUp : ChevronDown}
                           variant={
-                            showAccountPanel
-                              ? undefined
-                              : "firstConnectionPlain"
+                            showAccountPanel ? "management" : "firstConnection"
                           }
                           action={
-                            showAccountPanel ? (
+                            <SSourceAction as="span">
                               <Icon
                                 size="xs"
                                 component={
@@ -658,7 +688,7 @@ export const WalletManagementContent = () => {
                                     : ChevronDown
                                 }
                               />
-                            ) : undefined
+                            </SSourceAction>
                           }
                           onClick={() => setIsMoreOpen((open) => !open)}
                         />
@@ -669,7 +699,6 @@ export const WalletManagementContent = () => {
               </ScrollArea>
               {hasConnectedWalletState && (
                 <SSourceFooter>
-                  <SSourceFooterGradient />
                   <SSourceFooterAction>
                     <WalletSourceButton
                       title={t("provider.logOutAll")}
@@ -690,8 +719,50 @@ export const WalletManagementContent = () => {
             showAccountPanel={showAccountPanel}
             mobileHidden={!isAccountsView}
           >
-            {selectedSource === WalletProviderType.ExternalWallet &&
-            showExternalWallet ? (
+            {isMultisigSelected ? (
+              <SRightColumn>
+                {multisigStep !== "list" && multisigConfigs.length > 0 && (
+                  <Button
+                    variant="muted"
+                    size="small"
+                    type="button"
+                    sx={{ flexShrink: 0, alignSelf: "flex-start" }}
+                    onClick={() => setMultisigStep("list")}
+                  >
+                    <Icon size="s" component={ChevronLeft} />
+                    {t("back")}
+                  </Button>
+                )}
+                <Box flex={1} sx={{ minHeight: 0, overflowY: "auto" }}>
+                  {multisigStep === "list" ? (
+                    <MultisigConfigList
+                      onSelected={() => setMultisigStep("signer")}
+                    />
+                  ) : multisigStep === "setup" ? (
+                    <MultisigSetupPanel
+                      onContinue={() => setMultisigStep("signer")}
+                    />
+                  ) : (
+                    <MultisigSignerSelect />
+                  )}
+                </Box>
+                {multisigStep === "list" && (
+                  <Button
+                    variant="accent"
+                    outline
+                    size="large"
+                    width="100%"
+                    type="button"
+                    sx={{ flexShrink: 0 }}
+                    onClick={() => setMultisigStep("setup")}
+                  >
+                    <Icon size="s" component={Plus} />
+                    {t("multisig.configSelect.setupNew")}
+                  </Button>
+                )}
+              </SRightColumn>
+            ) : selectedSource === WalletProviderType.ExternalWallet &&
+              showExternalWallet ? (
               <SRightColumn>
                 <Box flex={1} sx={{ minHeight: 0, overflowY: "auto" }}>
                   <FormProvider {...externalWalletForm}>
@@ -735,6 +806,7 @@ export const WalletManagementContent = () => {
                   }
                 }}
                 onSelect={handleWalletClick}
+                onDisconnect={(wallet) => disconnect(wallet.provider)}
               />
             ) : showSelectedWalletConnectState && selectedWallet ? (
               <WalletConnectionState

@@ -24,8 +24,8 @@ export const SChainSelectHeader = styled(Flex)(
 
 export const SWalletMark = styled(Image)(
   ({ theme }) => css`
-    width: calc(${theme.sizes["2xl"]} + ${theme.space.l});
-    height: calc(${theme.sizes["2xl"]} + ${theme.space.l});
+    width: ${theme.sizes["2xl"]};
+    height: ${theme.sizes["2xl"]};
     border-radius: ${theme.radii.full};
     flex-shrink: 0;
     object-fit: contain;

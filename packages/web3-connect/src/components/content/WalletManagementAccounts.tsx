@@ -31,7 +31,6 @@ import { getWallet, MetaMask } from "@/wallets"
 
 export type WalletAccount = ReturnType<typeof toAccount> & {
   balance?: number
-  /** Present means `balance` is a token amount, absent means fiat. */
   balanceSymbol?: string
   isActive?: boolean
 }
