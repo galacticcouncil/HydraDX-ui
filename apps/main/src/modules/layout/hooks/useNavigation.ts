@@ -16,6 +16,12 @@ export const useNavigation = (): NavigationItem[] => {
               if (child.key === "strategiesBil") {
                 return featureFlags.bilEnabled
               }
+              if (
+                child.key === "strategiesPropellerEth" ||
+                child.key === "strategiesPropellerTbtc"
+              ) {
+                return featureFlags.propellerEnabled
+              }
               if (child.key === "strategiesHollarBonds") {
                 return featureFlags.hollarBondsEnabled
               }
@@ -26,6 +32,10 @@ export const useNavigation = (): NavigationItem[] => {
 
         return item
       }),
-    [featureFlags.bilEnabled, featureFlags.hollarBondsEnabled],
+    [
+      featureFlags.bilEnabled,
+      featureFlags.hollarBondsEnabled,
+      featureFlags.propellerEnabled,
+    ],
   )
 }

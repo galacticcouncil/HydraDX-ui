@@ -1,11 +1,22 @@
 import { Box } from "@galacticcouncil/ui/components"
 import { containerSize, css, pxToRem, styled } from "@galacticcouncil/ui/utils"
 
-export const SCurrencyItem = styled(Box)(
+const itemStyles = css`
+  position: relative;
+  min-width: 0;
+  width: 100%;
+`
+
+export const SAssetProgressStat = styled(Box)(
   () => css`
-    position: relative;
-    min-width: 0;
-    width: 100%;
+    ${itemStyles}
+  `,
+)
+
+export const SAssetProgressStatGrid = styled(Box)(
+  () => css`
+    ${itemStyles}
+
     ${containerSize(
       "md",
       css`
@@ -15,7 +26,7 @@ export const SCurrencyItem = styled(Box)(
   `,
 )
 
-export const SCurrencyProgress = styled(Box)(
+export const SAssetProgressStatProgress = styled(Box)(
   ({ theme }) => css`
     position: absolute;
     top: calc(100% - ${theme.space.m});

@@ -19,7 +19,7 @@ import { neckwork, shortenAccountAddress } from "@galacticcouncil/utils"
 import { useTranslation } from "react-i18next"
 
 import { AssetLogo } from "@/components/AssetLogo"
-import { BilBorrowCapCurrency } from "@/modules/strategies/bil/components/BilBorrowCapCurrency"
+import { AssetProgressStat } from "@/components/AssetProgressStat"
 import {
   SDetailsStatItem,
   SDetailsStatsContainer,
@@ -42,6 +42,16 @@ export const StrategyDetailsCard = () => {
 
   const hasGlobalBorrowCap = (reserveConfig?.borrowCapHollar ?? 0) > 0
   const showBorrowCap = isReserveConfigLoading || hasGlobalBorrowCap
+  const borrowCapHollar = reserveConfig?.borrowCapHollar ?? 0
+  const totalBorrowedHollar = reserveConfig?.totalDebtHollar ?? 0
+  const totalBorrowed = Math.max(
+    0,
+    borrowCapHollar > 0
+      ? Math.min(totalBorrowedHollar, borrowCapHollar)
+      : totalBorrowedHollar,
+  )
+  const borrowedPct =
+    borrowCapHollar > 0 ? (totalBorrowed / borrowCapHollar) * 100 : 0
 
   return (
     <Paper>
@@ -61,7 +71,7 @@ export const StrategyDetailsCard = () => {
               label={t("bil.strategy.tvl")}
               customValue={
                 <Flex align="center" gap="s">
-                  <AssetLogo id={bil.id} size="medium" />
+                  <AssetLogo id={bil.id} size="medium" hideChain />
                   <Text
                     font="primary"
                     fs="h6"
@@ -108,10 +118,20 @@ export const StrategyDetailsCard = () => {
                   label={t("common:totalBorrowed")}
                   customValue={
                     reserveConfig ? (
-                      <BilBorrowCapCurrency
+                      <AssetProgressStat
                         assetId={hollar.id}
-                        totalBorrowedHollar={reserveConfig.totalDebtHollar}
-                        borrowCapHollar={reserveConfig.borrowCapHollar}
+                        progressPct={borrowedPct}
+                        value={
+                          <Text
+                            font="primary"
+                            fs="h6"
+                            fw={600}
+                            color={getToken("text.high")}
+                            minWidth="10rem"
+                          >
+                            {t("common:number", { value: totalBorrowed })}
+                          </Text>
+                        }
                       />
                     ) : null
                   }
@@ -130,7 +150,7 @@ export const StrategyDetailsCard = () => {
             label={t("bil.strategy.collateralAssetLabel")}
             content={
               <Flex align="center" gap="s">
-                <AssetLogo id={bilReserve.id} size="small" />
+                <AssetLogo id={bilReserve.id} size="small" hideChain />
                 <Text fs="p4" lh={1.5}>
                   {t("bil.strategy.collateralAsset")}
                 </Text>
@@ -141,7 +161,7 @@ export const StrategyDetailsCard = () => {
             label={t("bil.strategy.debtAssetLabel")}
             content={
               <Flex align="center" gap="s">
-                <AssetLogo id={hollar.id} size="small" />
+                <AssetLogo id={hollar.id} size="small" hideChain />
                 <Text fs="p4" lh={1.5}>
                   {hollar.symbol}
                 </Text>

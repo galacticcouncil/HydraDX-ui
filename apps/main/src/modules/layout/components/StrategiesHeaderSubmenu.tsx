@@ -8,12 +8,15 @@ import { AssetLogo } from "@/components/AssetLogo"
 import { SDetailedLink } from "@/components/DetailedLink/DetailedLink.styled"
 import { InternalNavigationItem, NavigationKey } from "@/config/navigation"
 import { useMenuTranslations } from "@/modules/layout/components/HeaderMenu.utils"
+import { PROPELLER_VAULTS } from "@/modules/strategies/propeller/config/vaults"
 import { useAssets } from "@/providers/assetsProvider"
 import { useRpcProvider } from "@/providers/rpcProvider"
 
 const STRATEGY_ASSET_ICON_BY_KEY: Partial<Record<NavigationKey, string>> = {
   strategiesBil: BIL_ERC20_ID,
   strategiesHollarBonds: HOLLAR_ASSET_ID,
+  strategiesPropellerEth: PROPELLER_VAULTS.eth.assetId,
+  strategiesPropellerTbtc: PROPELLER_VAULTS.tbtc.assetId,
 }
 
 type Props = {
@@ -32,7 +35,9 @@ export const StrategiesHeaderSubmenu: React.FC<Props> = ({ items }) => {
     return (
       <SDetailedLink key={key} asChild>
         <Link to={to} search={search}>
-          {showAssetIcon ? <AssetLogo id={assetIconId} size="medium" /> : null}
+          {showAssetIcon ? (
+            <AssetLogo id={assetIconId} size="medium" hideChain />
+          ) : null}
           <Box>
             <Text fw={600} fs="p4" lh={1.4}>
               {translations[key].title}

@@ -39,7 +39,7 @@ const PositionRow = ({ bondId }: { bondId: string }) => {
 
   return (
     <PositionCard
-      logo={<AssetLogo id={bondId} size="medium" />}
+      logo={<AssetLogo id={bondId} size="medium" hideChain />}
       symbol={asset.symbol}
       columns={2}
       stats={

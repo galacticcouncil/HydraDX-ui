@@ -11,9 +11,12 @@
   "badge.fixedYield": "Fixed Yield",
   "badge.leverage": "Leverage",
   "badge.noLiquidation": "No Liquidation",
+  "badge.propellerVault": "Propeller vault",
 
   "cards.bil.title": "Brazilian Invoice Loans",
   "cards.bil.description": "Deposit HOLLAR into a liquid strategy that earns fixed yield from short-term Brazilian invoice receivables.",
+  "cards.propeller.title": "Propeller {{ symbol }}",
+  "cards.propeller.description": "Deposit {{ symbol }} and earn leveraged staking yield. Propeller loops your collateral automatically and self-deleverages to avoid liquidation. Exit any time via the async withdrawal queue.",
   "cards.hollarBonds.title": "HOLLAR Bonds",
   "cards.hollarBonds.description": "Lock stablecoins and earn fixed APR. Fixed Yield HOLLAR Bonds have no liquidation risk for users, as the protocol covers the underlying yield and liquidation risk.",
 

@@ -1,18 +1,9 @@
-import {
-  Flex,
-  ProgressBar,
-  Skeleton,
-  Text,
-} from "@galacticcouncil/ui/components"
+import { Text } from "@galacticcouncil/ui/components"
 import { getToken } from "@galacticcouncil/ui/utils"
 import Big from "big.js"
 import { useTranslation } from "react-i18next"
 
-import { AssetLogo } from "@/components/AssetLogo"
-import {
-  SCurrencyItem,
-  SCurrencyProgress,
-} from "@/modules/strategies/stable-bonds/components/StableBondsCurrency.styled"
+import { AssetProgressStat } from "@/components/AssetProgressStat"
 import { useInitialOtcOfferAmount } from "@/modules/trade/otc/table/columns/OfferStatusColumn.utils"
 import { OtcOffer } from "@/modules/trade/otc/table/OtcTable.query"
 import { scaleHuman } from "@/utils/formatting"
@@ -46,16 +37,14 @@ export const StableBondsCurrency: React.FC<StableBondsCurrencyProps> = ({
     initialAmount && !initialAmount.eq(0)
       ? Big(amount).div(initialAmount).mul(100).toNumber()
       : 0
-  const showProgress = isFillable && !isLoading && remainingPct > 0
 
   return (
-    <SCurrencyItem>
-      <Flex
-        align="center"
-        gap="base"
-        sx={{ pb: isFillable && (isLoading || remainingPct > 0) && "base" }}
-      >
-        <AssetLogo id={asset.id} size="medium" />
+    <AssetProgressStat
+      assetId={asset.id}
+      layout="grid"
+      progressPct={isFillable ? remainingPct : 0}
+      isProgressLoading={isFillable && isLoading}
+      value={
         <Text
           font="primary"
           fs="h6"
@@ -67,31 +56,7 @@ export const StableBondsCurrency: React.FC<StableBondsCurrencyProps> = ({
             ? t("number", { value: amount })
             : t("strategies:bonds.soldOut")}
         </Text>
-      </Flex>
-      {isFillable &&
-        (isLoading ? (
-          <SCurrencyProgress>
-            <Skeleton sx={{ height: "2xs" }} />
-          </SCurrencyProgress>
-        ) : (
-          showProgress && (
-            <SCurrencyProgress>
-              <ProgressBar
-                value={remainingPct}
-                customLabel={
-                  <Text
-                    fs="p4"
-                    as="span"
-                    fw={600}
-                    color={getToken("text.tint.quart")}
-                  >
-                    {t("percent", { value: remainingPct })}
-                  </Text>
-                }
-              />
-            </SCurrencyProgress>
-          )
-        ))}
-    </SCurrencyItem>
+      }
+    />
   )
 }

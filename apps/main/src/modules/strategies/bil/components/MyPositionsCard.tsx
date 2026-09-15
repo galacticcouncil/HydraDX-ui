@@ -105,7 +105,7 @@ export const MyPositionsCard = () => {
           return (
             <PositionCard
               key={row.id}
-              logo={<AssetLogo id={bil.id} size="medium" />}
+              logo={<AssetLogo id={bil.id} size="medium" hideChain />}
               symbol={row.label}
               stats={
                 <>

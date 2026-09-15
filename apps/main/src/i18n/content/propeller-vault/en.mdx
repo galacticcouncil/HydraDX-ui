@@ -1,7 +1,17 @@
-Propeller is a **leveraged staking** strategy. You deposit **ETH** and the vault runs a recursive loop — supplying your collateral, minting a synthetic against it, and re-staking — to amplify the underlying staking yield without you having to manage any positions manually.
+Propeller is a **leveraged staking** strategy. You deposit **{props.symbol}** and the vault runs a recursive loop — supplying your collateral, minting a synthetic against it, and re-staking — to amplify the underlying staking yield without you having to manage any positions manually.
 
-There is **no user-facing borrow** and **no liquidation risk** for depositors. The vault keeps its loan-to-value inside a target band and **self-deleverages** automatically when the market moves, so your shares (**pETH**) simply accrue value as the loop harvests and compounds rewards.
+There is **no user-facing borrow** and **no liquidation risk** for depositors. The vault keeps its loan-to-value inside a target band and **self-deleverages** automatically when the market moves, so your shares (**{props.shareSymbol}**) simply accrue value as the loop harvests and compounds rewards.
 
-### Withdrawals
+### Key features
 
-Exits go through an **async withdrawal queue**. When you request a redemption, your pETH is escrowed and the vault unwinds the corresponding slice of the loop. Once settled, you **claim** your ETH back. The settlement uses the exchange rate at the time of settlement, so your position keeps earning while it's in the queue.
+- Rewards are automatically compounded into the vault
+- No separate claiming required
+- No impermanent loss
+- No liquidation of your deposited position
+- Withdraw all or part of your position at any time
+
+### Risk management
+
+Exits go through an **async withdrawal queue**. When you request a redemption, the amount of {props.symbol} you will receive is **fixed at the share price at the moment of the request** — later deposits, withdrawals or price moves do not change it.
+
+The vault then unwinds the corresponding slice of the loop over subsequent blocks. Your {props.symbol} becomes claimable as it settles, **possibly in parts**, so you may claim more than once for a single request.

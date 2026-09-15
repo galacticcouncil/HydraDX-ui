@@ -12,7 +12,7 @@ export const StrategyHeader = () => {
   return (
     <Flex justify="space-between" align="center" gap="s">
       <Flex align="center" gap="base">
-        <AssetLogo id={bil.id} size="large" />
+        <AssetLogo id={bil.id} size="large" hideChain />
         <Flex direction="column">
           <Text
             font="primary"

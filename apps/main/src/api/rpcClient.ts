@@ -15,6 +15,7 @@ import { createPublicClient, custom, PublicClient } from "viem"
 import { rpcStatusQueryOptions } from "@/api/rpc"
 import { getSortedRpcUrlList } from "@/api/rpcConfig"
 import { ENV } from "@/config/env"
+import { PROPELLER_VAULTS } from "@/modules/strategies/propeller/config/vaults"
 import { useProviderRpcUrlStore } from "@/states/provider"
 import { clearIndexedDBStore, IndexedDBStores } from "@/utils/indexedDB"
 
@@ -24,6 +25,7 @@ export type PapiNext = TypedApi<typeof hydrationNext>
 export type TFeatureFlags = {
   hollarBondsEnabled: boolean
   bilEnabled: boolean
+  propellerEnabled: boolean
 }
 
 export type WsPolkadotClient = ReturnType<typeof createWsClient>
@@ -85,6 +87,11 @@ const getProviderData = async (
     }),
   })
 
+  const propellerEnabled = await evm
+    .getCode({ address: PROPELLER_VAULTS.eth.vaultAddress })
+    .then((code) => !!code && code !== "0x")
+    .catch(() => false)
+
   // Read the connected chain's identity before anything is built on top of the
   // client. papiClient.getChainSpecData() is memoized per client and never
   // follows switch(), so it cannot be used here.
@@ -112,6 +119,7 @@ const getProviderData = async (
     featureFlags: {
       hollarBondsEnabled: true,
       bilEnabled: true,
+      propellerEnabled,
     },
     dryRunErrorDecoder: new DryRunErrorDecoder(papiClient),
   }
