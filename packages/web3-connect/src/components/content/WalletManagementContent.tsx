@@ -7,6 +7,7 @@ import {
   ScrollArea,
   Text,
 } from "@galacticcouncil/ui/components"
+import { useBreakpoints } from "@galacticcouncil/ui/theme"
 import { getToken, pxToRem } from "@galacticcouncil/ui/utils"
 import {
   ChevronDown,
@@ -104,6 +105,8 @@ export const WalletManagementContent = () => {
   const { account: currentAccount } = useAccount()
   const { mode, onAccountSelect, isControlled, setModalContentWidth } =
     useWeb3ConnectContext()
+  const { gte } = useBreakpoints()
+  const isDesktop = gte("md")
   const { enable, disconnect } = useWeb3Enable()
   const { enable: enableWithDisconnectOnError } = useWeb3Enable({
     disconnectOnError: true,
@@ -138,6 +141,12 @@ export const WalletManagementContent = () => {
   const [accountFilter, setAccountFilter] = useState<WalletAccountFilterOption>(
     WalletMode.Default,
   )
+  /**
+   * Which of the two columns is on screen below `md`. Desktop shows both, so
+   * the flag is dead weight there and is set unconditionally - a flag that is
+   * always correct beats one maintained only on some viewports.
+   */
+  const [showAccounts, setShowAccounts] = useState(false)
   const [walletSearchValue, setWalletSearchValue] = useState("")
   const [accountSearchValue, setAccountSearchValue] = useState("")
   const [walletSearch, setWalletSearch] = useState("")
@@ -152,6 +161,16 @@ export const WalletManagementContent = () => {
     if (!meta?.initialProvider) return
     setSelectedSource(meta.initialProvider)
   }, [meta?.initialProvider])
+
+  /**
+   * The single entry point for picking a wallet source. Seeding the initial
+   * provider above deliberately does not go through it: the modal always opens
+   * on the wallet list, even when a wallet is already connected.
+   */
+  const selectSource = useCallback((source: WalletSourceId) => {
+    setSelectedSource(source)
+    setShowAccounts(true)
+  }, [])
 
   useDebounce(() => setWalletSearch(walletSearchValue), 100, [
     walletSearchValue,
@@ -254,9 +273,23 @@ export const WalletManagementContent = () => {
     showWalletGroupChainSelectState ||
     showErrorState
 
+  /**
+   * `showAccountPanel` stays the authority on whether the right column has
+   * anything to render, so an emptied panel falls back to the wallet list on
+   * its own - no effect chasing the six async states that feed it.
+   */
+  const isAccountsView = showAccounts && showAccountPanel
+
+  /**
+   * Below `md` the width is pinned: only one column is ever on screen, and
+   * `--modal-content-width` lives two components up, so a change here is an
+   * unanimated jump on every forward/back press.
+   */
   useLayoutEffect(() => {
-    setModalContentWidth?.(showAccountPanel ? pxToRem(650) : pxToRem(452))
-  }, [setModalContentWidth, showAccountPanel])
+    setModalContentWidth?.(
+      !isDesktop || showAccountPanel ? pxToRem(650) : pxToRem(452),
+    )
+  }, [isDesktop, setModalContentWidth, showAccountPanel])
 
   const visibleRecentWalletGroups = useMemo(
     () => filterWalletGroups(recentWalletGroups, walletSearch),
@@ -366,7 +399,7 @@ export const WalletManagementContent = () => {
   )
 
   const handleProviderSelect = (wallet: Wallet) => {
-    setSelectedSource(wallet.provider)
+    selectSource(wallet.provider)
   }
 
   const handleWalletClick = (wallet: Wallet) => {
@@ -387,7 +420,7 @@ export const WalletManagementContent = () => {
       return
     }
 
-    setSelectedSource(group.id)
+    selectSource(group.id)
   }
 
   const renderWalletGroup = (group: WalletSourceGroup) => {
@@ -457,14 +490,29 @@ export const WalletManagementContent = () => {
       ? visibleOtherWalletGroups
       : visibleOtherWalletGroups.slice(0, otherWalletsPreviewCount)
 
+  /**
+   * On the mobile accounts column the back arrow is the only cue that the view
+   * moved, so the header names what was picked. Falls through to the shared
+   * titles for "all", which already reads correctly there.
+   */
+  const selectedSourceTitle =
+    selectedWallet?.title ?? selectedWalletGroup?.title
+
   return (
     <SWalletManagementShell showAccountPanel={showAccountPanel}>
       <SModalHeader
         title={
           meta?.title ??
-          (showAccountPanel
-            ? t("provider.selectSourceWallet")
-            : t("provider.selectSourceWalletOnly"))
+          (!isDesktop && isAccountsView && selectedSourceTitle
+            ? selectedSourceTitle
+            : showAccountPanel
+              ? t("provider.selectSourceWallet")
+              : t("provider.selectSourceWalletOnly"))
+        }
+        onBack={
+          !isDesktop && isAccountsView
+            ? () => setShowAccounts(false)
+            : undefined
         }
         description={
           meta?.description ??
@@ -477,7 +525,7 @@ export const WalletManagementContent = () => {
       />
       <SModalBody noPadding scrollable={false}>
         <SLayoutGrid showAccountPanel={showAccountPanel}>
-          <SSourceColumn>
+          <SSourceColumn mobileHidden={isAccountsView}>
             <Input
               value={walletSearchValue}
               onChange={(event) => setWalletSearchValue(event.target.value)}
@@ -506,7 +554,7 @@ export const WalletManagementContent = () => {
                           count: connectedAccountsCount,
                         })}
                         icon={WalletIcon}
-                        onClick={() => setSelectedSource("all")}
+                        onClick={() => selectSource("all")}
                       />
                     </Flex>
                   )}
@@ -555,7 +603,7 @@ export const WalletManagementContent = () => {
                             showAccountPanel ? "management" : "firstConnection"
                           }
                           onClick={() =>
-                            setSelectedSource(WalletProviderType.ExternalWallet)
+                            selectSource(WalletProviderType.ExternalWallet)
                           }
                           onDisconnect={() =>
                             disconnect(WalletProviderType.ExternalWallet)
@@ -640,6 +688,7 @@ export const WalletManagementContent = () => {
           <SRightPanelFrame
             aria-hidden={!showAccountPanel}
             showAccountPanel={showAccountPanel}
+            mobileHidden={!isAccountsView}
           >
             {selectedSource === WalletProviderType.ExternalWallet &&
             showExternalWallet ? (

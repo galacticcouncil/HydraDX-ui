@@ -11,7 +11,17 @@ import { css, pxToRem, styled } from "@galacticcouncil/ui/utils"
 
 type PanelProps = { showAccountPanel: boolean }
 
+/**
+ * Below `md` only one column is on screen at a time, so the inactive one is
+ * removed outright rather than collapsed - `display: none` keeps it out of the
+ * tab order for free.
+ */
+type MobileColumnProps = { mobileHidden: boolean }
+
 const shouldForwardProp = (prop: string) => prop !== "showAccountPanel"
+
+const shouldForwardColumnProp = (prop: string) =>
+  prop !== "showAccountPanel" && prop !== "mobileHidden"
 
 export const SScrollAreaContent = styled(Box)(
   ({ theme }) => css`
@@ -27,8 +37,7 @@ export const SWalletManagementShell = styled(Box, {
   ({ showAccountPanel }) => css`
     width: 100%;
     max-width: 100%;
-    height: 100dvh;
-    max-height: 100dvh;
+    max-height: 80dvh;
 
     display: flex;
     flex-direction: column;
@@ -36,9 +45,14 @@ export const SWalletManagementShell = styled(Box, {
 
     transition: width 180ms ease;
 
+    /* Below sm the modal chrome itself is edge-to-edge, so fill it. */
+    ${mq("max-xs")} {
+      height: 100dvh;
+      max-height: 100dvh;
+    }
+
     ${mq("md")} {
       width: ${showAccountPanel ? pxToRem(650) : pxToRem(452)};
-      max-height: 80dvh;
     }
   `,
 )
@@ -95,8 +109,10 @@ export const SLayoutGrid = styled(Grid, { shouldForwardProp })<PanelProps>(
   `,
 )
 
-export const SSourceColumn = styled(Flex)(
-  ({ theme }) => css`
+export const SSourceColumn = styled(Flex, {
+  shouldForwardProp: shouldForwardColumnProp,
+})<MobileColumnProps>(
+  ({ theme, mobileHidden }) => css`
     flex-direction: column;
     gap: ${theme.space.base};
 
@@ -105,6 +121,10 @@ export const SSourceColumn = styled(Flex)(
     max-height: none;
     overflow: hidden;
     padding-inline: 0;
+
+    ${mq("max-sm")} {
+      display: ${mobileHidden ? "none" : "flex"};
+    }
 
     ${mq("md")} {
       max-height: 100%;
@@ -166,9 +186,9 @@ export const SSourceFooterAction = styled(Box)(
 )
 
 export const SRightPanelFrame = styled(Box, {
-  shouldForwardProp,
-})<PanelProps>(
-  ({ showAccountPanel }) => css`
+  shouldForwardProp: shouldForwardColumnProp,
+})<PanelProps & MobileColumnProps>(
+  ({ showAccountPanel, mobileHidden }) => css`
     min-width: 0;
     min-height: 0;
     max-height: ${showAccountPanel ? "none" : 0};
@@ -180,6 +200,13 @@ export const SRightPanelFrame = styled(Box, {
     transition: ${showAccountPanel
       ? "opacity 120ms ease 120ms"
       : "opacity 80ms ease, visibility 0s linear 80ms"};
+
+    ${mq("max-sm")} {
+      display: ${mobileHidden ? "none" : "flex"};
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
 
     ${mq("md")} {
       display: flex;
