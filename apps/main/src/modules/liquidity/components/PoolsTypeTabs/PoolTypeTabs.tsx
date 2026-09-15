@@ -4,7 +4,6 @@ import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useTranslation } from "react-i18next"
 
 import { TabMenu } from "@/components/TabMenu"
-import { ENV } from "@/config/env"
 import { LINKS } from "@/config/navigation"
 
 export const PoolTypeTabs = () => {
@@ -20,9 +19,7 @@ export const PoolTypeTabs = () => {
       key: "all" as const,
       label: t("tab.allPools"),
     },
-    ...(ENV.VITE_UNIV3_GAMMA_ENABLED
-      ? [{ key: "vaults" as const, label: t("tab.vaults") }]
-      : []),
+    { key: "vaults" as const, label: t("tab.vaults") },
     {
       key: "omnipoolStablepool" as const,
       label: t("tab.omnipoolStablepool"),
@@ -65,18 +62,14 @@ export const PoolTypeTabs = () => {
           search: { type: "all", myLiquidity: search?.myLiquidity },
           title: t("tab.allPools"),
         },
-        ...(ENV.VITE_UNIV3_GAMMA_ENABLED
-          ? [
-              {
-                to: LINKS.liquidity,
-                search: {
-                  type: "vaults" as const,
-                  myLiquidity: search?.myLiquidity,
-                },
-                title: t("tab.vaults"),
-              },
-            ]
-          : []),
+        {
+          to: LINKS.liquidity,
+          search: {
+            type: "vaults" as const,
+            myLiquidity: search?.myLiquidity,
+          },
+          title: t("tab.vaults"),
+        },
         {
           to: LINKS.liquidity,
           search: {

@@ -1,7 +1,6 @@
-import { UINT256_MAX } from "@galacticcouncil/utils"
 import { EVM_DECIMALS } from "@galacticcouncil/web3-connect/src/config/evm"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { type Address, formatUnits, getContract } from "viem"
+import { type Address, formatUnits, getContract, maxUint256 } from "viem"
 
 import {
   ERC20_ABI,
@@ -74,7 +73,7 @@ export function useBilPoolPosition(evmAddress: string | undefined) {
         ltvPct: Number(ltv) / 100,
         liquidationThresholdPct: Number(currentLiquidationThreshold) / 100,
         healthFactor:
-          healthFactor === UINT256_MAX
+          healthFactor === maxUint256
             ? Infinity
             : Number(formatUnits(healthFactor, EVM_DECIMALS)),
         hasCollateral: totalCollateralBase > 0n,

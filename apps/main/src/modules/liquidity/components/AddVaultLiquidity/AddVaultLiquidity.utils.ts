@@ -8,11 +8,12 @@ import Big from "big.js"
 import { useCallback, useMemo, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
-import { Abi, encodeFunctionData, Hex, parseAbi } from "viem"
+import { Abi, encodeFunctionData, erc20Abi, Hex, maxUint128 } from "viem"
 import z from "zod/v4"
 
 import { useAccountBalances } from "@/api/balances/account.hooks"
 import { estimateGasLimit } from "@/api/borrow"
+import { UNIPROXY_ABI } from "@/api/gamma/abi"
 import { VaultState } from "@/api/gamma/vaults"
 import { VaultTable } from "@/modules/liquidity/Vaults.utils"
 import { useCreateBatchTx } from "@/modules/transactions/hooks/useBatchTx"
@@ -22,20 +23,7 @@ import { useRpcProvider } from "@/providers/rpcProvider"
 import { scale, scaleHuman } from "@/utils/formatting"
 import { positive, required } from "@/utils/validators"
 
-// u128 max: uint256 approval overflows on Hydration ERC20 precompiles.
-const U128_MAX = (1n << 128n) - 1n
-
 const EVM_CALL_GAS = 700_000
-
-export const ERC20_APPROVE_ABI = parseAbi([
-  "function approve(address spender, uint256 amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)",
-])
-
-export const UNIPROXY_ABI = parseAbi([
-  "function deposit(uint256 deposit0, uint256 deposit1, address to, address pos, uint256[4] minIn) returns (uint256)",
-  "function getDepositAmount(address pos, address token, uint256 _deposit) view returns (uint256 amountStart, uint256 amountEnd)",
-])
 
 export const useVaultDepositAmount = (
   vault: VaultState | null,
@@ -92,7 +80,7 @@ export const useVaultDeposit = () => {
         if (amount === 0n) continue
 
         const allowance = await rpc.evm.readContract({
-          abi: ERC20_APPROVE_ABI,
+          abi: erc20Abi,
           address: token,
           functionName: "allowance",
           args: [evmAddress, vault.address],
@@ -103,11 +91,12 @@ export const useVaultDeposit = () => {
         calls.push({
           to: token,
           data: encodeFunctionData({
-            abi: ERC20_APPROVE_ABI,
+            abi: erc20Abi,
             functionName: "approve",
-            args: [vault.address, U128_MAX],
+            // maxUint128: uint256 approval overflows on Hydration ERC20 precompiles.
+            args: [vault.address, maxUint128],
           }),
-          abi: [...ERC20_APPROVE_ABI],
+          abi: [...erc20Abi],
         })
       }
 

@@ -2578,6 +2578,117 @@
         }
       }
     },
+    "/v1/pools/uniswapv3/volumes": {
+      "get": {
+        "summary": "Concentrated-liquidity (Uniswap v3) volume and fees per pool",
+        "tags": [
+          "pools"
+        ],
+        "description": "Per-pool traded volume over a rolling window for the Uniswap v3 pools on Hydration's EVM, keyed by the pool CONTRACT address. `?pools=` filters to a subset; omitted, every pool that traded in the window is returned. `feeUsd` is the pool fee (amount in × fee tier) the swaps paid to the pool's liquidity providers, valued at event time.\n\nFills reach this feed two ways: a Router-routed hop through the venue as its Broadcast fill, and a direct EVM swap (SwapRouter02 or any contract) from the pool's own Swap log — the latter with a few minutes' lag. A swap counts once either way.\n\nThe window is rolling and anchored to the newest indexed swap fill (`asOf`), not to wall clock or to an independently advancing blocks head, so model catch-up cannot shorten it. `asOf` is null while the swap-leg model holds no data at all.\n\nLegs are valued at the 1-hour candle that had already CLOSED when the fill happened; an asset whose last close is more than 30 days older than the window is treated as unpriced and contributes 0.\n\nCoverage is the full indexed swap history, back to the first Omnipool fill at block 1,708,104. Before block 6,837,788 an Omnipool event records the user's direct asset pair rather than the router's internal LRNA hops, so an LRNA per-asset row exists there only when the user actually traded LRNA.",
+        "parameters": [
+          {
+            "schema": {
+              "default": "24h",
+              "type": "string",
+              "enum": [
+                "1h",
+                "24h",
+                "7d",
+                "30d"
+              ]
+            },
+            "in": "query",
+            "name": "period",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "pools",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "period": {
+                      "type": "string",
+                      "enum": [
+                        "1h",
+                        "24h",
+                        "7d",
+                        "30d"
+                      ]
+                    },
+                    "asOf": {
+                      "nullable": true,
+                      "type": "string",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z$"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "pool": {
+                            "type": "string",
+                            "description": "The pool contract address (0x + 40 hex, lowercase)."
+                          },
+                          "token0": {
+                            "nullable": true,
+                            "type": "string",
+                            "pattern": "^\\d+$"
+                          },
+                          "token1": {
+                            "nullable": true,
+                            "type": "string",
+                            "pattern": "^\\d+$"
+                          },
+                          "fee": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Fee tier in hundredths of a bip: 3000 = 0.3%."
+                          },
+                          "volumeUsd": {
+                            "type": "string"
+                          },
+                          "feeUsd": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "pool",
+                          "token0",
+                          "token1",
+                          "fee",
+                          "volumeUsd",
+                          "feeUsd"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "period",
+                    "asOf",
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/pools/xyk/volumes": {
       "get": {
         "summary": "XYK volume and fees per pool",

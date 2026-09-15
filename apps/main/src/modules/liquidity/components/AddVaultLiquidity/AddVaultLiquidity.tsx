@@ -1,4 +1,10 @@
-import { Alert, Button, Summary, Text } from "@galacticcouncil/ui/components"
+import {
+  Alert,
+  Button,
+  Stack,
+  Summary,
+  Text,
+} from "@galacticcouncil/ui/components"
 import {
   ModalBody,
   ModalContentDivider,
@@ -143,6 +149,7 @@ export const AddVaultLiquidity = ({
 
             <Summary
               separator={<ModalContentDivider />}
+              withTrailingSeparator
               rows={[
                 {
                   label: t("liquidity:liquidity.add.modal.sharesToGet.label"),
@@ -163,47 +170,49 @@ export const AddVaultLiquidity = ({
               ]}
             />
 
+            <Stack gap="base" my="base">
+              <Text fs="p6" lh={1.4} color={getToken("text.low")}>
+                {t("liquidity:vaults.add.managedNote")}
+              </Text>
+
+              {wrapHint && (
+                <Alert
+                  variant="info"
+                  title={t("liquidity:vaults.add.wrap.title", {
+                    symbol: wrapHint.symbol,
+                  })}
+                  description={t("liquidity:vaults.add.wrap.description", {
+                    symbol: wrapHint.symbol,
+                    underlying: wrapHint.underlyingSymbol,
+                  })}
+                  action={
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="small"
+                      onClick={() => setSupplyAssetId(wrapHint.underlyingId)}
+                    >
+                      {t("liquidity:vaults.add.wrap.cta", {
+                        symbol: wrapHint.symbol,
+                      })}
+                    </Button>
+                  }
+                />
+              )}
+
+              {blocker && (
+                <Alert
+                  variant="warning"
+                  description={t(`liquidity:${blocker.key}`, {
+                    symbol: blocker.symbol,
+                  })}
+                />
+              )}
+            </Stack>
+
             <ModalContentDivider />
-
-            {wrapHint && (
-              <Alert
-                variant="info"
-                title={t("liquidity:vaults.add.wrap.title", {
-                  symbol: wrapHint.symbol,
-                })}
-                description={t("liquidity:vaults.add.wrap.description", {
-                  symbol: wrapHint.symbol,
-                  underlying: wrapHint.underlyingSymbol,
-                })}
-                action={
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="small"
-                    onClick={() => setSupplyAssetId(wrapHint.underlyingId)}
-                  >
-                    {t("liquidity:vaults.add.wrap.cta", {
-                      symbol: wrapHint.symbol,
-                    })}
-                  </Button>
-                }
-              />
-            )}
-
-            {blocker && (
-              <Alert
-                variant="warning"
-                description={t(`liquidity:${blocker.key}`, {
-                  symbol: blocker.symbol,
-                })}
-              />
-            )}
-
-            <Text fs="p6" color={getToken("text.low")}>
-              {t("liquidity:vaults.add.managedNote")}
-            </Text>
           </ModalBody>
-          <ModalFooter pt={0}>
+          <ModalFooter sx={{ pt: 0 }}>
             <Button
               type="submit"
               size="large"

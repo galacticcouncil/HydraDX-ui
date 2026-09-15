@@ -4,6 +4,11 @@ export const FACTORY_ABI = parseAbi([
   "function getHypervisor(address,address,uint24) view returns (address)",
 ])
 
+export const UNIPROXY_ABI = parseAbi([
+  "function deposit(uint256 deposit0, uint256 deposit1, address to, address pos, uint256[4] minIn) returns (uint256)",
+  "function getDepositAmount(address pos, address token, uint256 _deposit) view returns (uint256 amountStart, uint256 amountEnd)",
+])
+
 export const UNIPROXY_CLEARANCE_ABI = parseAbi([
   "function clearance() view returns (address)",
 ])

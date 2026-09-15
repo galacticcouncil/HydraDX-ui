@@ -1,9 +1,11 @@
+import { uniswapV3VolumeQuery } from "@galacticcouncil/indexer/neckwork"
+import { useQuery } from "@tanstack/react-query"
 import Big from "big.js"
 import { useMemo } from "react"
 
 import { useVaultShares, useVaultStates, VaultState } from "@/api/gamma/vaults"
-import { useV3Pools, V3PoolBase } from "@/api/pools"
-import { ENV } from "@/config/env"
+import { neckworkClient } from "@/api/neckwork"
+import { useV3PoolMetrics, useV3Pools, V3PoolBase } from "@/api/pools"
 import { TAsset, useAssets } from "@/providers/assetsProvider"
 import { useAssetsPrice } from "@/states/displayAsset"
 import { scaleHuman } from "@/utils/formatting"
@@ -13,7 +15,15 @@ export type VaultTable = {
   pool: V3PoolBase
   tokens: [TAsset, TAsset]
   feeTier: number
+  /** Deposited value of the pool, at what its contract actually holds. */
   tvlDisplay: string | undefined
+  volumeDisplay: string | undefined
+  /**
+   * Annualised pool fee APR in percent units: the LPs' share of the last 24
+   * hours of fees, over what the pool holds.
+   */
+  apr: string | undefined
+  isVolumeLoading: boolean
   price: string | undefined
   vault: VaultState | null
   status: VaultStatus
@@ -32,14 +42,22 @@ export type VaultStatus =
   | "outOfRange"
 
 export const useVaults = () => {
-  const gammaEnabled = ENV.VITE_UNIV3_GAMMA_ENABLED
   const { data: pools, isLoading } = useV3Pools()
   const { getAssetWithFallback } = useAssets()
   const { data: vaults, isLoading: isVaultLoading } = useVaultStates(
-    gammaEnabled ? (pools ?? []) : [],
+    pools ?? [],
   )
   const sharesQuery = useVaultShares(vaults)
   const shares = sharesQuery.data
+
+  const { data: volumes, isLoading: isVolumeLoading } = useQuery(
+    uniswapV3VolumeQuery(neckworkClient),
+  )
+
+  // What each pool actually holds, and the part of its fees LPs keep.
+  const { data: metrics, isLoading: isMetricsLoading } = useV3PoolMetrics(
+    pools ?? [],
+  )
 
   const assetIds = useMemo(
     () =>
@@ -57,24 +75,58 @@ export const useVaults = () => {
   const { getAssetPrice } = useAssetsPrice(assetIds)
 
   const data = useMemo<VaultTable[]>(() => {
-    if (!gammaEnabled || !pools?.length) return []
+    if (!pools?.length) return []
 
     return pools.map((pool, index) => {
       const vault = vaults[index] ?? null
       const token0 = getAssetWithFallback(pool.token0.toString())
       const token1 = getAssetWithFallback(pool.token1.toString())
 
-      const tvlDisplay = pool.tokens
-        .reduce((total, token) => {
-          const price = getAssetPrice(token.id.toString())
-          if (!price?.isValid) return total
+      // Deposited value, from what the pool contract holds. Not `pool.tokens`:
+      // those balances are the SDK's VIRTUAL reserves (the depth the active
+      // liquidity offers at the current price), so in a concentrated pool they
+      // run well above the money actually in it.
+      const poolMetrics = metrics[index]
+      const tvlDisplay = poolMetrics
+        ? [
+            { id: pool.token0, amount: poolMetrics.reserve0 },
+            { id: pool.token1, amount: poolMetrics.reserve1 },
+          ]
+            .reduce((total, { id, amount }) => {
+              const price = getAssetPrice(id.toString())
+              if (!price?.isValid) return total
 
-          const meta = getAssetWithFallback(token.id.toString())
-          const amount = scaleHuman(token.balance ?? 0n, meta.decimals)
+              const meta = getAssetWithFallback(id.toString())
 
-          return total.plus(Big(amount).times(price.price))
-        }, Big(0))
-        .toString()
+              return total.plus(
+                Big(scaleHuman(amount, meta.decimals)).times(price.price),
+              )
+            }, Big(0))
+            .toString()
+        : undefined
+
+      // 24h volume and the fees it paid, from neckwork, keyed by pool contract.
+      // The APR annualises the LPs' share of those fees over what the pool
+      // holds, the way every other concentrated-liquidity UI states a pool APR.
+      // A pool that saw no swaps is absent from the feed rather than zeroed, so
+      // it only reads as unknown while the feed itself is missing.
+      const volume = volumes?.find(
+        (entry) => entry.address === pool.address.toLowerCase(),
+      )
+      const volumeDisplay = volumes ? (volume?.volumeUsd ?? "0") : undefined
+      const feesDisplay = volumes ? (volume?.feeUsd ?? "0") : undefined
+      const apr =
+        feesDisplay !== undefined &&
+        poolMetrics &&
+        tvlDisplay &&
+        Big(tvlDisplay).gt(0)
+          ? Big(feesDisplay)
+              .times(poolMetrics.lpFeeShare)
+              .times(365)
+              .div(tvlDisplay)
+              .times(100)
+              .toString()
+          : undefined
 
       const raw = Big(pool.sqrtPriceX96.toString()).pow(2).div(Big(2).pow(192))
       const price = raw
@@ -115,6 +167,9 @@ export const useVaults = () => {
         tokens: [token0, token1],
         feeTier: pool.fee,
         tvlDisplay,
+        volumeDisplay,
+        apr,
+        isVolumeLoading,
         price,
         vault,
         status,
@@ -124,11 +179,20 @@ export const useVaults = () => {
         positionValueDisplay,
       }
     })
-  }, [gammaEnabled, pools, vaults, shares, getAssetWithFallback, getAssetPrice])
+  }, [
+    pools,
+    vaults,
+    shares,
+    volumes,
+    metrics,
+    isVolumeLoading,
+    getAssetWithFallback,
+    getAssetPrice,
+  ])
 
   return {
     data,
-    isLoading: isLoading || isVaultLoading,
+    isLoading: isLoading || isVaultLoading || isMetricsLoading,
     isPositionError: sharesQuery.isError,
     isDisconnected: sharesQuery.isDisconnected,
   }

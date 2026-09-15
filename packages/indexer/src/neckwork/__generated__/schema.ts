@@ -1770,6 +1770,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/pools/uniswapv3/volumes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Concentrated-liquidity (Uniswap v3) volume and fees per pool
+         * @description Per-pool traded volume over a rolling window for the Uniswap v3 pools on Hydration's EVM, keyed by the pool CONTRACT address. `?pools=` filters to a subset; omitted, every pool that traded in the window is returned. `feeUsd` is the pool fee (amount in × fee tier) the swaps paid to the pool's liquidity providers, valued at event time.
+         *
+         *     Fills reach this feed two ways: a Router-routed hop through the venue as its Broadcast fill, and a direct EVM swap (SwapRouter02 or any contract) from the pool's own Swap log — the latter with a few minutes' lag. A swap counts once either way.
+         *
+         *     The window is rolling and anchored to the newest indexed swap fill (`asOf`), not to wall clock or to an independently advancing blocks head, so model catch-up cannot shorten it. `asOf` is null while the swap-leg model holds no data at all.
+         *
+         *     Legs are valued at the 1-hour candle that had already CLOSED when the fill happened; an asset whose last close is more than 30 days older than the window is treated as unpriced and contributes 0.
+         *
+         *     Coverage is the full indexed swap history, back to the first Omnipool fill at block 1,708,104. Before block 6,837,788 an Omnipool event records the user's direct asset pair rather than the router's internal LRNA hops, so an LRNA per-asset row exists there only when the user actually traded LRNA.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    period?: "1h" | "24h" | "7d" | "30d";
+                    pools?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            asOf: string | null;
+                            items: {
+                                /** @description Fee tier in hundredths of a bip: 3000 = 0.3%. */
+                                fee: number;
+                                feeUsd: string;
+                                /** @description The pool contract address (0x + 40 hex, lowercase). */
+                                pool: string;
+                                token0: string | null;
+                                token1: string | null;
+                                volumeUsd: string;
+                            }[];
+                            /** @enum {string} */
+                            period: "1h" | "24h" | "7d" | "30d";
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/pools/xyk/volumes": {
         parameters: {
             query?: never;

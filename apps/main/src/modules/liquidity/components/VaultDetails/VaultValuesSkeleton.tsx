@@ -7,7 +7,8 @@ export const VaultValuesSkeleton = () => {
 
   const rows = [
     t("liquidity:totalValueLocked"),
-    t("liquidity:vaults.stats.poolLiquidity"),
+    t("liquidity:24hVolume"),
+    t("liquidity:vaults.stats.apr"),
     t("liquidity:vaults.stats.sharePrice"),
     t("liquidity:vaults.stats.poolFee"),
     t("liquidity:vaults.stats.utilisation"),

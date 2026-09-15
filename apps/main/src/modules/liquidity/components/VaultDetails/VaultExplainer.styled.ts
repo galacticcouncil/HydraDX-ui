@@ -2,9 +2,16 @@ import { Flex } from "@galacticcouncil/ui/components"
 import { containerQuery, css, styled } from "@galacticcouncil/ui/utils"
 
 export const SChartPreview = styled(Flex)(css`
-  flex: 3;
+  flex: 7;
   min-width: 0;
   pointer-events: none;
+
+  ${containerQuery(
+    { conditions: [{ type: "inline-size", value: "36rem" }] },
+    css`
+      align-self: flex-start;
+    `,
+  )}
 `)
 
 export const SExplainerSplit = styled(Flex)(css`
@@ -41,7 +48,7 @@ export const SExplainerSplitDivider = styled.div(
 
 export const SScenarioPanel = styled(Flex)(
   ({ theme }) => css`
-    flex: 2;
+    flex: 5;
     min-width: 0;
     animation-name: ${theme.animations.fadeIn};
     animation-duration: 650ms;

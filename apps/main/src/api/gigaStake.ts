@@ -7,6 +7,7 @@ import { useAccount } from "@galacticcouncil/web3-connect"
 import { queryOptions, useQuery } from "@tanstack/react-query"
 import Big from "big.js"
 import { millisecondsInHour, millisecondsInMinute } from "date-fns/constants"
+import { maxUint32 } from "viem"
 
 import { accountOpenGovVotesQuery, referendumInfoQuery } from "@/api/democracy"
 import { TProviderContext, useRpcProvider } from "@/providers/rpcProvider"
@@ -43,8 +44,6 @@ export const gigaStakeConstantsQuery = (rpc: TProviderContext) =>
     staleTime: millisecondsInHour,
     gcTime: GC_TIME,
   })
-
-const U32_MAX = 4_294_967_295
 
 type UnsafeTwoSecBlocksSinceQuery = {
   Parameters: {
@@ -93,7 +92,7 @@ export const getCooldownExpiresAt = (
 ): number => {
   if (
     twoSecBlocksSince === null ||
-    twoSecBlocksSince >= U32_MAX ||
+    twoSecBlocksSince >= Number(maxUint32) ||
     unstakedAt >= twoSecBlocksSince
   ) {
     return unstakedAt + cooldownPeriod

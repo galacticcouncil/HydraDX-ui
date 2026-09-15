@@ -12,6 +12,7 @@ import {
   formatUnits,
   type Hex,
   parseUnits,
+  zeroAddress,
 } from "viem"
 
 import { AAVE_GAS_LIMIT } from "@/api/aave"
@@ -190,9 +191,7 @@ export function useDeposit() {
       const hollarBig = parseUnits(hollarAmount, hollar.decimals)
       const calls: BatchEvmCall[] = []
 
-      if (
-        BIL_DEPOSIT_ZAP_ADDRESS === "0x0000000000000000000000000000000000000000"
-      ) {
+      if (BIL_DEPOSIT_ZAP_ADDRESS === zeroAddress) {
         throw new Error(
           "BILDepositZap address not configured — deploy via " +
             "`npx hardhat deploy-BILDepositZap` and update " +

@@ -10,7 +10,6 @@ import {
   Skeleton,
   Summary,
 } from "@galacticcouncil/ui/components"
-import { useBreakpoints } from "@galacticcouncil/ui/theme"
 import { FC } from "react"
 import { FormProvider } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -156,8 +155,6 @@ export const AddLiquiditySummary = ({
 }) => {
   const { t } = useTranslation(["liquidity", "common", "trade"])
   const { native } = useAssets()
-  const { isMobile } = useBreakpoints()
-
   const { price, isLoading: isPriceLoading } = useAssetPrice(meta.id)
 
   return (
@@ -165,9 +162,7 @@ export const AddLiquiditySummary = ({
       separator={<ModalContentDivider />}
       rows={[
         {
-          label: isMobile
-            ? t("liquidity.add.modal.sharesToGet.label.mob")
-            : t("liquidity.add.modal.sharesToGet.label"),
+          label: t("liquidity.add.modal.sharesToGet.label"),
           content: poolShare
             ? t("liquidity.add.modal.sharesToGet", {
                 percentage: poolShare,

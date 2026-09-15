@@ -90,14 +90,30 @@ const VaultValues = ({ vault }: { vault: VaultTable }) => {
       ? (Math.pow(1.0001, state.baseUpper - state.baseLower) - 1) * 100
       : undefined
 
-  const rows = [
+  const rows: {
+    label: string
+    value: string
+    isLoading?: boolean
+  }[] = [
     {
       label: t("liquidity:totalValueLocked"),
       value: t("currency", { value: Number(vault.vaultTvlDisplay ?? 0) }),
     },
     {
-      label: t("liquidity:vaults.stats.poolLiquidity"),
-      value: t("currency", { value: Number(vault.tvlDisplay ?? 0) }),
+      label: t("liquidity:24hVolume"),
+      value:
+        vault.volumeDisplay !== undefined
+          ? t("currency", { value: Number(vault.volumeDisplay) })
+          : t("notAvailable"),
+      isLoading: vault.isVolumeLoading,
+    },
+    {
+      label: t("liquidity:vaults.stats.apr"),
+      value:
+        vault.apr !== undefined
+          ? t("percent", { value: vault.apr })
+          : t("notAvailable"),
+      isLoading: vault.isVolumeLoading,
     },
     {
       label: t("liquidity:vaults.stats.sharePrice"),
@@ -131,7 +147,13 @@ const VaultValues = ({ vault }: { vault: VaultTable }) => {
       {rows.map((row, index) => (
         <Flex key={row.label} direction="column" gap="xl">
           {index > 0 && <Separator mx="-xl" />}
-          <ValueStats size="medium" label={row.label} value={row.value} wrap />
+          <ValueStats
+            size="medium"
+            label={row.label}
+            value={row.value}
+            isLoading={row.isLoading}
+            wrap
+          />
         </Flex>
       ))}
     </Flex>

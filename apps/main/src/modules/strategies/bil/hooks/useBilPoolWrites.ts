@@ -1,12 +1,12 @@
 import { ProtocolAction } from "@aave/contract-helpers"
 import { ExtendedEvmCall } from "@galacticcouncil/money-market/types"
-import { safeConvertSS58toH160, UINT256_MAX } from "@galacticcouncil/utils"
+import { safeConvertSS58toH160 } from "@galacticcouncil/utils"
 import { useAccount } from "@galacticcouncil/web3-connect"
 import { CallType } from "@galacticcouncil/xc-core"
 import { useMutation } from "@tanstack/react-query"
 import { useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { encodeFunctionData, type Hex, parseUnits } from "viem"
+import { encodeFunctionData, type Hex, maxUint256, parseUnits } from "viem"
 
 import { estimateGasLimit } from "@/api/borrow"
 import { BIL_POOL_ABI } from "@/modules/strategies/bil/config/abi"
@@ -128,7 +128,7 @@ export function useBorrowHollar({ onClose }: BilPoolWriteOptions = {}) {
  * Mirrors `useBorrowHollar` — single `pool.repay(asset, amount, mode, onBehalfOf)`
  * EVM call routed through the project's transaction store. Uses variable rate
  * mode (=2) to match the borrow side. When repaying the full debt, pass
- * `repayAll: true` so the call uses `UINT256_MAX` (Aave's "repay everything"
+ * `repayAll: true` so the call uses `maxUint256` (Aave's "repay everything"
  * sentinel) instead of a fixed wei amount that may drift with accrued interest.
  */
 export function useRepayHollar({ onClose }: BilPoolWriteOptions = {}) {
@@ -149,7 +149,7 @@ export function useRepayHollar({ onClose }: BilPoolWriteOptions = {}) {
         functionName: "repay",
         args: [
           HOLLAR_ADDRESS,
-          repayAll ? UINT256_MAX : parseUnits(amount, hollar.decimals),
+          repayAll ? maxUint256 : parseUnits(amount, hollar.decimals),
           AAVE_INTEREST_RATE_MODE_VARIABLE,
           evmAddress,
         ],

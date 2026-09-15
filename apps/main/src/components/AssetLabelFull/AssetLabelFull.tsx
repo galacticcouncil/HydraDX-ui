@@ -4,11 +4,13 @@ import {
   AssetLogo as AssetLogoPrimitive,
   Flex,
   Skeleton,
+  Stack,
 } from "@galacticcouncil/ui/components"
 import { FC, ReactNode } from "react"
 
 import { TAssetData } from "@/api/assets"
 import { AssetLogo } from "@/components/AssetLogo"
+import { AutoManagedBadge } from "@/modules/liquidity/components/AutoManagedBadge"
 import { StablepoolBadge } from "@/modules/liquidity/components/StablepoolBadge"
 
 export const AssetLabelFull = ({
@@ -83,6 +85,28 @@ export const AssetLabelXYK = ({
     <AssetLabelFullContainer>
       <AssetLogo id={iconIds} />
       <AssetLabel symbol={symbol} name={name} badge={badge} size={size} />
+    </AssetLabelFullContainer>
+  )
+}
+
+export const AssetLabelUniV3 = ({
+  iconIds,
+  symbol,
+  name,
+  size,
+}: {
+  iconIds: string[]
+  symbol: string
+  name?: string
+  size?: AssetLabelProps["size"]
+}) => {
+  return (
+    <AssetLabelFullContainer>
+      <AssetLogo id={iconIds} />
+      <Stack gap="xs">
+        <AssetLabel symbol={symbol} name={name} size={size} />
+        <AutoManagedBadge />
+      </Stack>
     </AssetLabelFullContainer>
   )
 }

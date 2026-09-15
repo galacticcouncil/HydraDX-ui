@@ -95,3 +95,22 @@ export const xykVolumeQuery = (client: NeckworkClient) =>
       }))
     },
   })
+
+export const uniswapV3VolumeQuery = (client: NeckworkClient) =>
+  queryOptions({
+    queryKey: ["neckwork", "uniswapV3Volumes"],
+    staleTime: NECKWORK_BASE_STALE_TIME,
+    queryFn: async () => {
+      const { data } = await client.GET("/v1/pools/uniswapv3/volumes", {
+        params: { query: { period: "24h" } },
+      })
+
+      if (!data) throw new Error("Neckwork API returned no Uniswap v3 volumes")
+
+      return data.items.map((item) => ({
+        address: item.pool.toLowerCase(),
+        volumeUsd: item.volumeUsd,
+        feeUsd: item.feeUsd,
+      }))
+    },
+  })

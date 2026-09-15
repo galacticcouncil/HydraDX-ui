@@ -10,12 +10,9 @@ import {
   REBALANCE_PROXY_ABI,
   UNIPROXY_CLEARANCE_ABI,
 } from "@/api/gamma/abi"
-import { GAMMA_CONTRACTS } from "@/api/gamma/config"
+import { GammaContracts, getGammaContracts } from "@/api/gamma/config"
 import { V3PoolBase } from "@/api/pools"
-import { ENV } from "@/config/env"
 import { useRpcProvider } from "@/providers/rpcProvider"
-
-type GammaContracts = typeof GAMMA_CONTRACTS
 
 type HypervisorFn = Extract<
   (typeof HYPERVISOR_ABI)[number],
@@ -230,17 +227,15 @@ const vaultQuery = (
       }
     },
     staleTime: 30_000,
+    refetchInterval: 60_000,
   })
 
 export const useVaultStates = (pools: V3PoolBase[]) => {
-  const { evm } = useRpcProvider()
-  const enabled = ENV.VITE_UNIV3_GAMMA_ENABLED
+  const { evm, endpoint } = useRpcProvider()
+  const contracts = getGammaContracts(endpoint)
 
   return useQueries({
-    queries: pools.map((pool) => ({
-      ...vaultQuery(evm, GAMMA_CONTRACTS, pool),
-      enabled,
-    })),
+    queries: pools.map((pool) => vaultQuery(evm, contracts, pool)),
     combine: (results) => ({
       data: results.map((result) => result.data ?? null),
       isLoading: results.some((result) => result.isLoading),

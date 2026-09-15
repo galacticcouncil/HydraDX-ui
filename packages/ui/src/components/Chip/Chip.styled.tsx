@@ -97,6 +97,8 @@ export const SChip = styled(Box, {
       align-items: center;
       gap: ${theme.space.s};
       flex-shrink: 0;
+      width: fit-content;
+      white-space: nowrap;
 
       font-weight: 500;
       line-height: 1;

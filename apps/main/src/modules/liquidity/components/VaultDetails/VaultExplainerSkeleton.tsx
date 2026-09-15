@@ -4,10 +4,7 @@ import {
   ResponsiveScope,
   Separator,
   Skeleton,
-  ToggleGroup,
-  ToggleGroupItem,
 } from "@galacticcouncil/ui/components"
-import { useTranslation } from "react-i18next"
 
 import { ChartState } from "@/components/ChartState"
 import {
@@ -18,14 +15,6 @@ import {
 } from "@/modules/liquidity/components/VaultDetails/VaultExplainer.styled"
 
 export const VaultExplainerSkeleton = () => {
-  const { t } = useTranslation("liquidity")
-
-  const options = [
-    t("vaults.explainer.states.inRange"),
-    t("vaults.explainer.states.outOfRange"),
-    t("vaults.explainer.states.recentered"),
-  ]
-
   return (
     <Paper p="l" flex={2.5} minWidth={0}>
       <Skeleton width={220} height="1.5em" />
@@ -37,16 +26,6 @@ export const VaultExplainerSkeleton = () => {
 
       <Flex mt="m">
         <Skeleton width={180} height={12} />
-      </Flex>
-
-      <Flex mt="m">
-        <ToggleGroup type="single" value={options[0]} disabled>
-          {options.map((option) => (
-            <ToggleGroupItem key={option} value={option}>
-              {option}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
       </Flex>
 
       <ResponsiveScope mt="l">
