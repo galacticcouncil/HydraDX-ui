@@ -22,7 +22,7 @@
   "dependencies": {
     "@galacticcouncil/common": "^1.2.0",
     "@galacticcouncil/descriptors": "^2.7.0",
-    "@galacticcouncil/sdk-next": "^2.3.0",
+    "@galacticcouncil/sdk-next": "2.3.1-pr369-6dfc7b7",
     "@galacticcouncil/xc": "^2.1.0",
     "@galacticcouncil/xc-cfg": "^2.6.0",
     "@galacticcouncil/xc-core": "^2.5.0",
