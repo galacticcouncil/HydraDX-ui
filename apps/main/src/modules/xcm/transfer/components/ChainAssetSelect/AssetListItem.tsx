@@ -54,15 +54,10 @@ export const AssetListItem: React.FC<AssetListItemProps> = ({
   const registryId = chain ? getHydrationAssetId(asset, chain.key) : null
   const registryAsset = registryId ? getAsset(registryId) : undefined
 
-  const meta = registryAsset
-    ? {
-        symbol: registryAsset.symbol,
-        name: registryAsset.name,
-      }
-    : {
-        symbol: asset.originSymbol,
-        name: asset.originSymbol,
-      }
+  const meta = {
+    symbol: asset.originSymbol,
+    name: registryAsset?.name ?? asset.originSymbol,
+  }
 
   return (
     <SAssetListItem isSelected={isSelected} onClick={onClick} as="button">

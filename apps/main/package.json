@@ -45,7 +45,7 @@
     "react-dom": "^19.1.1",
     "react-i18next": "^15.7.3",
     "sonner": "^2.0.1",
-    "viem": "^2.38.3"
+    "viem": "^2.55.4"
   },
   "devDependencies": {
     "@galacticcouncil/eslint-config": "*",

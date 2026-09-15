@@ -6,6 +6,7 @@ export const PORTFOLIO_CACHE_MAX_AGE = hoursToMilliseconds(24)
 
 export const PORTFOLIO_CHAINS: string[] = [
   "ethereum",
+  "robinhood",
   "base",
   "solana",
   "sui",
